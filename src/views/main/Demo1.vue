@@ -12,6 +12,7 @@
 <script lang="ts">
 import { Graph } from '@antv/x6'
 import { defineComponent, onMounted, ref } from 'vue'
+
 export default defineComponent({
   name: 'Demo1',
   setup()
