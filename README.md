@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # power_simulation
 
 ## Project setup
