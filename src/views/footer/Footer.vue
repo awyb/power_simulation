@@ -1,7 +1,9 @@
 <style scoped lang="less">
-  .footer { position: relative;width: 100%;height: 100%;background: rgb(243, 243, 243);}
+  .footer { position: relative;width: 100%;height: 100%;background: #cbcbcb;}
 </style>
 
 <template>
-  <div class="footer"></div>
+  <div class="footer">
+    footer
+  </div>
 </template>
