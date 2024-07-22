@@ -56,108 +56,11 @@ export default class common
   {
     const nodes = []
     const groups = common.getGrounps()
-    interface graphNode
-    {
-      x: number,
-      y: number,
-      width: number,
-      height: number,
-      angle: number,
-      namec: string,
-      tools: Array<[]>,
-      attrs: object,
-      ports: object
-    }
-    // nodes.push({
-    //   x: 200,
-    //   y: 300,
-    //   width: 200,
-    //   height: 40,
-    //   angle:90,
-    //   label: '结点1',
-    //   tools: [
-    //     {
-    //       name: 'node-editor',
-    //       args: {
-    //         attrs: {
-    //           backgroundColor: '#EFF4FF',
-    //         },
-    //       },
-    //     },
-    //   ],
-
-    //   attrs:
-    //   {
-    //     body: {
-    //       fill: '#f5f5f5',
-    //       stroke: '#d9d9d9'
-    //     },
-    //   },
-    //   ports:
-    //   {
-    //     groups: groups,
-    //     items:
-    //     [
-    //       {
-    //         id: 'out1_1',
-    //         group: 'out',
-    //         args:
-    //         {
-    //           x: 30,
-    //           y: 0,
-    //         },
-    //         attrs:
-    //         {
-    //           text: { text: 'out1_1' },
-    //         }
-    //       },
-    //       {
-    //         id: 'out1_2',
-    //         group: 'out',
-    //         args:
-    //         {
-    //           x: 70,
-    //           y: 0,
-    //         },
-    //         attrs:
-    //         {
-    //           text: { text: 'out1_2' },
-    //         }
-    //       },
-    //       {
-    //         id: 'in1_1',
-    //         group: 'in',
-    //         args:
-    //         {
-    //           x: 0,
-    //           y: 10,
-    //         },
-    //         attrs:
-    //         {
-    //           text: { text: 'in1_1' },
-    //         }
-    //       },
-    //       {
-    //         id: 'in1_2',
-    //         group: 'in',
-    //         args:
-    //         {
-    //           x: 0,
-    //           y: 30,
-    //         },
-    //         attrs:
-    //         {
-    //           text: { text: 'in1_2' },
-    //         }
-    //       }
-    //     ]
-    //   }
-    // })
     nodes.push({
       x: 400,
-      y: 200,
-      width: 200,
-      height: 200,
+      y: 160,
+      width: 160,
+      height: 160,
       shape: 'image',
       namec: '异步电机',
       attrs: {
@@ -167,9 +70,11 @@ export default class common
         },
         image: {
           'xlink:href': '/static/svg/异步电机.svg',
-          width: 200,
-          height: 200,
+          width: 160,
+          height: 160,
         },
+      },
+      data:{
       },
       ports:
       {
@@ -181,7 +86,7 @@ export default class common
             group: 'in',
             args:
             {
-              x: 0.068,
+              x: 0.09,
               y: 0.233,
             },
           },
@@ -190,7 +95,7 @@ export default class common
             group: 'in',
             args:
             {
-              x: 0.068,
+              x: 0.09,
               y: 0.513,
             }
           },
@@ -199,7 +104,7 @@ export default class common
             group: 'in',
             args:
             {
-              x: 0.068,
+              x: 0.09,
               y: 0.793,
             }
           },
@@ -218,8 +123,8 @@ export default class common
     nodes.push({
       x: 400,
       y: 400,
-      width: 200,
-      height: 200,
+      width: 160,
+      height: 160,
       shape: 'image',
       namec: '同步电机',
       attrs: {
@@ -229,9 +134,12 @@ export default class common
         },
         image: {
           'xlink:href': '/static/svg/同步电机.svg',
-          width: 200,
-          height: 200,
+          width: 160,
+          height: 160,
         },
+      },
+      data:{
+
       },
       ports:
       {
@@ -287,10 +195,10 @@ export default class common
       }
     })
     nodes.push({
-      x: 200,
-      y: 200,
-      width: 200,
-      height: 200,
+      x: 160,
+      y: 160,
+      width: 160,
+      height: 160,
       shape: 'image',
       namec: '异步逻辑',
       attrs: {
@@ -300,9 +208,12 @@ export default class common
         },
         image: {
           'xlink:href': '/static/svg/异步逻辑.png',
-          width: 200,
-          height: 200,
-        },
+          width: 160,
+          height: 160,
+        }
+      },
+      data:{
+
       },
       ports:
       {
@@ -330,6 +241,51 @@ export default class common
         ]
       }
     })
+    nodes.push({
+      x: 400,
+      y: 160,
+      width: 160,
+      height: 160,
+      shape: 'image',
+      namec: '并联电容/电抗器',
+      attrs: {
+        body: {
+          fill: '#f5f5f5',
+          stroke: '#d9d9d9',
+        },
+        image: {
+          'xlink:href': '/static/svg/并联电容_电抗器.svg',
+          width: 160,
+          height: 160,
+        },
+      },
+      data:{
+        params:{
+          Configuration:{
+            'Name':'',
+            'Rated Frequency':50,
+            'Rated Voltage (L-L, RMS)':110,
+            'Input Capacity':1
+          }
+        }
+      },
+      ports:
+      {
+        groups: groups,
+        items:
+        [
+          {
+            id: 'in2_1',
+            group: 'in',
+            args:
+            {
+              x: 0.5,
+              y: 0.2,
+            },
+          }
+        ]
+      }
+    })
     return nodes
   }
   
@@ -343,7 +299,7 @@ export default class common
         {
           circle:
           {
-            r: 5,
+            r: 6,
             magnet: true,
             stroke: '#000000',
             strokeWidth: 1,
@@ -352,7 +308,7 @@ export default class common
           },
           text:
           {
-            fontSize: 10,
+            fontSize: 12,
             fill: '#888',
           },
         },
@@ -370,7 +326,7 @@ export default class common
         {
           circle:
           {
-            r: 5,
+            r: 6,
             magnet: true,
             stroke: '#fff',
             strokeWidth: 1,
@@ -379,7 +335,7 @@ export default class common
           },
           text:
           {
-            fontSize: 10,
+            fontSize: 12,
             fill: '#888',
           },
         },

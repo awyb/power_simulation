@@ -70,7 +70,6 @@ export default defineComponent({
   },
   setup(props, { expose })
   {
-    console.log(props.menus)
     const showMenu = ref(false)
     const position = reactive({x: 0, y: 0})
 

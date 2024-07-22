@@ -1,30 +1,15 @@
 <style scoped lang="less">
   .container { width: 100%;height: 100%;
-    .context-menu {
-      position: absolute;
-      background-color: white;
-      border: 1px solid #ccc;
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      z-index: 1000;
-    }
-    .context-menu li {
-      display: flex;
-      align-items: center;
-      padding: 10px 15px;
-      cursor: pointer;
-    }
-    .context-menu li:hover {
-      background-color: #f0f0f0;
-    }
-    .el-icon{margin-right: 5px;}
+    .context-menu { position: absolute;border: 1px solid #ccc;background-color: white;list-style: none;padding: 0;margin: 0;z-index: 1000; }
+    .context-menu li { display: flex;align-items: center;padding: 10px 15px;cursor: pointer; }
+    .context-menu li:hover { background-color: #f0f0f0; }
+    .el-icon { margin-right: 5px;}
   }
 </style>
 
 <template>
    <div class="container">
-    <div class="container" ref="container" />
+    <div class="container" ref="container"></div>
     <ul v-if="contextMenuVisible" :style="{ top: `${menuPosition.y}px`, left: `${menuPosition.x}px` }" class="context-menu">
       <li @click="editEdge">
         <el-icon><component :is="'Edit'"/></el-icon>编辑
@@ -86,18 +71,13 @@ export default defineComponent({
       contextMenuVisible.value = false
     }
 
-    function bindKey()
+    const bindKey = ()=>
     {
       graph.on('cell:contextmenu', ({ cell, e }) =>
       {
         if (!container.value) return
-
         e.preventDefault()
-        // const { left, top } = container.value.getBoundingClientRect()
-        // menuPosition.x = e.clientX -left
-        // menuPosition.y = e.clientY - top
-
-        const pos = graph.clientToGraph(e.clientX, e.clientY)// 核心代码就是这一行
+        const pos = graph.clientToGraph(e.clientX, e.clientY)
         menuPosition.x = pos.x
         menuPosition.y = pos.y
         
@@ -111,7 +91,7 @@ export default defineComponent({
         if (cell.getProp('manualConnection'))
           graphcom.showPorts('visible', graph)
       })
-
+      
       
       graph.on('cell:mouseleave', ({ cell }) =>
       {
@@ -155,29 +135,36 @@ export default defineComponent({
         }
       })
       
-      graph.on('node:click', ({e, node}) =>
+      graph.on('blank:click', ()=>
       {
-        // const nodeView = view // 获取节点视图实例
-        // const nodeBBox = nodeView.getBBox() // 获取节点的包围盒
-        const nodePosition = node.position()
-        const local = graph.pageToLocal(e.clientX, e.clientY)
-        const size = node.size()
-        const position = [local.x - nodePosition.x, local.y - nodePosition.y]
-        console.log('相对于节点的坐标:', position)
-        node.addPort({group: 'in', args:{x: position[0]/size.width, y: position[1]/size.height, }})
-        
+        if (checkEdge)
+        {
+          checkEdge.removeTools()
+          checkEdge = null
+        }
       })
+      // 手动新增连接桩
+      // graph.on('node:click', ({e, node}) =>
+      // {
+      //   const nodePosition = node.position()
+      //   const local = graph.pageToLocal(e.clientX, e.clientY)
+      //   const size = node.size()
+      //   const position = [local.x - nodePosition.x, local.y - nodePosition.y]
+      //   console.log('相对于节点的坐标:', position)
+      //   node.addPort({group: 'in', args:{x: position[0]/size.width, y: position[1]/size.height, }})
+        
+      // })
       // 点击其他地方隐藏菜单
       document.addEventListener('click', ()=>
       {
         contextMenuVisible.value = false
       })
     }
-    const addNode = ()=>
+    const loadDefNode = ()=>
     {
       const nodes = common.getNodes()
       const gNodes: Node<Node.Properties>[] | { id: string }[] = []
-      nodes.forEach(node=>
+      nodes.slice(0, 3).forEach(node=>
       {
         gNodes.push(graph.addNode(Object(node)))
       })
@@ -195,6 +182,7 @@ export default defineComponent({
           attrs: {
             line: {
               stroke: '#000000',
+              targetMarker:null
             },
           },
         })
@@ -210,8 +198,16 @@ export default defineComponent({
         {
           color: '#F2F7FA',
         },
-        panning: true,
-        mousewheel: true,
+        panning: {
+          enabled: true,
+          modifiers: 'ctrl'
+        },
+        mousewheel: {
+          enabled: true,
+          modifiers: 'Ctrl',
+          maxScale: 4,
+          minScale: 0.2,
+        },
         grid:
         {
           visible: true,
@@ -233,7 +229,7 @@ export default defineComponent({
           // 设置连接点
           allowBlank: false,  // 不允许连接到空白处
           allowMulti: 'withPort',  // 允许多个连接到同一个节点，但不同的端口
-          allowLoop: false,  // 不允许连接回自身
+          // allowLoop: false,  // 不允许连接回自身
           highlight: true,  // 在拖动连接时高亮显示连接点
           // connector: 'smooth',  // 设置连接器的样式
           connectionPoint: 'anchor',  // 设置连接点样式
@@ -259,6 +255,7 @@ export default defineComponent({
                 line: {
                   stroke: '#000000',
                   strokeWidth:2,
+                  targetMarker:null
                 },
               },
               tools:[toolsConfig.segments, toolsConfig.vertices],
@@ -267,26 +264,28 @@ export default defineComponent({
           },
           validateConnection({ sourceView, targetView, sourceMagnet, targetMagnet })
           {
+            return true
             // 自定义连接验证逻辑
-            if (targetMagnet&&sourceMagnet && targetMagnet.getAttribute('port-group') === 'in'&& sourceMagnet.getAttribute('port-group') === 'out')
-              return true  // 仅允许连接到输入端口
-            return false  // 否则不允许连接
+            // if (targetMagnet&&sourceMagnet && targetMagnet.getAttribute('port-group') === 'in'&& sourceMagnet.getAttribute('port-group') === 'out')
+            //   return true  // 仅允许连接到输入端口
+            // return false  // 否则不允许连接
           },
         },
       })
       // #region 使用插件
       graph
-        .use(
-          new Transform({
-            resizing: true,
-            rotating: true,
-          }),
+        .use(new Transform({
+          resizing: true,
+          rotating: true,
+        }),
         )
-        .use(
-          new Selection({
-            rubberband: true,
-            showNodeSelectionBox: true,
-          }),
+        .use(new Selection({
+          enabled: true,
+          multiple: true,
+          rubberband: true,
+          movable: true,
+          showNodeSelectionBox: true,
+        }),
         )
         .use(new Snapline())
         .use(new Keyboard())
@@ -295,22 +294,27 @@ export default defineComponent({
           enabled: true,
           beforeAddCommand:(type, data)=>
           {
-            console.log(type, data)
             const nIncludes=['ports', 'tools']
             if (nIncludes.includes(Object(data).key))
               return false
             return true
           }
         }))
-      graphcom.bindKey(graph, ['copy', 'cut', 'paste', 'undo', 'redo', 'delete'])
-      addNode()
+      graphcom.bindKey(graph, ['copy', 'cut', 'paste', 'undo', 'redo', 'delete', 'selectall'])
     }
     
     onMounted(() =>
     {
       renderGraph()
       bindKey()
+      loadDefNode()
       document.removeEventListener('click', () =>contextMenuVisible.value = false)
+    })
+    
+    onBeforeUnmount(() =>
+    {
+      document.removeEventListener('click', () =>contextMenuVisible.value = false)
+      graph.dispose()
     })
 
     expose({ dragEnd })

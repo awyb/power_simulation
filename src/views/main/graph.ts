@@ -79,6 +79,18 @@ class graphEvents
         graph.removeCells(cells)
     })
   }
+  // 全选
+  selectall()
+  {
+    const graph = this.graph
+    graph.bindKey(['meta+a', 'ctrl+a'], (e) =>
+    {
+      e.preventDefault()
+      const all = graph.getCells()
+      if (all.length)
+        graph.select(all)
+    })
+  }
 }
 
 /**
