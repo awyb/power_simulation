@@ -104,7 +104,8 @@ const showPorts = (portsVisibility: 'visible' | 'hidden', graph:Graph) =>
   {
     node.getPorts().forEach(port =>
     {
-      node.portProp(port.id+'', 'attrs/circle/style/visibility', portsVisibility)
+      if (port.group!=='inline')
+        node.portProp(port.id+'', 'attrs/circle/style/visibility', portsVisibility)
     })
   })
 }

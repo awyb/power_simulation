@@ -12,4 +12,27 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue))
 
   app.component(key, component)
 
+const debounce = (fn: any, delay: any) =>
+{
+  let timer: any
+  return (...args: any) =>
+  {
+    if (timer)
+      clearTimeout(timer)
+    timer = setTimeout(() =>
+    {
+      fn(...args)
+    }, delay)
+  }
+}
+const resizeObserver = window.ResizeObserver
+window.ResizeObserver = class ResizeObserver extends resizeObserver
+{
+  constructor(callback: any)
+  {
+    callback = debounce(callback, 200)
+    super(callback)
+  }
+}
+
 app.use(store).use(router).use(ElementPlus).mount('#app')

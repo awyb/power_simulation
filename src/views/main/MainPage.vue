@@ -2,7 +2,7 @@
   .container { position: relative;width: 100%;height: 100%;
     .collapse-btn { position: absolute;top: 0;}
     /deep/ .el-collapse-item__header { padding-left:20px;}
-    .drag-box { float: left;cursor: pointer;margin: 10px;padding: 10px; width: calc(50% - 40px);text-align: center;
+    .drag-box { float: left;cursor: pointer;margin: 5px;padding: 5px; width: calc(50% - 20px);text-align: center;
       &:hover { background: #e6e6e68e}}
     img { width: 100%;height: 80px;object-fit: contain;}
   }

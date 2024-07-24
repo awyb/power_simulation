@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="并联电容_电抗器" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  class="preview-node"
+  style="--width: 115.96875; --height: 78.171875; --scale: 1.0150580336867665; --scale-level: 10.021562212650515; --apx: 0.9851653470175743; --rpx: 0.9888532503900002;"
+  width="115.96875" height="78.171875" viewBox="-40.44140625 -4 115.96875 78.171875">
+  <g data-cell-id="59d3f1eb-def0-4e2a-b1de-bba3a49b3684" data-shape="diagram-component" class="x6-cell x6-node"
+    data-definition="model/CloudPSS/_newExpLoad_3p" data-enabled="true"  transform="translate(0,0)">
+    <path fill="transparent" fill-opacity="0.1" stroke="transparent"
+      stroke-opacity="1" stroke-width="1"
+      d="m0 11.6953125h35.0859375v58.4765625h-35.0859375z"></path>
+    <path fill="black" fill-opacity="0" stroke="black"
+      stroke-opacity="1" stroke-width="1"
+      d="m17.54296875 0v46.78125h-11.6953125l11.6953125 11.6953125l11.6953125 -11.6953125h-11.6953125"></path><text
+      y="0.75em" fill="black" fill-opacity="1" font-size="10"
+      text-anchor="middle" stroke="transparent" transform="matrix(1,0,0,1,17.5,60.8)"
+      style="transform: matrix(1, 0, 0, 1, 17.5, 60.8);">P+jQ</text>
+  </g>
+</svg>

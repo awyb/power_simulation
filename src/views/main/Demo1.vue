@@ -5,6 +5,7 @@
     .context-menu li:hover { background-color: #f0f0f0; }
     .el-icon { margin-right: 5px;}
   }
+  
 </style>
 
 <template>
@@ -84,12 +85,45 @@ export default defineComponent({
         selectedCell = cell
         contextMenuVisible.value = true
       })
-
-      // 监听连线的 mouseenter 和 mouseleave 事件
-      graph.on('edge:added', ({ cell }) =>
+      graph.on('edge:connected', ({ isNew, edge }) =>
       {
-        if (cell.getProp('manualConnection'))
+        // edge.getTargetPoint().adhereToRect({
+        //   x: edge.getTargetPoint().x,
+        //   y: edge.getTargetPoint().y,
+        //   width: 100,
+        //   height: 100
+        // })
+      })
+      // 监听连线的 mouseenter 和 mouseleave 事件
+      graph.on('edge:added', ({ edge }) =>
+      {
+        console.log(edge)
+        if (edge.getProp('manualConnection'))
           graphcom.showPorts('visible', graph)
+        if (!edge.isEdge()) return
+        if (edge && edge.attrs && edge.attrs.line)
+        {
+          console.log(edge)
+          const { connectionPoints } = edge.attrs.line
+          if (connectionPoints&& Array.isArray(connectionPoints))
+          {
+            connectionPoints.forEach((point: { x: number; y: number }) =>
+            {
+              const circle = new Shape.Circle({
+                position: { x: point.x - 5, y: point.y - 5 },
+                size: { width: 10, height: 10 },
+                attrs: {
+                  body: {
+                    fill: '#ff0000',
+                    stroke: '#ff0000',
+                  },
+                },
+              })
+              graph?.addNode(circle)
+            })
+          }
+        }
+       
       })
       
       
@@ -109,7 +143,8 @@ export default defineComponent({
         {
           cell.getPorts().forEach(port =>
           {
-            cell.portProp(port.id+'', 'attrs/circle/style/visibility', 'visible')
+            if (port.group!=='inline')
+              cell.portProp(port.id+'', 'attrs/circle/style/visibility', 'visible')
           })
         }
         else if (checkEdge&&cell.isEdge())
@@ -125,6 +160,7 @@ export default defineComponent({
         }
         emit('accept-data', {data:cell.toJSON()})
       })
+      
       // 监听边的取消选中事件
       graph.on('cell:unselected', ({ cell }) =>
       {
@@ -134,7 +170,6 @@ export default defineComponent({
           cell.removeTools()
         }
       })
-      
       graph.on('blank:click', ()=>
       {
         if (checkEdge)
@@ -172,8 +207,8 @@ export default defineComponent({
       if (nodes.length>=2)
       {
         graph.addEdge({
-          source:{cell:gNodes[0].id+'', port:'out3_1'},
-          target:{cell:gNodes[1].id+'', port:'in3_2'},
+          source:{cell:gNodes[0].id+'', port:'out1_1'},
+          target:{cell:gNodes[1].id+'', port:'in2_2'},
           router: {
             name: 'orth'
           },
@@ -234,6 +269,7 @@ export default defineComponent({
           // connector: 'smooth',  // 设置连接器的样式
           connectionPoint: 'anchor',  // 设置连接点样式
           anchor: 'center',  // 设置锚点在中心
+          
           connector: {
             name: 'jumpover',
             args: {
@@ -253,6 +289,7 @@ export default defineComponent({
             return new Shape.Edge({
               attrs: {
                 line: {
+                  // targetMarker:'circle',
                   stroke: '#000000',
                   strokeWidth:2,
                   targetMarker:null
@@ -275,8 +312,16 @@ export default defineComponent({
       // #region 使用插件
       graph
         .use(new Transform({
-          resizing: true,
+          resizing: {
+            enabled: true,
+            minWidth: 20,
+            maxWidth: 400,
+            orthogonal: false,
+            restrict: false,
+            preserveAspectRatio:true
+          },
           rotating: true,
+          
         }),
         )
         .use(new Selection({
