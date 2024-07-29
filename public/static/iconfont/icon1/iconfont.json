@@ -1,0 +1,72 @@
+{
+  "id": "4635945",
+  "name": "iconfont",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "27221830",
+      "name": "粘贴",
+      "font_class": "niantie",
+      "unicode": "e708",
+      "unicode_decimal": 59144
+    },
+    {
+      "icon_id": "1621488",
+      "name": "新建",
+      "font_class": "xinjian",
+      "unicode": "e62d",
+      "unicode_decimal": 58925
+    },
+    {
+      "icon_id": "8094210",
+      "name": "删除",
+      "font_class": "shanchu",
+      "unicode": "e64c",
+      "unicode_decimal": 58956
+    },
+    {
+      "icon_id": "7009033",
+      "name": "undo",
+      "font_class": "undo",
+      "unicode": "e739",
+      "unicode_decimal": 59193
+    },
+    {
+      "icon_id": "7736001",
+      "name": "cut",
+      "font_class": "cut",
+      "unicode": "e8e0",
+      "unicode_decimal": 59616
+    },
+    {
+      "icon_id": "34573200",
+      "name": "redo",
+      "font_class": "zhongzuo",
+      "unicode": "e61c",
+      "unicode_decimal": 58908
+    },
+    {
+      "icon_id": "38969698",
+      "name": "inverse",
+      "font_class": "a-xuanzhuanmianban-rotatepanel-anti-1",
+      "unicode": "e621",
+      "unicode_decimal": 58913
+    },
+    {
+      "icon_id": "38969701",
+      "name": "along",
+      "font_class": "a-xuanzhuanmianban-rotatepanel-1",
+      "unicode": "e622",
+      "unicode_decimal": 58914
+    },
+    {
+      "icon_id": "22756841",
+      "name": "copy",
+      "font_class": "copy",
+      "unicode": "e67f",
+      "unicode_decimal": 59007
+    }
+  ]
+}

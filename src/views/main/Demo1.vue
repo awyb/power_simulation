@@ -1,9 +1,12 @@
 <style scoped lang="less">
-  .container { width: 100%;height: 100%;
+  .container { width: 100%;height: 100%;font-size:14px;
     .context-menu { position: absolute;border: 1px solid #ccc;background-color: white;list-style: none;padding: 0;margin: 0;z-index: 1000; }
-    .context-menu li { display: flex;align-items: center;padding: 10px 15px;cursor: pointer; }
+    .context-menu li { display: flex;align-items: center;justify-content: space-between; padding: 10px 15px;width:200px; cursor: pointer;
+      span:nth-child(2) { color: #a8a8a8;font-style: italic;font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif; }
+    }
     .context-menu li:hover { background-color: #f0f0f0; }
     .el-icon { margin-right: 5px;}
+    i { margin-right:5px; }
   }
   
 </style>
@@ -13,10 +16,44 @@
     <div class="container" ref="container"></div>
     <ul v-if="contextMenuVisible" :style="{ top: `${menuPosition.y}px`, left: `${menuPosition.x}px` }" class="context-menu">
       <li @click="editEdge">
-        <el-icon><component :is="'Edit'"/></el-icon>编辑
+        <span><el-icon><component :is="'Edit'"/></el-icon>编辑</span>
+        <span></span>
       </li>
-      <li @click="deleteEdge">
-        <el-icon><component :is="'Delete'"/></el-icon>删除
+      <li @click="excute('delete')">
+        <span><i class="iconfont icon-shanchu"></i>删除</span>
+        <span>Delete</span>
+      </li>
+      <li @click="excute('cut')">
+        <span><i class="iconfont icon-cut"></i>剪切</span>
+        <span>Ctrl+X</span>
+      </li>
+      <li @click="excute('copy')">
+        <span><i class="iconfont icon-copy"></i>复制</span>
+        <span>Ctrl+C</span>
+      </li>
+      <li @click="pasteFun">
+        <span><i class="iconfont icon-niantie"></i>粘贴</span>
+        <span>Ctrl+V</span>
+      </li>
+      <li @click="excute('create')">
+        <span><i class="iconfont icon-xinjian"></i>创建副本</span>
+        <span>Ctrl+D</span>
+      </li>
+      <li @click="excute('rotateR')">
+        <span><i class="iconfont icon-a-xuanzhuanmianban-rotatepanel-1"></i>顺时针旋转</span>
+        <span>Ctrl+R</span>
+      </li>
+      <li @click="excute('rotateL')">
+        <span><i class="iconfont icon-a-xuanzhuanmianban-rotatepanel-anti-1"></i>逆时针旋转</span>
+        <span>Ctrl+Shift+R</span>
+      </li>
+      <li @click="excute('undo')">
+        <span><i class="iconfont icon-undo"></i>撤销</span>
+        <span>Ctrl+Z</span>
+      </li>
+      <li @click="excute('redo')">
+        <span><i class="iconfont icon-zhongzuo"></i>重做</span>
+        <span>Ctrl+Y</span>
       </li>
     </ul>
   </div>
@@ -30,6 +67,7 @@ import { Snapline } from '@antv/x6-plugin-snapline'
 import { Keyboard } from '@antv/x6-plugin-keyboard'
 import { Clipboard } from '@antv/x6-plugin-clipboard'
 import { History } from '@antv/x6-plugin-history'
+import { graphEvents } from './graphEvents'
 import common from '@/components/common'
 import graphcom from './graph'
 import { defineComponent, onMounted, ref, onBeforeUnmount, reactive } from 'vue'
@@ -42,9 +80,7 @@ export default defineComponent({
     const contextMenuVisible = ref(false)
     const menuPosition = reactive({ x: 0, y: 0 })
     const toolsConfig = common.toolsConfig()
-    let checkEdge: Edge|null = null
-    let selectedCell: Cell
-    let graph: Graph
+    let checkEdge: Edge|null, selectedCell: Cell|null, graph: Graph, excuteGraph:object|null
     // 拖拽结束,渲染到画布上
     const dragEnd = (x:number, y:number, config:object)=>
     {
@@ -65,13 +101,18 @@ export default defineComponent({
       }
       contextMenuVisible.value = false
     }
-    const deleteEdge = () =>
+    const excute = (type:string)=>
     {
-      if (selectedCell)
-        selectedCell.remove()
+      if (excuteGraph)
+        (excuteGraph as any)[type]()
       contextMenuVisible.value = false
     }
-
+    const pasteFun = () =>
+    {
+      // menuPosition
+      // 计算相对偏移量
+      console.log(graph.getCells())
+    }
     const bindKey = ()=>
     {
       graph.on('cell:contextmenu', ({ cell, e }) =>
@@ -85,8 +126,22 @@ export default defineComponent({
         selectedCell = cell
         contextMenuVisible.value = true
       })
-      graph.on('edge:connected', ({ isNew, edge }) =>
+      graph.on('blank:contextmenu', ({ e }) =>
       {
+        if (!container.value) return
+        e.preventDefault()
+        const pos = graph.clientToGraph(e.clientX, e.clientY)
+        menuPosition.x = pos.x
+        menuPosition.y = pos.y
+        
+       
+        contextMenuVisible.value = true
+      })
+      graph.on('edge:connected', (args) =>
+      {
+        // args.edge.prop('target/anchor', {name:'length', args:{length:100}})
+        // args.edge.prop('target/anchor', {name:'orth'})
+        // console.log(args)
         // edge.getTargetPoint().adhereToRect({
         //   x: edge.getTargetPoint().x,
         //   y: edge.getTargetPoint().y,
@@ -123,18 +178,17 @@ export default defineComponent({
             })
           }
         }
-       
       })
-      
-      
-      graph.on('cell:mouseleave', ({ cell }) =>
+      graph.on('cell:mouseleave', ({e, cell }) =>
       {
-        graphcom.showPorts('hidden', graph)
         if (cell.isEdge())
         {
           cell.hasTool('vertices')&&cell.removeTool('vertices')
           cell.hasTool('segments')&&cell.removeTool('segments')
         }
+        if (cell.isNode())
+          graphcom.showPorts('hidden', graph)
+        
       })
       // 控制连接桩显示/隐藏
       graph.on('cell:mouseenter', ({ cell }) =>
@@ -156,7 +210,7 @@ export default defineComponent({
         if (cell.isEdge())
         {
           checkEdge = cell
-          graphcom.addTools(cell, ['vertices', 'segments', 'boundary'], toolsConfig)
+          graphcom.addTools(cell, ['vertices', 'segments', 'boundary', 'source-arrowhead', 'target-arrowhead'], toolsConfig)
         }
         emit('accept-data', {data:cell.toJSON()})
       })
@@ -206,7 +260,7 @@ export default defineComponent({
 
       if (nodes.length>=2)
       {
-        graph.addEdge({
+        const edge = graph.addEdge({
           source:{cell:gNodes[0].id+'', port:'out1_1'},
           target:{cell:gNodes[1].id+'', port:'in2_2'},
           router: {
@@ -221,6 +275,20 @@ export default defineComponent({
             },
           },
         })
+        // graph.addEdge({
+        //   source: { x: 100, y: 100 },
+        //   target: { cell: edge.id, anchor:{name:'orth'}},
+        //   connectionPoint: 'anchor',  // 设置连接点样式
+        //   anchor: 'center',  // 设置锚点在中心
+        //   attrs: {
+        //     line: {
+        //       stroke: '#8f8f8f',
+        //       strokeWidth: 1,
+        //       targetMarker: 'circle',
+        //     },
+        //   },
+        // })
+
       }
     }
     const renderGraph = ()=>
@@ -259,11 +327,25 @@ export default defineComponent({
             },
           ]
         },
+        // // 连接桩样式 -- 高亮
+        // highlighting: {
+        //   magnetAvailable: {
+        //     name: 'stroke',
+        //     args: {
+        //       padding: 0.1,
+        //       attrs: {
+        //         strokeWidth: 0.1,
+        //         stroke: '#1684FC99',
+        //       },
+        //     },
+        //   },
+        // },
         connecting: {
+          edgeAnchor:{name:'orth'},
           allowEdge: true,
           // 设置连接点
           allowBlank: false,  // 不允许连接到空白处
-          allowMulti: 'withPort',  // 允许多个连接到同一个节点，但不同的端口
+          // allowMulti: 'withPort',  // 允许多个连接到同一个节点，但不同的端口
           // allowLoop: false,  // 不允许连接回自身
           highlight: true,  // 在拖动连接时高亮显示连接点
           // connector: 'smooth',  // 设置连接器的样式
@@ -289,19 +371,25 @@ export default defineComponent({
             return new Shape.Edge({
               attrs: {
                 line: {
-                  // targetMarker:'circle',
+                  targetMarker:{ tagName: 'circle', r: 2, cx: -1, },
+                  sourceMarker:{ tagName: 'circle', r: 2, cx: -1, },
                   stroke: '#000000',
                   strokeWidth:2,
-                  targetMarker:null
+                 
+                  // targetMarker:null
                 },
               },
               tools:[toolsConfig.segments, toolsConfig.vertices],
               manualConnection: true // 手动连接
             })
           },
-          validateConnection({ sourceView, targetView, sourceMagnet, targetMagnet })
+          validateConnection(args)
           {
-            return true
+            return Boolean(args.sourcePort!==args.targetPort&&(args.targetView?.isEdgeView()||args.targetMagnet))
+            // return Boolean(targetView?.isEdgeView()||targetMagnet?.getAttribute('port-group')||sourceMagnet?.getAttribute('port-group'))
+            // if (targetMagnet && targetMagnet.getAttribute('port-group'))
+            //   return true
+            // return false
             // 自定义连接验证逻辑
             // if (targetMagnet&&sourceMagnet && targetMagnet.getAttribute('port-group') === 'in'&& sourceMagnet.getAttribute('port-group') === 'out')
             //   return true  // 仅允许连接到输入端口
@@ -345,21 +433,22 @@ export default defineComponent({
             return true
           }
         }))
-      graphcom.bindKey(graph, ['copy', 'cut', 'paste', 'undo', 'redo', 'delete', 'selectall'])
+      graphcom.bindKey(graph, ['copy', 'cut', 'paste', 'undo', 'redo', 'delete', 'selectall', 'create', 'rotateR', 'rotateL'])
+      excuteGraph = new graphEvents(graph)
+      
     }
-    
     onMounted(() =>
     {
       renderGraph()
       bindKey()
       loadDefNode()
-      document.removeEventListener('click', () =>contextMenuVisible.value = false)
     })
-    
+  
     onBeforeUnmount(() =>
     {
       document.removeEventListener('click', () =>contextMenuVisible.value = false)
-      graph.dispose()
+      if (graph)
+        graph.dispose()
     })
 
     expose({ dragEnd })
@@ -369,8 +458,9 @@ export default defineComponent({
       contextMenuVisible,
       menuPosition,
       editEdge,
-      deleteEdge,
-      dragEnd
+      dragEnd,
+      excute,
+      pasteFun
     }
   }
 })

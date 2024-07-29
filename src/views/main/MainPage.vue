@@ -5,6 +5,7 @@
     .drag-box { float: left;cursor: pointer;margin: 5px;padding: 5px; width: calc(50% - 20px);text-align: center;
       &:hover { background: #e6e6e68e}}
     img { width: 100%;height: 80px;object-fit: contain;}
+    /deep/ .el-collapse {--el-collapse-border-color: #dfdfdf;}
   }
 </style>
 
@@ -65,14 +66,14 @@
       <!-- <router-view></router-view> -->
        <Demo1 ref="childRef" @accept-data="acceptData"></Demo1>
     </el-main>
-    <el-aside :width="collapseR?'400px':'0'" style="padding: 0;">
+    <el-aside :width="collapseR?'350px':'0'" style="padding: 0;">
       <div style="width: 100%;height: 100%;background: #f3f3f3;">
         <CellInfo :params="nodeInfo"></CellInfo>
       </div>
     </el-aside>
     <RightClickMenu ref="rightClickMenu" :menus="[1]"></RightClickMenu>
     <el-button class="collapse-btn" size="small" :style="{left:collapseL?'300px':'0px'}" @click="collapseL=!collapseL" :icon="collapseL?DArrowLeft:DArrowRight"></el-button>
-    <el-button class="collapse-btn" size="small" :style="{right:collapseR?'400px':'0px'}" @click="collapseR=!collapseR" :icon="!collapseR?DArrowLeft:DArrowRight"></el-button>
+    <el-button class="collapse-btn" size="small" :style="{right:collapseR?'350px':'0px'}" @click="collapseR=!collapseR" :icon="!collapseR?DArrowLeft:DArrowRight"></el-button>
   </el-container>
 </template>
 

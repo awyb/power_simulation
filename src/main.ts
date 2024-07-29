@@ -6,6 +6,7 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import '@/style/main.less'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import '../public/static/iconfont/icon1/iconfont.css'
 
 const app = createApp(App)
 for (const [key, component] of Object.entries(ElementPlusIconsVue))

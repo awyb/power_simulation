@@ -1,2 +1,32 @@
 html, body {position: absolute; inset: 0; padding: 0; margin: 0; overflow: hidden; font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;}
 #app {height: 100%;}
+.el-collapse{--el-collapse-header-bg-color:transparent;}
+.el-collapse-item__wrap{background-color: transparent;}
+
+/* 整个滚动条 */
+::-webkit-scrollbar {
+  width: 12px; /* 宽度 */
+  background-color: #f9f9f9; /* 背景色 */
+}
+ 
+/* 滚动条轨道 */
+::-webkit-scrollbar-track {
+  background: #e1e1e1; /* 轨道颜色 */
+  border-radius: 10px; /* 轨道圆角 */
+}
+ 
+/* 滚动条的滑块 */
+::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1; /* 滑块颜色 */
+  border-radius: 10px; /* 滑块圆角 */
+  border: 2px solid #ffffff; /* 滑块边框 */
+}
+ 
+/* 滑块在悬停或者点击时的样式 */
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8; /* 悬停时滑块颜色 */
+}
+ 
+::-webkit-scrollbar-thumb:active {
+  background-color: #919191; /* 点击时滑块颜色 */
+}

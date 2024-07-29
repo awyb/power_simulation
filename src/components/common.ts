@@ -1,4 +1,5 @@
 import { rect } from '@antv/x6/lib/registry/connection-point/rect'
+import { stroke } from '@antv/x6/lib/registry/highlighter/stroke'
 
 export default class common
 {
@@ -86,6 +87,26 @@ export default class common
   static toolsConfig()
   {
     return {
+      'source-arrowhead':
+      {
+        name: 'source-arrowhead',
+        args: {
+          attrs: {
+            fill: '#fff',
+            stroke:'#000'
+          },
+        },
+      },
+      'target-arrowhead':
+      {
+        name: 'target-arrowhead',
+        args: {
+          attrs: {
+            fill: '#fff',
+            stroke:'#000'
+          },
+        },
+      },
       boundary:
       {
         name:'boundary'
@@ -156,7 +177,7 @@ export default class common
           stroke: '#d9d9d9',
         },
         image: {
-          'xlink:href': '/static/svg/异步电机.svg',
+          'xlink:href': '/static/image/nodeSvg/异步电机.svg',
           width: 160,
           height: 160,
         },
@@ -220,7 +241,7 @@ export default class common
           stroke: '#d9d9d9',
         },
         image: {
-          'xlink:href': '/static/svg/同步电机.svg',
+          'xlink:href': '/static/image/nodeSvg/同步电机.svg',
           width: 160,
           height: 160,
         },
@@ -294,7 +315,7 @@ export default class common
           stroke: '#d9d9d9',
         },
         image: {
-          'xlink:href': '/static/svg/异步逻辑.png',
+          'xlink:href': '/static/image/nodeSvg/异步逻辑.png',
           width: 160,
           height: 160,
         }
@@ -341,7 +362,7 @@ export default class common
           stroke: '#d9d9d9',
         },
         image: {
-          'xlink:href': '/static/svg/并联电容_电抗器.svg',
+          'xlink:href': '/static/image/nodeSvg/并联电容_电抗器.svg',
           width: 160,
           height: 160,
         },
@@ -386,7 +407,7 @@ export default class common
           stroke: '#d9d9d9',
         },
         image: {
-          'xlink:href': '/static/svg/静态负载.svg',
+          'xlink:href': '/static/image/nodeSvg/静态负载.svg',
           width: 160,
           height: 160,
         },
@@ -438,7 +459,7 @@ export default class common
           stroke: '#d9d9d9',
         },
         image: {
-          'xlink:href': '/static/svg/三相传输线.svg',
+          'xlink:href': '/static/image/nodeSvg/三相传输线.svg',
           width: 160,
           height: 160,
         },
@@ -469,7 +490,7 @@ export default class common
             group: 'in',
             args:
             {
-              x: 0.02,
+              x: 0.04,
               y: 0.5,
             },
           },
@@ -478,7 +499,7 @@ export default class common
             group: 'in',
             args:
             {
-              x: 0.98,
+              x: 0.96,
               y: 0.5,
             },
           }
@@ -498,7 +519,7 @@ export default class common
           stroke: '#d9d9d9',
         },
         image: {
-          'xlink:href': '/static/svg/三相戴维南等值电压源.svg',
+          'xlink:href': '/static/image/nodeSvg/三相戴维南等值电压源.svg',
           width: 160,
           height: 160,
         },
@@ -527,7 +548,7 @@ export default class common
             group: 'in',
             args:
             {
-              x: 0.98,
+              x: 0.96,
               y: 0.5,
             },
           }
@@ -547,7 +568,7 @@ export default class common
           stroke: '#d9d9d9',
         },
         image: {
-          'xlink:href': '/static/svg/三相交流母线.svg',
+          'xlink:href': '/static/image/nodeSvg/三相交流母线.svg',
           width: 160,
           height: 160,
         },
@@ -568,7 +589,8 @@ export default class common
       ports:
       {
         groups: groups,
-        items: this.equidistributePors({x:0.05, y:0.45}, {x:0.95, y:0.45}, 4/160).map((p, i)=>
+        
+        items: this.equidistributePors({x:0.05, y:0.454}, {x:0.96, y:0.454}, 4/160).map((p, i)=>
         {
           return {
             id: 'in7_'+(i+1),
@@ -587,6 +609,7 @@ export default class common
       y: 160,
       width: 160,
       height: 160,
+      zIndex:100,
       shape: 'image',
       namec: '三相交流电压源',
       attrs: {
@@ -595,7 +618,7 @@ export default class common
           stroke: '#d9d9d9',
         },
         image: {
-          'xlink:href': '/static/svg/三相交流电压源.svg',
+          'xlink:href': '/static/image/nodeSvg/三相交流电压源.svg',
           width: 160,
           height: 160,
         },
@@ -627,7 +650,7 @@ export default class common
             group: 'in',
             args:
             {
-              x: 0.98,
+              x: 0.96,
               y: 0.5,
             },
           }
@@ -643,16 +666,34 @@ export default class common
     {
       out:
       {
+        markup: [
+          {
+            tagName: 'circle',
+            selector: 'outcircle',
+          },
+          {
+            tagName: 'circle',
+            selector: 'circle',
+          }
+        ],
         attrs:
         {
           circle:
           {
             r: 5,
             magnet: true,
-            stroke: '#000000',
+            stroke: '#fff',
             strokeWidth: 1,
-            fill: '#fff',
+            fill: '#000',
             visibility: 'hidden', // 初始时隐藏连接桩
+          },
+          outcircle: // 添加一个外部圆圈,更容易选中
+          {
+            r: 7,
+            magnet: true,
+            stroke: 'transparent',
+            strokeWidth: 0.1,
+            fill: 'transparent',
           },
           text:
           {
@@ -670,24 +711,33 @@ export default class common
       },
       inline:
       {
-        markup: [
-          {
-            tagName: 'rect',
-            selector: 'rect',
-          }
-        ],
+        // markup: [
+        //   {
+        //     tagName: 'rect',
+        //     selector: 'rect',
+        //   }
+        // ],
         attrs:
         {
-          rect:
+          // rect:
+          // {
+          //   width: 4,
+          //   height: 6,
+          //   x:-2,
+          //   y:-2.8,
+          //   magnet: true,
+          //   stroke: 'transparent',
+          //   strokeWidth:0.1,
+          //   fill: 'transparent',
+          // },
+          circle:
           {
-            width: 4,
-            height: 6,
-            x:-2,
-            y:-3,
+            r: 1.9,
             magnet: true,
             stroke: 'transparent',
-            strokeWidth:1,
+            strokeWidth: 0.1,
             fill: 'transparent',
+            // visibility: 'hidden', // 初始时隐藏连接桩
           },
           text:
           {
@@ -705,8 +755,19 @@ export default class common
       },
       in:
       {
+        markup: [
+          {
+            tagName: 'circle',
+            selector: 'outcircle',
+          },
+          {
+            tagName: 'circle',
+            selector: 'circle',
+          }
+        ],
         attrs:
         {
+         
           circle:
           {
             r: 5,
@@ -715,6 +776,14 @@ export default class common
             strokeWidth: 1,
             fill: '#095aba',
             visibility: 'hidden', // 初始时隐藏连接桩
+          },
+          outcircle: // 添加一个外部圆圈,更容易选中
+          {
+            r: 7,
+            magnet: true,
+            stroke: 'transparent',
+            strokeWidth: 0.1,
+            fill: 'transparent',
           },
           text:
           {

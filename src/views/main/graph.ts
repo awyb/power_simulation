@@ -1,97 +1,118 @@
 
 import { Graph, Cell } from '@antv/x6'
+import { graphEvents } from './graphEvents'
+// class graphEvents
+// {
+//   constructor(private graph:Graph)
+//   {
+//     this.graph = graph
 
-class graphEvents
-{
-  constructor(private graph:Graph)
-  {
-    this.graph = graph
+//   }
+//   // 创建
+//   create()
+//   {
+//     const graph = this.graph
+//     graph.bindKey(['meta+d', 'ctrl+d'], (e: KeyboardEvent) =>
+//     {
+//       e.preventDefault()
+//       const cells = graph.getSelectedCells()
+      
+//       if (cells.length)
+//       {
+//         graph.copy(cells)
 
-  }
-  // 复制
-  copy()
-  {
-    const graph = this.graph
-    graph.bindKey(['meta+c', 'ctrl+c'], () =>
-    {
-      const cells = graph.getSelectedCells()
-      if (cells.length)
-        graph.copy(cells)
-      return false
-    })
-  }
-  // 剪切
-  cut()
-  {
-    const graph = this.graph
-    graph.bindKey(['meta+x', 'ctrl+x'], () =>
-    {
-      const cells = graph.getSelectedCells()
-      if (cells.length)
-        graph.cut(cells)
-      return false
-    })
-  }
-  // 粘贴
-  paste()
-  {
-    const graph = this.graph
-    graph.bindKey(['meta+v', 'ctrl+v'], () =>
-    {
-      if (!graph.isClipboardEmpty())
-      {
-        const cells = graph.paste({ offset: 32 })
-        graph.cleanSelection()
-        graph.select(cells)
-      }
-      return false
-    })
-  }
-  // 撤销
-  undo()
-  {
-    const graph = this.graph
-    graph.bindKey(['meta+z', 'ctrl+z'], () =>
-    {
-      if (graph.canUndo())
-        graph.undo()
-    })
-  }
-  // 重做
-  redo()
-  {
-    const graph = this.graph
-    graph.bindKey(['meta+y', 'ctrl+y'], () =>
-    {
-      if (graph.canRedo())
-        graph.redo()
-      return false
-    })
-  }
-  // 删除
-  delete()
-  {
-    const graph = this.graph
-    graph.bindKey(['delete', 'backspace'], () =>
-    {
-      const cells = graph.getSelectedCells()
-      if (cells.length)
-        graph.removeCells(cells)
-    })
-  }
-  // 全选
-  selectall()
-  {
-    const graph = this.graph
-    graph.bindKey(['meta+a', 'ctrl+a'], (e) =>
-    {
-      e.preventDefault()
-      const all = graph.getCells()
-      if (all.length)
-        graph.select(all)
-    })
-  }
-}
+//         const _cells = graph.paste({ offset: 32 })
+//         graph.cleanSelection()
+//         graph.select(_cells)
+//       }
+       
+//       return false
+//     })
+//   }
+//   // 复制
+//   copy()
+//   {
+//     const graph = this.graph
+//     graph.bindKey(['meta+c', 'ctrl+c'], () =>
+//     {
+//       const cells = graph.getSelectedCells()
+//       if (cells.length)
+//         graph.copy(cells)
+//       return false
+//     })
+//   }
+//   // 剪切
+//   cut()
+//   {
+//     const graph = this.graph
+//     graph.bindKey(['meta+x', 'ctrl+x'], () =>
+//     {
+//       const cells = graph.getSelectedCells()
+//       if (cells.length)
+//         graph.cut(cells)
+//       return false
+//     })
+//   }
+//   // 粘贴
+//   paste()
+//   {
+//     const graph = this.graph
+//     graph.bindKey(['meta+v', 'ctrl+v'], () =>
+//     {
+//       if (!graph.isClipboardEmpty())
+//       {
+//         const cells = graph.paste({ offset: 32 })
+//         graph.cleanSelection()
+//         graph.select(cells)
+//       }
+//       return false
+//     })
+//   }
+//   // 撤销
+//   undo()
+//   {
+//     const graph = this.graph
+//     graph.bindKey(['meta+z', 'ctrl+z'], () =>
+//     {
+//       if (graph.canUndo())
+//         graph.undo()
+//     })
+//   }
+//   // 重做
+//   redo()
+//   {
+//     const graph = this.graph
+//     graph.bindKey(['meta+y', 'ctrl+y'], () =>
+//     {
+//       if (graph.canRedo())
+//         graph.redo()
+//       return false
+//     })
+//   }
+//   // 删除
+//   delete()
+//   {
+//     const graph = this.graph
+//     graph.bindKey(['delete', 'backspace'], () =>
+//     {
+//       const cells = graph.getSelectedCells()
+//       if (cells.length)
+//         graph.removeCells(cells)
+//     })
+//   }
+//   // 全选
+//   selectall()
+//   {
+//     const graph = this.graph
+//     graph.bindKey(['meta+a', 'ctrl+a'], (e: KeyboardEvent) =>
+//     {
+//       e.preventDefault()
+//       const all = graph.getCells()
+//       if (all.length)
+//         graph.select(all)
+//     })
+//   }
+// }
 
 /**
  * 显示隐藏连接桩
@@ -135,11 +156,12 @@ const addTools= (cell:Cell, types:string[], toolsConfig:any)=>
 const bindKey = (graph:Graph, types:Array<keyof graphEvents>)=>
 {
   const events = new graphEvents(graph)
-  types.forEach(type=>
-  {
-    if (typeof events[type] === 'function')
-      events[type]()
-  })
+  events.bindOper(types)
+  // types.forEach(type=>
+  // {
+  //   if (typeof events[type] === 'function')
+  //     events[type]()
+  // })
 }
 
 export default
