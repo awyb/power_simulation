@@ -4,7 +4,7 @@ const keyObj =
 {
   copy:['ctrl+c', 'meta+c'],
   paste:['ctrl+v', 'meta+v'],
-  delete:['ctrl+d', 'meta+d'],
+  delete:['delete', 'backspace'],
   cut:['ctrl+x', 'meta+x'],
   undo:['ctrl+z', 'meta+z'],
   redo:['meta+y', 'ctrl+y'],

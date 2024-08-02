@@ -1,5 +1,3 @@
-import { rect } from '@antv/x6/lib/registry/connection-point/rect'
-import { stroke } from '@antv/x6/lib/registry/highlighter/stroke'
 
 export default class common
 {
@@ -7,7 +5,14 @@ export default class common
   {
     
   }
-
+  static getGVars()
+  {
+    const global = [
+      {name:'Rs', label:'', unit:'', disptype:1, default:'0.0001', isFunc:false},
+      {name:'R2', label:'', unit:'', disptype:1, default:'0.228', isFunc:false},
+    ]
+    return global
+  }
   static getFlds()
   {
 
@@ -166,70 +171,6 @@ export default class common
     const groups = common.getGrounps()
     nodes.push({
       x: 400,
-      y: 160,
-      width: 160,
-      height: 160,
-      shape: 'image',
-      namec: '异步电机',
-      attrs: {
-        body: {
-          fill: '#f5f5f5',
-          stroke: '#d9d9d9',
-        },
-        image: {
-          'xlink:href': '/static/image/nodeSvg/异步电机.svg',
-          width: 160,
-          height: 160,
-        },
-      },
-      data:{
-      },
-      ports:
-      {
-        groups: groups,
-        items:
-        [
-          {
-            id: 'in1_1',
-            group: 'in',
-            args:
-            {
-              x: 0.09,
-              y: 0.233,
-            },
-          },
-          {
-            id: 'in1_2',
-            group: 'in',
-            args:
-            {
-              x: 0.09,
-              y: 0.513,
-            }
-          },
-          {
-            id: 'in1_3',
-            group: 'in',
-            args:
-            {
-              x: 0.09,
-              y: 0.793,
-            }
-          },
-          {
-            id: 'out1_1',
-            group: 'out',
-            args:
-            {
-              x: 0.93,
-              y: 0.513,
-            }
-          },
-        ]
-      }
-    })
-    nodes.push({
-      x: 400,
       y: 400,
       width: 160,
       height: 160,
@@ -247,7 +188,7 @@ export default class common
         },
       },
       data:{
-
+        type:2,
       },
       ports:
       {
@@ -303,53 +244,6 @@ export default class common
       }
     })
     nodes.push({
-      x: 160,
-      y: 160,
-      width: 160,
-      height: 160,
-      shape: 'image',
-      namec: '异步逻辑',
-      attrs: {
-        body: {
-          fill: '#f5f5f5',
-          stroke: '#d9d9d9',
-        },
-        image: {
-          'xlink:href': '/static/image/nodeSvg/异步逻辑.png',
-          width: 160,
-          height: 160,
-        }
-      },
-      data:{
-
-      },
-      ports:
-      {
-        groups: groups,
-        items:
-        [
-          {
-            id: 'in3_1',
-            group: 'in',
-            args:
-            {
-              x: 0.04,
-              y: 0.5,
-            },
-          },
-          {
-            id: 'out3_1',
-            group: 'out',
-            args:
-            {
-              x: 0.97,
-              y: 0.5,
-            }
-          }
-        ]
-      }
-    })
-    nodes.push({
       x: 400,
       y: 160,
       width: 160,
@@ -368,6 +262,7 @@ export default class common
         },
       },
       data:{
+        type:2,
         params:{
           Configuration:{
             'Name':'',
@@ -388,7 +283,7 @@ export default class common
             args:
             {
               x: 0.5,
-              y: 0.2,
+              y: 0.05,
             },
           }
         ]
@@ -414,6 +309,7 @@ export default class common
       },
       
       data:{
+        type:2,
         params:{
           Configuration:{
             'Name':'',
@@ -466,6 +362,7 @@ export default class common
       },
       
       data:{
+        type:2,
         params:{
           Configuration:{
             'Name':'',
@@ -526,6 +423,7 @@ export default class common
       },
       
       data:{
+        type:2,
         params:{
           Configuration:{
             'Name':'',
@@ -575,6 +473,7 @@ export default class common
       },
       
       data:{
+        type:2,
         params:{
           Configuration:{
             'Name':'',
@@ -625,6 +524,7 @@ export default class common
       },
       
       data:{
+        type:2,
         params:{
           Configuration:{
             'Source Name	':'',
@@ -652,6 +552,87 @@ export default class common
             {
               x: 0.96,
               y: 0.5,
+            },
+          }
+        ]
+      }
+    })
+    nodes.push({
+      x: 400,
+      y: 160,
+      width: 160,
+      height: 160,
+      zIndex:100,
+      shape: 'image',
+      namec: '单相变压器',
+      attrs: {
+        body: {
+          fill: '#f5f5f5',
+          stroke: '#d9d9d9',
+        },
+        image: {
+          'xlink:href': '/static/image/nodeSvg/单相变压器.svg',
+          width: 160,
+          height: 160,
+        },
+      },
+      
+      data:{
+        type:1,
+        params:{
+          Configuration:{
+            'Source Name	':'',
+            'Is Star Point Grounded?':2, // NO||YES
+            'Rated Voltage (L-L, RMS)':230,
+            'Function Type':1,
+            'Initial Phase':0,
+            'Frequency':60,
+            'Resistance':0,
+            'Start-up Type':1,
+            'Voltage Ramp Up Time':0.05,
+            'Voltage Input Time Constant':0.05
+          }
+        }
+      },
+      ports:
+      {
+        groups: groups,
+        items:
+        [
+          {
+            id: 'in10_1',
+            group: 'in',
+            args:
+            {
+              x: 0.96,
+              y: 0.28,
+            },
+          },
+          {
+            id: 'in10_2',
+            group: 'in',
+            args:
+            {
+              x: 0.96,
+              y: 0.72,
+            },
+          },
+          {
+            id: 'in10_3',
+            group: 'in',
+            args:
+            {
+              x: 0.04,
+              y: 0.28,
+            },
+          },
+          {
+            id: 'in10_4',
+            group: 'in',
+            args:
+            {
+              x: 0.04,
+              y: 0.72,
             },
           }
         ]

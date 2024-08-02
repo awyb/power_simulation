@@ -30,3 +30,19 @@ html, body {position: absolute; inset: 0; padding: 0; margin: 0; overflow: hidde
 ::-webkit-scrollbar-thumb:active {
   background-color: #919191; /* 点击时滑块颜色 */
 }
+.name-input { border: 0;height: 30px;
+    .el-input__wrapper {
+      background-color: transparent;
+      box-shadow: none;
+      border-radius: 0;
+      border: none;
+    }
+    .el-input__inner {
+      border: none; /* 移除默认的边框 */
+      border-bottom: 1px solid #dcdfe6; /* 设置单一的下边框 */
+    }
+    .el-input__inner:focus {
+      border-color: #409eff; /* 焦点时的下边框颜色 */
+      outline: none; /* 移除默认的蓝色轮廓线 */
+    }
+  }

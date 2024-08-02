@@ -14,7 +14,7 @@
 <template>
    <div class="container">
     <div class="container" ref="container"></div>
-    <ul v-if="contextMenuVisible" :style="{ top: `${menuPosition.y}px`, left: `${menuPosition.x}px` }" class="context-menu">
+    <ul v-if="contextMenuVisible" ref="rightmenu" :style="{ top: `${menuPosition.y}px`, left: `${menuPosition.x}px`,transform:translatecss }" class="context-menu">
       <li @click="editEdge">
         <span><el-icon><component :is="'Edit'"/></el-icon>编辑</span>
         <span></span>
@@ -70,17 +70,32 @@ import { History } from '@antv/x6-plugin-history'
 import { graphEvents } from './graphEvents'
 import common from '@/components/common'
 import graphcom from './graph'
+import { useStore } from 'vuex'
 import { defineComponent, onMounted, ref, onBeforeUnmount, reactive } from 'vue'
+import { ElMessage } from 'element-plus'
+
 
 export default defineComponent({
   name: 'Demo1',
-  setup(_, { expose, emit })
+  props:{
+    widthL: {
+      type: Number,
+      default: 0,
+    }
+  },
+  setup(props, { expose, emit })
   {
     const container = ref<HTMLElement | null>(null)
+    const rightmenu = ref<HTMLElement | null>(null)
     const contextMenuVisible = ref(false)
     const menuPosition = reactive({ x: 0, y: 0 })
     const toolsConfig = common.toolsConfig()
-    let checkEdge: Edge|null, selectedCell: Cell|null, graph: Graph, excuteGraph:object|null
+    const translatecss = ref('')
+    
+    let checkEdge: Edge|null, selectedCell: Cell|null, graph: Graph, excuteGraph:object|null, transform:string
+    const store = useStore()
+    const pageHeaderH = store.state.pageHeaderH
+    
     // 拖拽结束,渲染到画布上
     const dragEnd = (x:number, y:number, config:object)=>
     {
@@ -109,9 +124,21 @@ export default defineComponent({
     }
     const pasteFun = () =>
     {
+      if (graph.isClipboardEmpty()) return
       // menuPosition
       // 计算相对偏移量
-      console.log(graph.getCells())
+      let center = {x:0, y:0}
+      if (graph&&graph.getPlugin('clipboard'))
+      
+        center =Object(graph.getCellsBBox(Object(graph.getPlugin('clipboard')).cells)).center
+
+      // const t1 = graph.localToPage(graph.graphToLocal(menuPosition))
+      // const t2 = graph.localToClient(graph.graphToLocal(center))
+      const t1 = graph.graphToLocal({...menuPosition, x:menuPosition.x-props.widthL})
+      const t2 = center
+      const cells =graph.paste({ offset:{dx:t1.x-t2.x, dy:t1.y-t2.y} })
+      graph.cleanSelection()
+      graph.select(cells)
     }
     const bindKey = ()=>
     {
@@ -119,10 +146,11 @@ export default defineComponent({
       {
         if (!container.value) return
         e.preventDefault()
-        const pos = graph.clientToGraph(e.clientX, e.clientY)
+        const pos = graph.clientToGraph(e.clientX+props.widthL, e.clientY)
         menuPosition.x = pos.x
         menuPosition.y = pos.y
-        
+        translatecss.value = `translate(${window.innerWidth-e.clientX<=store.state.rmenuBoxW?'-100%':'0'},${container.value.offsetHeight-e.clientY+pageHeaderH<(rightmenu&&rightmenu.value?rightmenu.value.offsetHeight:store.state.rmenuBoxH)?'-100%':'0'})`
+
         selectedCell = cell
         contextMenuVisible.value = true
       })
@@ -130,10 +158,14 @@ export default defineComponent({
       {
         if (!container.value) return
         e.preventDefault()
-        const pos = graph.clientToGraph(e.clientX, e.clientY)
+        const pos = graph.clientToGraph(e.clientX+props.widthL, e.clientY)
         menuPosition.x = pos.x
         menuPosition.y = pos.y
-        
+
+        translatecss.value = `translate(${window.innerWidth-e.clientX<=232?'-100%':'0'},${container.value.offsetHeight-e.clientY+pageHeaderH<(rightmenu&&rightmenu.value?rightmenu.value.offsetHeight:400)?'-100%':'0'})`
+        // 屏幕宽度:window.screen.width
+        // 浏览器窗口宽度:window.innerWidth e.clientX
+        // container.value.offsetHeight
        
         contextMenuVisible.value = true
       })
@@ -148,6 +180,7 @@ export default defineComponent({
         //   width: 100,
         //   height: 100
         // })
+        
       })
       // 监听连线的 mouseenter 和 mouseleave 事件
       graph.on('edge:added', ({ edge }) =>
@@ -212,7 +245,7 @@ export default defineComponent({
           checkEdge = cell
           graphcom.addTools(cell, ['vertices', 'segments', 'boundary', 'source-arrowhead', 'target-arrowhead'], toolsConfig)
         }
-        emit('accept-data', {data:cell.toJSON()})
+        emit('accept-data', {data:cell.toJSON(), type:cell.isEdge()?'edge':'node'})
       })
       
       // 监听边的取消选中事件
@@ -231,6 +264,8 @@ export default defineComponent({
           checkEdge.removeTools()
           checkEdge = null
         }
+        graphcom.showPorts('hidden', graph)
+        emit('accept-data', {type:'blank'})
       })
       // 手动新增连接桩
       // graph.on('node:click', ({e, node}) =>
@@ -251,45 +286,12 @@ export default defineComponent({
     }
     const loadDefNode = ()=>
     {
-      const nodes = common.getNodes()
-      const gNodes: Node<Node.Properties>[] | { id: string }[] = []
-      nodes.slice(0, 3).forEach(node=>
-      {
-        gNodes.push(graph.addNode(Object(node)))
-      })
-
-      if (nodes.length>=2)
-      {
-        const edge = graph.addEdge({
-          source:{cell:gNodes[0].id+'', port:'out1_1'},
-          target:{cell:gNodes[1].id+'', port:'in2_2'},
-          router: {
-            name: 'orth'
-          },
-          tools:[toolsConfig.segments, toolsConfig.vertices],
-          manualConnection: false, // 手动连接
-          attrs: {
-            line: {
-              stroke: '#000000',
-              targetMarker:null
-            },
-          },
-        })
-        // graph.addEdge({
-        //   source: { x: 100, y: 100 },
-        //   target: { cell: edge.id, anchor:{name:'orth'}},
-        //   connectionPoint: 'anchor',  // 设置连接点样式
-        //   anchor: 'center',  // 设置锚点在中心
-        //   attrs: {
-        //     line: {
-        //       stroke: '#8f8f8f',
-        //       strokeWidth: 1,
-        //       targetMarker: 'circle',
-        //     },
-        //   },
-        // })
-
-      }
+      // const nodes = common.getNodes()
+      // const gNodes: Node<Node.Properties>[] | { id: string }[] = []
+      // nodes.slice(0, 3).forEach(node=>
+      // {
+      //   gNodes.push(graph.addNode(Object(node)))
+      // })
     }
     const renderGraph = ()=>
     {
@@ -385,6 +387,8 @@ export default defineComponent({
           },
           validateConnection(args)
           {
+            console.log(args)
+            
             return Boolean(args.sourcePort!==args.targetPort&&(args.targetView?.isEdgeView()||args.targetMagnet))
             // return Boolean(targetView?.isEdgeView()||targetMagnet?.getAttribute('port-group')||sourceMagnet?.getAttribute('port-group'))
             // if (targetMagnet && targetMagnet.getAttribute('port-group'))
@@ -442,6 +446,7 @@ export default defineComponent({
       renderGraph()
       bindKey()
       loadDefNode()
+   
     })
   
     onBeforeUnmount(() =>
@@ -455,12 +460,14 @@ export default defineComponent({
 
     return {
       container,
+      rightmenu,
       contextMenuVisible,
       menuPosition,
       editEdge,
       dragEnd,
       excute,
-      pasteFun
+      pasteFun,
+      translatecss
     }
   }
 })

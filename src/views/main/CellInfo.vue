@@ -1,7 +1,8 @@
 <style scoped lang="less">
   .cell-info { height: calc(100% - 40px);width: 100%; padding: 20px 0; display: flex;flex-direction: column;
-    .top{width: 100%;height: 50px;
-      .title{font-size: 16px;margin-left: 20px;}
+    .top{width: 100%;height: 70px;
+      .description{margin: 5px;}
+      .title{font-size: 10px;margin-left: 20px;color:#676767e8}
     }
     .info-tabs { flex: 1;position: relative;height:0%;
       /deep/ .el-tabs__content{height: calc(100% - 50px);overflow-y: auto;}
@@ -12,16 +13,21 @@
   /deep/.el-form-item__label {white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline;}
   /deep/.el-tabs__nav{transform: translateX(30px) !important;}
   /deep/.el-form-item{margin-bottom:5px;}
-
+  .add-global{text-align: center;cursor: pointer;font-size: 14px;color:rgba(0, 0, 0,0.6);font-weight: bold;}
+  .line-config{width: 100%;height: 100%;display: flex;align-items: center;justify-content: center;}
 </style>
 <template>
   <div class="cell-info">
     <div class="top">
-      <label class="title">{{ namec }}</label>
+      <div class="description">
+        <i :class="'iconfont '+description.icon" style="font-size: 20px;vertical-align: middle;"></i>
+        <el-input v-model="description.name" class="name-input" style="width: 300px;"/>
+      </div>
+      <label class="title">{{ description.namec }}</label>
     </div>
     <el-tabs v-model="actTab" class="info-tabs" @tab-click="handleClick">
-      <el-tab-pane label="参数" name="param">
-        <el-collapse v-model="collapseExp.main">
+      <el-tab-pane label="参数" name="param" v-if="graphType==='node'||graphType==='edge'" style="height: 100%;">
+        <el-collapse v-model="collapseExp.main" v-if="graphType==='node'">
           <el-collapse-item name="1" title="属性">
             <el-form label-width="120px" style="width: 300px;padding: 10px 20px;">
               <el-form-item :label="item.label" v-for="(item,index) in attConfig" :key="index">
@@ -76,10 +82,16 @@
             </el-collapse>
           </el-collapse-item>
         </el-collapse>
-
-       
+        <div class="line-config" v-else-if="graphType==='edge'">
+          连接线配置
+        </div>
       </el-tab-pane>
-      <el-tab-pane label="格式" name="format">Config</el-tab-pane>
+      <el-tab-pane label="格式" name="format" v-if="graphType==='node'||graphType==='edge'">Config</el-tab-pane>
+      <el-tab-pane label="全局变量" name="globalVariable" v-if="graphType==='blank'">
+        <var-form v-for="(g,index) in global" :key="index" :params="{...g,value:g.default,isValue:g.isFunc}"></var-form>
+        <div class="add-global" @click="addGlobal">(x)新建全局变量</div>
+      </el-tab-pane>
+      <el-tab-pane label="图纸选项" name="graphConfig" v-if="graphType==='blank'">Config</el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -87,6 +99,9 @@
 <script lang="ts">
 import { reactive, ref, defineComponent, onMounted, watch} from 'vue'
 import common from '@/components/common'
+import { useStore } from 'vuex'
+import VarForm from '@/components/VarForm.vue'
+
 // 接收菜单信息
 interface info
 {
@@ -100,6 +115,7 @@ interface info
 }
 
 export default defineComponent({
+  components:{ VarForm },
   name: 'CellInfo',
   props:{
     params: {
@@ -109,12 +125,14 @@ export default defineComponent({
   },
   setup(props, { expose })
   {
+    const store = useStore()
+    const global = reactive(common.getGVars())
     const _fld = common.getFlds()
     const _fldvalue = common.getFldValues()
-    let fldValue = reactive<info[]>([])
-    let namec = ref<string>('电力仿真-画布')
-    const actTab = ref<string>('param')
+    const actTab = ref<string>('globalVariable')
     const isValue = ref<boolean>(true)
+    const graphType = ref<string>('blank')
+    const description = reactive({name:'图纸', namec:'电力仿真-画布', icon:'icon-huabu'})
     const configForm:{[key: string]: any} = reactive({})
     const collapseExp:{[key: string]: any} = reactive({
       main:['1', '2'],
@@ -124,10 +142,35 @@ export default defineComponent({
       {name:'enable', label: '启用', unit: '', isValue:true, disptype:3, fldValue:[], value:true},
       {name:'outlinelevel', label: '大纲级别', unit: '', isValue:true, disptype:1, fldValue:[], value:0},
     ])
-
+    let fldValue = reactive<info[]>([])
+    
     watch(() => props.params, (newValue, oldValue) =>
     {
-      namec.value = newValue.data.namec
+      graphType.value = newValue.type
+      
+      if (props.params.type==='blank')
+      {
+        actTab.value = 'globalVariable'
+        description.name = '图纸'
+        description.icon = 'icon-huabu'
+        description.namec = '电力仿真-画布'
+        return
+      }
+      else if (props.params.type==='edge')
+      {
+        actTab.value = 'param'
+        description.icon = 'icon-xian'
+        description.name = '线'
+        description.namec = '连接线'
+        return
+      }
+      else
+      {
+        actTab.value = 'param'
+        description.icon = 'icon-node'
+        description.name = newValue.data.namec
+        description.namec = newValue.data.namec
+      }
      
       try
       {
@@ -145,7 +188,6 @@ export default defineComponent({
             else if (temp.disptype===2)
               fldValue.push({name:key, label: temp.label, unit: temp.unit, isValue:true, disptype:2, fldValue: _fldvalue.filter(item => item.colname === key), value:''})
           }
-          
         })
       }
       catch (error)
@@ -156,6 +198,10 @@ export default defineComponent({
     const handleClick = () =>
     {
       console.log()
+    }
+    const addGlobal = ()=>
+    {
+      global.push({name:'variable_'+(global.length+1), label:'', unit:'', disptype:1, default:'', isFunc:false},)
     }
     // onMounted(() =>
     // {
@@ -169,9 +215,12 @@ export default defineComponent({
       configForm,
       isValue,
       handleClick,
-      namec,
       attConfig,
-      collapseExp
+      collapseExp,
+      graphType,
+      global,
+      addGlobal,
+      description
     }
   }
 })

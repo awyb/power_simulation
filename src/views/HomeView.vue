@@ -7,14 +7,14 @@
 <template>
   <div class="home">
     <el-container class="container">
-      <el-header height="5%" style="padding: 0;">
+      <el-header :height="pageHeaderH" style="padding: 0;">
         <Header></Header>
       </el-header>
-      <el-main height="90%" style="padding: 0;">
+      <el-main  style="padding: 0;position: relative;overflow: hidden;">
         <!-- <Main></Main> -->
         <MainPage></MainPage>
       </el-main>
-      <el-footer height="5%" style="padding: 0;">
+      <el-footer :height="pageFooterH" style="padding: 0;">
         <!-- <Footer></Footer> -->
       </el-footer>
     </el-container>
@@ -27,8 +27,8 @@ import Header from '@/views/header/Header.vue'
 import Main from '@/views/main/Main.vue'
 import MainPage from '@/views/main/MainPage.vue'
 import Demo1 from '@/views/main/Demo1.vue'
-
 import Footer from '@/views/footer/Footer.vue'
+import { useStore } from 'vuex'
 @Options({
   components:
   {
@@ -37,10 +37,12 @@ import Footer from '@/views/footer/Footer.vue'
     Demo1,
     Footer,
     MainPage
-  },
+  }
 })
 export default class HomeView extends Vue
 {
-
+  private store = useStore()
+  public pageHeaderH = this.store.state.pageHeaderH + 'px'
+  public pageFooterH = this.store.state.pageFooterH + 'px'
 }
 </script>

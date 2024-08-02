@@ -19,7 +19,8 @@ module.exports = {
     $app: 'writable',
     comCx: 'writable',
     plugCx: 'writable',
-    cxe: 'writable'
+    cxe: 'writable',
+    window:'writable'
   },
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',

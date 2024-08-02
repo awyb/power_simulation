@@ -6,6 +6,34 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "25433538",
+      "name": "画布",
+      "font_class": "huabu",
+      "unicode": "e961",
+      "unicode_decimal": 59745
+    },
+    {
+      "icon_id": "36813935",
+      "name": "线",
+      "font_class": "xian",
+      "unicode": "e608",
+      "unicode_decimal": 58888
+    },
+    {
+      "icon_id": "41272010",
+      "name": "模型节点",
+      "font_class": "node",
+      "unicode": "e962",
+      "unicode_decimal": 59746
+    },
+    {
+      "icon_id": "18261674",
+      "name": "drag",
+      "font_class": "drag",
+      "unicode": "e62c",
+      "unicode_decimal": 58924
+    },
+    {
       "icon_id": "27221830",
       "name": "粘贴",
       "font_class": "niantie",
