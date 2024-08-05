@@ -67,14 +67,15 @@ import { Snapline } from '@antv/x6-plugin-snapline'
 import { Keyboard } from '@antv/x6-plugin-keyboard'
 import { Clipboard } from '@antv/x6-plugin-clipboard'
 import { History } from '@antv/x6-plugin-history'
+import { Scroller } from '@antv/x6-plugin-scroller'
+
 import { graphEvents } from './graphEvents'
 import common from '@/components/common'
 import graphcom from './graph'
 import { useStore } from 'vuex'
 import { defineComponent, onMounted, ref, onBeforeUnmount, reactive } from 'vue'
-import { ElMessage } from 'element-plus'
-
-
+import { ElNotification } from 'element-plus'
+import eveBus from '@/components/eveBus'
 export default defineComponent({
   name: 'Demo1',
   props:{
@@ -85,6 +86,7 @@ export default defineComponent({
   },
   setup(props, { expose, emit })
   {
+    
     const container = ref<HTMLElement | null>(null)
     const rightmenu = ref<HTMLElement | null>(null)
     const contextMenuVisible = ref(false)
@@ -92,7 +94,8 @@ export default defineComponent({
     const toolsConfig = common.toolsConfig()
     const translatecss = ref('')
     
-    let checkEdge: Edge|null, selectedCell: Cell|null, graph: Graph, excuteGraph:object|null, transform:string
+    let checkEdge: Edge|null, selectedCell: Cell|null, graph: Graph, excuteGraph:object|null
+    let gridColor = '#ddd'
     const store = useStore()
     const pageHeaderH = store.state.pageHeaderH
     
@@ -130,7 +133,7 @@ export default defineComponent({
       let center = {x:0, y:0}
       if (graph&&graph.getPlugin('clipboard'))
       
-        center =Object(graph.getCellsBBox(Object(graph.getPlugin('clipboard')).cells)).center
+        center =Object(graph.getCellsBBox(Object(graph.getPlugin('clipboard')).cells.filter((n: { isNode: () => any })=>n.isNode()))).center
 
       // const t1 = graph.localToPage(graph.graphToLocal(menuPosition))
       // const t2 = graph.localToClient(graph.graphToLocal(center))
@@ -169,7 +172,7 @@ export default defineComponent({
        
         contextMenuVisible.value = true
       })
-      graph.on('edge:connected', (args) =>
+      graph.on('edge:connected', async(args) =>
       {
         // args.edge.prop('target/anchor', {name:'length', args:{length:100}})
         // args.edge.prop('target/anchor', {name:'orth'})
@@ -180,6 +183,25 @@ export default defineComponent({
         //   width: 100,
         //   height: 100
         // })
+        const source = args.edge.getSourceCell()
+        const target = args.edge.getTargetCell()
+        if (source && target)
+        {
+          if (getNodeType(source) && getNodeType(target)&&getNodeType(source) !== getNodeType(target))
+          {
+            const Icon = await import('./Icon.vue').then(module => module.default)
+            ElNotification({
+              title: '连接失败',
+              position: 'bottom-right',
+              message: `引脚 X 维度不相等，首端维度 ${getNodeType(source)}，末端维度 ${getNodeType(target)}`,
+              showClose: true,
+              icon: Icon,
+              duration: 20000,
+              customClass:'msg-warning'
+            })
+            args.edge.remove()
+          }
+        }
         
       })
       // 监听连线的 mouseenter 和 mouseleave 事件
@@ -188,6 +210,8 @@ export default defineComponent({
         console.log(edge)
         if (edge.getProp('manualConnection'))
           graphcom.showPorts('visible', graph)
+
+        
         if (!edge.isEdge()) return
         if (edge && edge.attrs && edge.attrs.line)
         {
@@ -293,15 +317,26 @@ export default defineComponent({
       //   gNodes.push(graph.addNode(Object(node)))
       // })
     }
+    const getNodeType = (cell:Cell|null|undefined) =>
+    {
+      if (!cell) return null
+      if (!cell.isNode) return null
+      if (cell.data && Object.prototype.hasOwnProperty.call(cell.data, 'type'))
+        return cell.data.type
+      return null
+    }
     const renderGraph = ()=>
     {
       if (!container.value) return
       
       graph = new Graph({
         container: container.value,
+        autoResize: true,
+        // width: 800, // 画布宽度
+        // height: 600, // 画布高度
         background:
         {
-          color: '#F2F7FA',
+          color: '#ffffff',
         },
         panning: {
           enabled: true,
@@ -319,13 +354,13 @@ export default defineComponent({
           type: 'doubleMesh',
           args: [
             {
-              color: '#eee', // 主网格线颜色
+              color: gridColor, // 主网格线颜色
               thickness: 1, // 主网格线宽度
             },
             {
-              color: '#ddd', // 次网格线颜色
-              thickness: 1, // 次网格线宽度
-              factor: 4, // 主次网格线间隔
+              color: gridColor, // 次网格线颜色
+              thickness: 2, // 次网格线宽度
+              factor: 16, // 主次网格线间隔
             },
           ]
         },
@@ -387,8 +422,8 @@ export default defineComponent({
           },
           validateConnection(args)
           {
-            console.log(args)
-            
+            // if (getNodeType(args.sourceCell) && getNodeType(args.targetCell))
+            //   return getNodeType(args.sourceCell) === getNodeType(args.targetCell)
             return Boolean(args.sourcePort!==args.targetPort&&(args.targetView?.isEdgeView()||args.targetMagnet))
             // return Boolean(targetView?.isEdgeView()||targetMagnet?.getAttribute('port-group')||sourceMagnet?.getAttribute('port-group'))
             // if (targetMagnet && targetMagnet.getAttribute('port-group'))
@@ -401,6 +436,7 @@ export default defineComponent({
           },
         },
       })
+      graph.zoomTo(0.6)
       // #region 使用插件
       graph
         .use(new Transform({
@@ -437,16 +473,71 @@ export default defineComponent({
             return true
           }
         }))
+        // .use(
+        //   new Scroller({
+        //     enabled: true,
+        //     pannable: true,
+        //     modifiers: 'ctrl',
+        //     pageHeight: 800,
+        //     pageWidth: 800,
+        //     // padding:200
+        //   }))
       graphcom.bindKey(graph, ['copy', 'cut', 'paste', 'undo', 'redo', 'delete', 'selectall', 'create', 'rotateR', 'rotateL'])
       excuteGraph = new graphEvents(graph)
-      
+      eveBus.on('change-graph-config', (data) =>
+      {
+        if (graph&&data)
+          graph.drawBackground(data as Graph.BackgroundManager.Options)
+       
+      })
+      eveBus.on('change-graph-grid', (data) =>
+      {
+        if (graph&&data)
+        {
+          graph.showGrid()
+          switch ((data as any).type)
+          {
+          case 'hidden':
+            graph.hideGrid()
+            break
+          case 'dot':
+            graph.drawGrid({type:'dot', args:[{color:gridColor}]})
+            break
+          case 'mesh':
+            graph.drawGrid({type:'mesh', args:[{color:gridColor}]})
+            break
+          case 'doubleMesh':
+            graph.drawGrid({type:'doubleMesh', args:[
+              {
+                color: gridColor, // 主网格线颜色
+                thickness: 1, // 主网格线宽度
+              },
+              {
+                color: gridColor, // 次网格线颜色
+                thickness: 2, // 次网格线宽度
+                factor: 16, // 主次网格线间隔
+              },
+            ]})
+          }
+        }
+      })
+      eveBus.on('change-grid-color', (data) =>
+      {
+        
+        if (graph&&data)
+        {
+          const grid = graph.options.grid
+          gridColor = (data as any).color
+          if (grid.args&&Array.isArray(grid.args))
+            graph.drawGrid({...(grid as any), args:grid.args.map(arg=>({...arg, color:gridColor, thickness: arg.thickness || 1}))})
+        }
+      })
     }
     onMounted(() =>
     {
       renderGraph()
       bindKey()
       loadDefNode()
-   
     })
   
     onBeforeUnmount(() =>

@@ -7,6 +7,8 @@ import 'element-plus/dist/index.css'
 import '@/style/main.less'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import '../public/static/iconfont/icon1/iconfont.css'
+import 'vcolorpicker/lib/style.css'
+import vcolorpicker from 'vcolorpicker'
 
 const app = createApp(App)
 for (const [key, component] of Object.entries(ElementPlusIconsVue))
@@ -36,4 +38,4 @@ window.ResizeObserver = class ResizeObserver extends resizeObserver
   }
 }
 
-app.use(store).use(router).use(ElementPlus).mount('#app')
+app.use(store).use(router).use(ElementPlus).use(vcolorpicker).mount('#app')

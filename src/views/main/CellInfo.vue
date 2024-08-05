@@ -56,7 +56,7 @@
             <el-collapse v-model="collapseExp.children" style="padding-left: 20px;">
               <el-collapse-item name="1" title="Configuration">
                 <el-form :model="configForm" label-width="120px" style="width: 300px;padding: 10px 20px;">
-                  <el-form-item :label="item.label" v-for="(item,index) in fldValue" :key="index">
+                  <el-form-item :label="item.label" v-for="(item,index) in flds" :key="index">
                     <template #label="{label}">
                       <el-tooltip :content="label" placement="left">
                         <span>{{label}}</span>
@@ -91,7 +91,9 @@
         <var-form v-for="(g,index) in global" :key="index" :params="{...g,value:g.default,isValue:g.isFunc}"></var-form>
         <div class="add-global" @click="addGlobal">(x)新建全局变量</div>
       </el-tab-pane>
-      <el-tab-pane label="图纸选项" name="graphConfig" v-if="graphType==='blank'">Config</el-tab-pane>
+      <el-tab-pane label="图纸选项" name="graphConfig" v-if="graphType==='blank'">
+        <DynForm :params="csparams"></DynForm>
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -101,6 +103,8 @@ import { reactive, ref, defineComponent, onMounted, watch} from 'vue'
 import common from '@/components/common'
 import { useStore } from 'vuex'
 import VarForm from '@/components/VarForm.vue'
+import DynForm from '@/components/DynForm.vue'
+import eveBus from '@/components/eveBus'
 
 // 接收菜单信息
 interface info
@@ -115,7 +119,7 @@ interface info
 }
 
 export default defineComponent({
-  components:{ VarForm },
+  components:{ VarForm, DynForm},
   name: 'CellInfo',
   props:{
     params: {
@@ -125,6 +129,37 @@ export default defineComponent({
   },
   setup(props, { expose })
   {
+    const csparams = reactive({
+      form:{},
+      flds:[
+        {name:'bgcolor', value:'#fff', unit:'', isValue:true, label:'背景颜色', disptype:6, expression:null,
+          callback:(val:string)=>
+          {
+            eveBus.emit('change-graph-config', {color:val})
+          }},
+        {name:'gridtype', value:'doubleMesh', unit:'', isValue:true, label:'网格类型', disptype:2,
+          fldValue:[
+            {colname:'hidden', dbvalue:'hidden', disp:'hidden', dispc:'隐藏'},
+            {colname:'point', dbvalue:'dot', disp:'dot', dispc:'点阵'},
+            {colname:'nets', dbvalue:'mesh', disp:'mesh', dispc:'网状'},
+            {colname:'dbnewts', dbvalue:'doubleMesh', disp:'doubleMesh', dispc:'双层网状'}
+          ], expression:null,
+          callback:(val:string)=>
+          {
+            eveBus.emit('change-graph-grid', {type:val})
+          }},
+        {name:'gridcolor', value:'#f5f5f5', unit:'', isValue:true, label:'网格颜色', disptype:6, expression:null,
+          callback:(val:string)=>
+          {
+            eveBus.emit('change-grid-color', {color:val})
+          }
+        },
+        {name:'pagesplit', value:true, unit:'', isValue:true, label:'页面分割线', disptype:5, expression:null},
+        {name:'defdragpage', value:false, unit:'', isValue:true, label:'默认拖拽画布', disptype:5, expression:null},
+        {name:'celllabel', value:false, unit:'', isValue:true, label:'元件标签', disptype:5, expression:null},
+        {name:'portlabel', value:false, unit:'', isValue:true, label:'引脚标签', disptype:5, expression:null},
+      ]
+    })
     const store = useStore()
     const global = reactive(common.getGVars())
     const _fld = common.getFlds()
@@ -142,7 +177,7 @@ export default defineComponent({
       {name:'enable', label: '启用', unit: '', isValue:true, disptype:3, fldValue:[], value:true},
       {name:'outlinelevel', label: '大纲级别', unit: '', isValue:true, disptype:1, fldValue:[], value:0},
     ])
-    let fldValue = reactive<info[]>([])
+    let flds = reactive<info[]>([])
     
     watch(() => props.params, (newValue, oldValue) =>
     {
@@ -175,7 +210,7 @@ export default defineComponent({
       try
       {
         let temp
-        fldValue.length = 0
+        flds.length = 0
         const configuration = newValue.data.data.params.Configuration
         Object.keys(configuration).forEach(key =>
         {
@@ -184,9 +219,9 @@ export default defineComponent({
           if (configuration.hasOwnProperty(key)&& temp)
           {
             if (temp.disptype===1)
-              fldValue.push({name:key, label: temp.label, unit: temp.unit, isValue:true, disptype:1, fldValue:[], value:''})
+              flds.push({name:key, label: temp.label, unit: temp.unit, isValue:true, disptype:1, fldValue:[], value:''})
             else if (temp.disptype===2)
-              fldValue.push({name:key, label: temp.label, unit: temp.unit, isValue:true, disptype:2, fldValue: _fldvalue.filter(item => item.colname === key), value:''})
+              flds.push({name:key, label: temp.label, unit: temp.unit, isValue:true, disptype:2, fldValue: _fldvalue.filter(item => item.colname === key), value:''})
           }
         })
       }
@@ -210,7 +245,6 @@ export default defineComponent({
     // 暴露方法
     expose({})
     return {
-      fldValue,
       actTab,
       configForm,
       isValue,
@@ -220,7 +254,9 @@ export default defineComponent({
       graphType,
       global,
       addGlobal,
-      description
+      description,
+      flds,
+      csparams
     }
   }
 })

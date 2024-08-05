@@ -383,7 +383,7 @@ export default class common
         items:
         [
           {
-            id: 'in5_1',
+            id: 'in6_1',
             group: 'in',
             args:
             {
@@ -392,7 +392,7 @@ export default class common
             },
           },
           {
-            id: 'in5_2',
+            id: 'in6_2',
             group: 'in',
             args:
             {
@@ -442,7 +442,7 @@ export default class common
         items:
         [
           {
-            id: 'in6_1',
+            id: 'in7_1',
             group: 'in',
             args:
             {
@@ -492,7 +492,7 @@ export default class common
         items: this.equidistributePors({x:0.05, y:0.454}, {x:0.96, y:0.454}, 4/160).map((p, i)=>
         {
           return {
-            id: 'in7_'+(i+1),
+            id: 'in8_'+(i+1),
             group: 'inline',
             args:
             {
@@ -546,7 +546,7 @@ export default class common
         items:
         [
           {
-            id: 'in7_1',
+            id: 'in9_1',
             group: 'in',
             args:
             {
