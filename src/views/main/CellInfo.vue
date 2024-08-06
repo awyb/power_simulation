@@ -154,9 +154,18 @@ export default defineComponent({
             eveBus.emit('change-grid-color', {color:val})
           }
         },
-        {name:'pagesplit', value:true, unit:'', isValue:true, label:'页面分割线', disptype:5, expression:null},
-        {name:'defdragpage', value:false, unit:'', isValue:true, label:'默认拖拽画布', disptype:5, expression:null},
-        {name:'celllabel', value:false, unit:'', isValue:true, label:'元件标签', disptype:5, expression:null},
+        {name:'pagesplit', value:true, unit:'', isValue:true, label:'页面分割线', disptype:5, expression:null, callback:(val:boolean)=>
+        {
+          eveBus.emit('show-page-split', val)
+        }},
+        {name:'defdragpage', value:false, unit:'', isValue:true, label:'默认拖拽画布', disptype:5, expression:null, callback:(val:boolean)=>
+        {
+          eveBus.emit('drag-graph-page', val)
+        }},
+        {name:'celllabel', value:false, unit:'', isValue:true, label:'元件标签', disptype:5, expression:null, callback:(val:boolean)=>
+        {
+          eveBus.emit('show-cell-label', val)
+        }},
         {name:'portlabel', value:false, unit:'', isValue:true, label:'引脚标签', disptype:5, expression:null},
       ]
     })

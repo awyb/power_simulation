@@ -94,8 +94,8 @@ export default defineComponent({
     const toolsConfig = common.toolsConfig()
     const translatecss = ref('')
     
-    let checkEdge: Edge|null, selectedCell: Cell|null, graph: Graph, excuteGraph:object|null
-    let gridColor = '#ddd'
+    let checkEdge: Edge|null, selectedCell: Cell|null, graph: Graph, excuteGraph:object|null, scroller:Scroller|null
+    let [gridColor, showLabel] = ['#ddd', 'none']
     const store = useStore()
     const pageHeaderH = store.state.pageHeaderH
     
@@ -108,7 +108,8 @@ export default defineComponent({
       const p = graph.pageToLocal(x, y)
       const [X, Y] = [p.x - n.width/2, p.y - n.height/2]
       // 添加节点到画布
-      graph.addNode(Object({...n, x:X, y:Y}))
+      const node = graph.addNode(Object({...n, x:X, y:Y}))
+      node.attr('label/display', showLabel)
     }
     const editEdge = () =>
     {
@@ -137,7 +138,7 @@ export default defineComponent({
 
       // const t1 = graph.localToPage(graph.graphToLocal(menuPosition))
       // const t2 = graph.localToClient(graph.graphToLocal(center))
-      const t1 = graph.graphToLocal({...menuPosition, x:menuPosition.x-props.widthL})
+      const t1 = graph.clientToLocal({...menuPosition, y:menuPosition.y+store.state.pageHeaderH})
       const t2 = center
       const cells =graph.paste({ offset:{dx:t1.x-t2.x, dy:t1.y-t2.y} })
       graph.cleanSelection()
@@ -150,10 +151,11 @@ export default defineComponent({
         if (!container.value) return
         e.preventDefault()
         const pos = graph.clientToGraph(e.clientX+props.widthL, e.clientY)
-        menuPosition.x = pos.x
-        menuPosition.y = pos.y
-        translatecss.value = `translate(${window.innerWidth-e.clientX<=store.state.rmenuBoxW?'-100%':'0'},${container.value.offsetHeight-e.clientY+pageHeaderH<(rightmenu&&rightmenu.value?rightmenu.value.offsetHeight:store.state.rmenuBoxH)?'-100%':'0'})`
+        menuPosition.x = e.clientX
+        menuPosition.y = e.clientY-store.state.pageHeaderH
 
+        translatecss.value = `translate(${window.innerWidth-e.clientX<=store.state.rmenuBoxW?'-100%':'0'},${window.innerHeight-e.clientY-pageHeaderH<(rightmenu&&rightmenu.value?rightmenu.value.offsetHeight:400)?'-100%':'0'})`
+        
         selectedCell = cell
         contextMenuVisible.value = true
       })
@@ -162,10 +164,10 @@ export default defineComponent({
         if (!container.value) return
         e.preventDefault()
         const pos = graph.clientToGraph(e.clientX+props.widthL, e.clientY)
-        menuPosition.x = pos.x
-        menuPosition.y = pos.y
+        menuPosition.x = e.clientX
+        menuPosition.y = e.clientY-store.state.pageHeaderH
 
-        translatecss.value = `translate(${window.innerWidth-e.clientX<=232?'-100%':'0'},${container.value.offsetHeight-e.clientY+pageHeaderH<(rightmenu&&rightmenu.value?rightmenu.value.offsetHeight:400)?'-100%':'0'})`
+        translatecss.value = `translate(${window.innerWidth-e.clientX<=store.state.rmenuBoxW?'-100%':'0'},${window.innerHeight-e.clientY-pageHeaderH<(rightmenu&&rightmenu.value?rightmenu.value.offsetHeight:400)?'-100%':'0'})`
         // 屏幕宽度:window.screen.width
         // 浏览器窗口宽度:window.innerWidth e.clientX
         // container.value.offsetHeight
@@ -338,10 +340,10 @@ export default defineComponent({
         {
           color: '#ffffff',
         },
-        panning: {
-          enabled: true,
-          modifiers: 'ctrl'
-        },
+        // panning: {
+        //   enabled: true,
+        //   modifiers: 'ctrl'
+        // },
         mousewheel: {
           enabled: true,
           modifiers: 'Ctrl',
@@ -424,7 +426,9 @@ export default defineComponent({
           {
             // if (getNodeType(args.sourceCell) && getNodeType(args.targetCell))
             //   return getNodeType(args.sourceCell) === getNodeType(args.targetCell)
-            return Boolean(args.sourcePort!==args.targetPort&&(args.targetView?.isEdgeView()||args.targetMagnet))
+            if (args.targetCell?.id===args.sourceCell?.id)
+              return Boolean(args.sourcePort!==args.targetPort)
+            return Boolean(args.targetView?.isEdgeView()||args.targetMagnet)
             // return Boolean(targetView?.isEdgeView()||targetMagnet?.getAttribute('port-group')||sourceMagnet?.getAttribute('port-group'))
             // if (targetMagnet && targetMagnet.getAttribute('port-group'))
             //   return true
@@ -436,8 +440,17 @@ export default defineComponent({
           },
         },
       })
-      graph.zoomTo(0.6)
       // #region 使用插件
+      scroller = new Scroller({
+        enabled: true,
+        pageBreak: true,
+        pageVisible: true,
+        pannable: true,
+        modifiers: 'ctrl',
+        // pageHeight: 800,
+        // pageWidth: 800,
+        // padding:200
+      })
       graph
         .use(new Transform({
           resizing: {
@@ -460,7 +473,9 @@ export default defineComponent({
           showNodeSelectionBox: true,
         }),
         )
-        .use(new Snapline())
+        .use(new Snapline({
+          enabled: true,
+        }))
         .use(new Keyboard())
         .use(new Clipboard())
         .use(new History({
@@ -473,21 +488,15 @@ export default defineComponent({
             return true
           }
         }))
-        // .use(
-        //   new Scroller({
-        //     enabled: true,
-        //     pannable: true,
-        //     modifiers: 'ctrl',
-        //     pageHeight: 800,
-        //     pageWidth: 800,
-        //     // padding:200
-        //   }))
+        .use(scroller)
+      graph.zoomTo(0.8)
       graphcom.bindKey(graph, ['copy', 'cut', 'paste', 'undo', 'redo', 'delete', 'selectall', 'create', 'rotateR', 'rotateL'])
       excuteGraph = new graphEvents(graph)
       eveBus.on('change-graph-config', (data) =>
       {
         if (graph&&data)
-          graph.drawBackground(data as Graph.BackgroundManager.Options)
+          // graph.drawBackground(data as Graph.BackgroundManager.Options)
+          graph.container.style.background = (data as any).color
        
       })
       eveBus.on('change-graph-grid', (data) =>
@@ -532,16 +541,47 @@ export default defineComponent({
             graph.drawGrid({...(grid as any), args:grid.args.map(arg=>({...arg, color:gridColor, thickness: arg.thickness || 1}))})
         }
       })
+      eveBus.on('show-page-split', (show) =>
+      {
+        
+        if (scroller)
+        {
+          const plugin = Object(graph.getPlugin('scroller'))
+          plugin.scrollerImpl.options.pageBreak = show
+          plugin.scrollerImpl.updatePageBreak()
+        }
+      })
+      eveBus.on('drag-graph-page', (show) =>
+      {
+        if (scroller)
+        {
+          const plugin = Object(graph.getPlugin('scroller'))
+          plugin.scrollerImpl.options.modifiers = null
+          plugin.scrollerImpl.update()
+        }
+        console.log(graph)
+      })
+      eveBus.on('show-cell-label', (show) =>
+      {
+        showLabel = show ? 'block' : 'none'
+        const nodes = graph.getNodes()
+        nodes.forEach(node =>
+        {
+          node.attr('label/display', showLabel)
+        })
+      })
     }
     onMounted(() =>
     {
       renderGraph()
       bindKey()
       loadDefNode()
+     
     })
   
     onBeforeUnmount(() =>
     {
+      eveBus.all.clear()
       document.removeEventListener('click', () =>contextMenuVisible.value = false)
       if (graph)
         graph.dispose()

@@ -176,6 +176,7 @@ export default class common
       height: 160,
       shape: 'image',
       namec: '同步电机',
+      label: '同步电机_1',
       attrs: {
         body: {
           fill: '#f5f5f5',
@@ -202,6 +203,9 @@ export default class common
             {
               x: 0.03,
               y: 0.19,
+            },
+            attrs: {
+              text: { text: 'A组' },
             },
           },
           {
@@ -250,6 +254,7 @@ export default class common
       height: 160,
       shape: 'image',
       namec: '并联电容/电抗器',
+      label: '并联电容/电抗器_1',
       attrs: {
         body: {
           fill: '#f5f5f5',
@@ -296,6 +301,7 @@ export default class common
       height: 160,
       shape: 'image',
       namec: '静态负载',
+      label: '静态负载_1',
       attrs: {
         body: {
           fill: '#f5f5f5',
@@ -349,6 +355,7 @@ export default class common
       height: 160,
       shape: 'image',
       namec: '三相传输线',
+      label: '三相传输线_1',
       attrs: {
         body: {
           fill: '#f5f5f5',
@@ -410,6 +417,7 @@ export default class common
       height: 160,
       shape: 'image',
       namec: '三相戴维南等值电压源',
+      label: '三相戴维南等值电压源_1',
       attrs: {
         body: {
           fill: '#f5f5f5',
@@ -460,6 +468,7 @@ export default class common
       height: 160,
       shape: 'image',
       namec: '三相交流母线',
+      label: '三相交流母线_1',
       attrs: {
         body: {
           fill: '#f5f5f5',
@@ -511,6 +520,7 @@ export default class common
       zIndex:100,
       shape: 'image',
       namec: '三相交流电压源',
+      label: '三相交流电压源',
       attrs: {
         body: {
           fill: '#f5f5f5',
@@ -565,6 +575,7 @@ export default class common
       zIndex:100,
       shape: 'image',
       namec: '单相变压器',
+      label: '单相变压器_1',
       attrs: {
         body: {
           fill: '#f5f5f5',
@@ -575,6 +586,7 @@ export default class common
           width: 160,
           height: 160,
         },
+        
       },
       
       data:{
@@ -637,6 +649,20 @@ export default class common
           }
         ]
       }
+    })
+    nodes.forEach(node=>
+    {
+      Object.assign(node.attrs, {label:{
+        refX: 0.5,
+        refY: '100%',
+        refY2: 4,
+        textAnchor: 'middle',
+        textVerticalAnchor: 'top',
+        fontSize: 16,
+        fontWeight: 'bold',
+        display:'none'
+      }})
+      
     })
     return nodes
   }
@@ -766,6 +792,7 @@ export default class common
             strokeWidth: 0.1,
             fill: 'transparent',
           },
+          
           text:
           {
             fontSize: 10,

@@ -68,7 +68,7 @@
     </el-main>
     <el-aside :width="collapseR?rightMenuW:'0px'" style="padding: 0;">
       <div style="width: 100%;height: 100%;background: #f3f3f3;">
-        <CellInfo :params="nodeInfo"></CellInfo>
+        <cell-info :params="nodeInfo"></cell-info>
       </div>
     </el-aside>
     <RightClickMenu ref="rightClickMenu" :menus="[1]"></RightClickMenu>
@@ -107,13 +107,13 @@ export default defineComponent({
   {
     Demo1,
     RightClickMenu,
-    CellInfo
+    'cell-info':CellInfo
   },
   setup()
   {
     const store = useStore()
-    const collapseL = ref<boolean>(false)
-    const collapseR = ref<boolean>(false)
+    const collapseL = ref<boolean>(true)
+    const collapseR = ref<boolean>(true)
     // const router = useRouter()
     // const childRef = ref(null)
     // router.push('/demo1')
