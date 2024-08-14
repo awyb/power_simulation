@@ -95,7 +95,7 @@ export default defineComponent({
     const translatecss = ref('')
     
     let checkEdge: Edge|null, selectedCell: Cell|null, graph: Graph, excuteGraph:object|null, scroller:Scroller|null
-    let [gridColor, showLabel] = ['#ddd', 'none']
+    let [gridColor, showLabel, showPortLabel, dragPage] = ['#ddd', 'none', 'none', false]
     const store = useStore()
     const pageHeaderH = store.state.pageHeaderH
     
@@ -110,6 +110,10 @@ export default defineComponent({
       // 添加节点到画布
       const node = graph.addNode(Object({...n, x:X, y:Y}))
       node.attr('label/display', showLabel)
+      node.getPorts().forEach(port =>
+      {
+        node.portProp(port.id+'', 'attrs/text/display', showPortLabel)
+      })
     }
     const editEdge = () =>
     {
@@ -309,6 +313,24 @@ export default defineComponent({
       {
         contextMenuVisible.value = false
       })
+      document.addEventListener('keydown', (event: KeyboardEvent) =>
+      {
+        if ((event.ctrlKey||event.key==='Control') && dragPage)
+        {
+          graph.toggleRubberband(true)
+          const plugin = Object(graph.getPlugin('scroller'))
+          plugin.disablePanning()
+        }
+      })
+      document.addEventListener('keyup', (event: KeyboardEvent) =>
+      {
+        if ((event.ctrlKey||event.key==='Control') && dragPage)
+        {
+          graph.toggleRubberband(false)
+          const plugin = Object(graph.getPlugin('scroller'))
+          plugin.enablePanning()
+        }
+      })
     }
     const loadDefNode = ()=>
     {
@@ -333,6 +355,10 @@ export default defineComponent({
       
       graph = new Graph({
         container: container.value,
+        interacting: function(cellView)
+        {
+          return !dragPage
+        },
         autoResize: true,
         // width: 800, // 画布宽度
         // height: 600, // 画布高度
@@ -551,15 +577,12 @@ export default defineComponent({
           plugin.scrollerImpl.updatePageBreak()
         }
       })
-      eveBus.on('drag-graph-page', (show) =>
+      eveBus.on('drag-graph-page', (isDrag) =>
       {
-        if (scroller)
-        {
-          const plugin = Object(graph.getPlugin('scroller'))
-          plugin.scrollerImpl.options.modifiers = null
-          plugin.scrollerImpl.update()
-        }
-        console.log(graph)
+        dragPage = Boolean(isDrag)
+        graph.toggleRubberband(!!!isDrag)
+        const plugin = Object(graph.getPlugin('scroller'))
+        plugin.options.modifiers = isDrag?null:'ctrl'
       })
       eveBus.on('show-cell-label', (show) =>
       {
@@ -568,6 +591,18 @@ export default defineComponent({
         nodes.forEach(node =>
         {
           node.attr('label/display', showLabel)
+        })
+      })
+      eveBus.on('show-port-label', (show) =>
+      {
+        showPortLabel = show ? 'block' : 'none'
+        const nodes = graph.getNodes()
+        nodes.forEach(node =>
+        {
+          node.getPorts().forEach(port =>
+          {
+            node.portProp(port.id+'', 'attrs/text/display', showPortLabel)
+          })
         })
       })
     }

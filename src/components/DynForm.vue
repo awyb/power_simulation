@@ -82,14 +82,9 @@ export default defineComponent({
       default: ()=>({name:'', value:'', unit:'', isValue:true}),
     }
   },
-  setup(props, { expose })
+  setup(props, { expose, emit })
   {
-    0.
-    const onChange = (args:any) =>
-    {
-      if (args.callback)
-        args.callback(configForm[args.name])
-    }
+   
     const params = reactive(props.params)
     const configForm:{[key: string]: any} = reactive({})
     const flds = reactive<fldConfig[]>(params.flds)
@@ -98,6 +93,12 @@ export default defineComponent({
     {
       configForm[fld.name] = resolve[fld.name]||fld.value
     })
+    const onChange = (args:any) =>
+    {
+      emit('onChange', {name:args.name, value:configForm[args.name]})
+      if (args.callback)
+        args.callback(configForm[args.name])
+    }
     expose({})
     return {
       configForm,

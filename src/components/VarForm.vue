@@ -2,6 +2,7 @@
   .form-container {display: flex;align-items: center;margin:5px;
     .value-input{height: 30px;}
     .end-label {height: 30px;width: 30px;margin-left: 5px;line-height: 30px;font-size: 16px;font-weight: bold;cursor: pointer;}
+    .icon-drag{cursor: pointer;}
   }
 </style>
 <template>
@@ -11,7 +12,7 @@
       <template v-if="values.isValue" #suffix>{{ values.unit }}</template>
     </el-input>
     <label class="end-label" @click="values.isValue=!values.isValue" v-html="values.isValue?'(x)':'ƒ<sub>x</sub>'"></label>
-    <i class="iconfont icon-drag"></i>
+    <i class="iconfont icon-drag" draggable></i>
   </div>
 </template>
 

@@ -86,13 +86,26 @@
           连接线配置
         </div>
       </el-tab-pane>
-      <el-tab-pane label="格式" name="format" v-if="graphType==='node'||graphType==='edge'">Config</el-tab-pane>
+      <el-tab-pane label="格式" name="format" v-if="graphType==='node'||graphType==='edge'">
+        Config
+      </el-tab-pane>
       <el-tab-pane label="全局变量" name="globalVariable" v-if="graphType==='blank'">
-        <var-form v-for="(g,index) in global" :key="index" :params="{...g,value:g.default,isValue:g.isFunc}"></var-form>
+        <Draggable
+          ref="dragEl"
+          :modelValue="global"
+          :disabled="disabled"
+          :animation="150"
+          ghostClass="ghost"
+          handle=".icon-drag"
+          @start="onStart"
+          @update="onUpdate"
+          @end="onEnd">
+          <var-form v-for="g in global" :key="g.id" :params="{...g,value:g.default,isValue:g.isFunc}"></var-form>
+        </Draggable>
         <div class="add-global" @click="addGlobal">(x)新建全局变量</div>
       </el-tab-pane>
       <el-tab-pane label="图纸选项" name="graphConfig" v-if="graphType==='blank'">
-        <DynForm :params="csparams"></DynForm>
+        <DynForm :params="csparams" @onChange="updState"></DynForm>
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -104,8 +117,8 @@ import common from '@/components/common'
 import { useStore } from 'vuex'
 import VarForm from '@/components/VarForm.vue'
 import DynForm from '@/components/DynForm.vue'
-import eveBus from '@/components/eveBus'
-
+// import eveBus from '@/components/eveBus'
+import { type UseDraggableReturn, type SortableEvent, VueDraggable } from 'vue-draggable-plus'
 // 接收菜单信息
 interface info
 {
@@ -117,9 +130,8 @@ interface info
   fldValue: { colname: string, dbvalue: number, disp: string, dispc: string }[],
   value:any
 }
-
 export default defineComponent({
-  components:{ VarForm, DynForm},
+  components:{ VarForm, DynForm, Draggable:VueDraggable},
   name: 'CellInfo',
   props:{
     params: {
@@ -129,48 +141,25 @@ export default defineComponent({
   },
   setup(props, { expose })
   {
+    const store = useStore()
+    const disabled = ref(false)
+
+    const updVal = () =>
+    {
+      const graphConfig = store.state.graphConfig
+      csparams.flds.forEach(fld=>
+      {
+        if (graphConfig[fld.name])
+          fld.value = graphConfig[fld.name]
+      })
+    }
+
     const csparams = reactive({
       form:{},
-      flds:[
-        {name:'bgcolor', value:'#fff', unit:'', isValue:true, label:'背景颜色', disptype:6, expression:null,
-          callback:(val:string)=>
-          {
-            eveBus.emit('change-graph-config', {color:val})
-          }},
-        {name:'gridtype', value:'doubleMesh', unit:'', isValue:true, label:'网格类型', disptype:2,
-          fldValue:[
-            {colname:'hidden', dbvalue:'hidden', disp:'hidden', dispc:'隐藏'},
-            {colname:'point', dbvalue:'dot', disp:'dot', dispc:'点阵'},
-            {colname:'nets', dbvalue:'mesh', disp:'mesh', dispc:'网状'},
-            {colname:'dbnewts', dbvalue:'doubleMesh', disp:'doubleMesh', dispc:'双层网状'}
-          ], expression:null,
-          callback:(val:string)=>
-          {
-            eveBus.emit('change-graph-grid', {type:val})
-          }},
-        {name:'gridcolor', value:'#f5f5f5', unit:'', isValue:true, label:'网格颜色', disptype:6, expression:null,
-          callback:(val:string)=>
-          {
-            eveBus.emit('change-grid-color', {color:val})
-          }
-        },
-        {name:'pagesplit', value:true, unit:'', isValue:true, label:'页面分割线', disptype:5, expression:null, callback:(val:boolean)=>
-        {
-          eveBus.emit('show-page-split', val)
-        }},
-        {name:'defdragpage', value:false, unit:'', isValue:true, label:'默认拖拽画布', disptype:5, expression:null, callback:(val:boolean)=>
-        {
-          eveBus.emit('drag-graph-page', val)
-        }},
-        {name:'celllabel', value:false, unit:'', isValue:true, label:'元件标签', disptype:5, expression:null, callback:(val:boolean)=>
-        {
-          eveBus.emit('show-cell-label', val)
-        }},
-        {name:'portlabel', value:false, unit:'', isValue:true, label:'引脚标签', disptype:5, expression:null},
-      ]
+      flds:common.getGConfigFlds()
     })
-    const store = useStore()
-    const global = reactive(common.getGVars())
+    
+    const global = reactive(store.state.variable.global)
     const _fld = common.getFlds()
     const _fldvalue = common.getFldValues()
     const actTab = ref<string>('globalVariable')
@@ -187,14 +176,16 @@ export default defineComponent({
       {name:'outlinelevel', label: '大纲级别', unit: '', isValue:true, disptype:1, fldValue:[], value:0},
     ])
     let flds = reactive<info[]>([])
-    
     watch(() => props.params, (newValue, oldValue) =>
     {
+     
+      if (oldValue&&newValue.type==oldValue.type)
+        return
+      updVal()
       graphType.value = newValue.type
-      
       if (props.params.type==='blank')
       {
-        actTab.value = 'globalVariable'
+        actTab.value =(actTab.value==='param')?'globalVariable':'graphConfig'
         description.name = '图纸'
         description.icon = 'icon-huabu'
         description.namec = '电力仿真-画布'
@@ -202,7 +193,7 @@ export default defineComponent({
       }
       else if (props.params.type==='edge')
       {
-        actTab.value = 'param'
+        actTab.value = (actTab.value==='globalVariable')?'param':'format'
         description.icon = 'icon-xian'
         description.name = '线'
         description.namec = '连接线'
@@ -210,7 +201,7 @@ export default defineComponent({
       }
       else
       {
-        actTab.value = 'param'
+        actTab.value = (actTab.value==='globalVariable')?'param':'format'
         description.icon = 'icon-node'
         description.name = newValue.data.namec
         description.namec = newValue.data.namec
@@ -239,21 +230,56 @@ export default defineComponent({
         
       }
     })
+    const updState = (param:any)=>
+    {
+     
+      if (Object.prototype.toString.call({})==='[object Object]')
+      {
+        const obj:{ [key: string]: any } = {}
+        obj[param.name] = param.value
+        store.commit('graphConfig/updState', obj)
+      }
+   
+    }
     const handleClick = () =>
     {
       console.log()
     }
     const addGlobal = ()=>
     {
-      global.push({name:'variable_'+(global.length+1), label:'', unit:'', disptype:1, default:'', isFunc:false},)
+      const add = { id:global.length+1, name:'variable_'+(global.length+1), label:'', unit:'', disptype:1, default:'', isFunc:false}
+      store.commit('variable/addGlobal', add)
     }
+
+    const onStart = (e: SortableEvent) =>
+    {
+      console.log('start', e)
+    }
+
+    const onEnd = (e: SortableEvent) =>
+    {
+      // console.log('onEnd', e)
+      const { newIndex, oldIndex } = e
+      store.commit('variable/changeGlobal', {oldIndex:Number(oldIndex), newIndex:Number(newIndex)})
+     
+    }
+    const onUpdate = () =>
+    {
+      console.log('update')
+    }
+    updVal()
     // onMounted(() =>
     // {
-    //   console.log(props.params)
+    
     // })
     // 暴露方法
     expose({})
     return {
+      disabled,
+      onStart,
+      onEnd,
+      onUpdate,
+      updState,
       actTab,
       configForm,
       isValue,

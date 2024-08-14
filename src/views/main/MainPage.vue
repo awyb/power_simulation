@@ -2,9 +2,9 @@
   .container { width: 100%;height: 100%;
     .collapse-btn { position: absolute;top: 0;}
     /deep/ .el-collapse-item__header { padding-left:20px;}
-    .drag-box { float: left;cursor: pointer;margin: 5px;padding: 5px; width: calc(50% - 20px);text-align: center;
-      &:hover { background: #e6e6e68e}}
-    img { width: 100%;height: 80px;object-fit: contain;}
+    .drag-box { float: left;cursor: pointer;margin: 10px;padding: 5px; width: calc(30% - 20px);text-align: center;
+      &:hover { background: #c1c1c18e}}
+    img { width: 100%;height: 60px;object-fit: contain;}
     /deep/ .el-collapse {--el-collapse-border-color: #dfdfdf;}
   }
 </style>

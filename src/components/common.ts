@@ -1,4 +1,6 @@
 
+import eveBus from '@/components/eveBus'
+
 export default class common
 {
   constructor(private opts={})
@@ -12,6 +14,50 @@ export default class common
       {name:'R2', label:'', unit:'', disptype:1, default:'0.228', isFunc:false},
     ]
     return global
+  }
+  static getGConfigFlds()
+  {
+    const flds = [
+      {name:'bgcolor', value: null, unit:'', isValue:true, label:'背景颜色', disptype:6, expression:null,
+        callback:(val:string)=>
+        {
+          eveBus.emit('change-graph-config', {color:val})
+        }},
+      {name:'gridtype', value:null, unit:'', isValue:true, label:'网格类型', disptype:2,
+        fldValue:[
+          {colname:'hidden', dbvalue:'hidden', disp:'hidden', dispc:'隐藏'},
+          {colname:'point', dbvalue:'dot', disp:'dot', dispc:'点阵'},
+          {colname:'nets', dbvalue:'mesh', disp:'mesh', dispc:'网状'},
+          {colname:'dbnewts', dbvalue:'doubleMesh', disp:'doubleMesh', dispc:'双层网状'}
+        ], expression:null,
+        callback:(val:string)=>
+        {
+          eveBus.emit('change-graph-grid', {type:val})
+        }},
+      {name:'gridcolor', value: null, unit:'', isValue:true, label:'网格颜色', disptype:6, expression:null,
+        callback:(val:string)=>
+        {
+          eveBus.emit('change-grid-color', {color:val})
+        }
+      },
+      {name:'pagesplit', value:null, unit:'', isValue:true, label:'页面分割线', disptype:5, expression:null, callback:(val:boolean)=>
+      {
+        eveBus.emit('show-page-split', val)
+      }},
+      {name:'defdragpage', value: null, unit:'', isValue:true, label:'默认拖拽画布', disptype:5, expression:null, callback:(val:boolean)=>
+      {
+        eveBus.emit('drag-graph-page', val)
+      }},
+      {name:'celllabel', value: null, unit:'', isValue:true, label:'元件标签', disptype:5, expression:null, callback:(val:boolean)=>
+      {
+        eveBus.emit('show-cell-label', val)
+      }},
+      {name:'portlabel', value: null, unit:'', isValue:true, label:'引脚标签', disptype:5, expression:null, callback:(val:boolean)=>
+      {
+        eveBus.emit('show-port-label', val)
+      }},
+    ]
+    return flds
   }
   static getFlds()
   {
@@ -205,7 +251,7 @@ export default class common
               y: 0.19,
             },
             attrs: {
-              text: { text: 'A组' },
+              text: { text: 'in2_1' },
             },
           },
           {
@@ -215,7 +261,10 @@ export default class common
             {
               x: 0.03,
               y: 0.81,
-            }
+            },
+            attrs: {
+              text: { text: 'in2_2' },
+            },
           },
           {
             id: 'in2_3',
@@ -224,7 +273,10 @@ export default class common
             {
               x: 0.36,
               y: 0.03,
-            }
+            },
+            attrs: {
+              text: { text: 'in2_3' },
+            },
           },
           {
             id: 'out2_1',
@@ -233,7 +285,10 @@ export default class common
             {
               x: 0.67,
               y: 0.03,
-            }
+            },
+            attrs: {
+              text: { text: 'out2_1' },
+            },
           },
           {
             id: 'out2_2',
@@ -242,7 +297,10 @@ export default class common
             {
               x: 0.96,
               y: 0.5,
-            }
+            },
+            attrs: {
+              text: { text: 'out2_2' },
+            },
           }
         ]
       }
@@ -289,6 +347,9 @@ export default class common
             {
               x: 0.5,
               y: 0.05,
+            },
+            attrs: {
+              text: { text: 'in4_1' },
             },
           }
         ]
@@ -344,6 +405,9 @@ export default class common
               x: 0.5,
               y: 0.2,
             },
+            attrs: {
+              text: { text: 'in5_1' },
+            },
           }
         ]
       }
@@ -397,6 +461,9 @@ export default class common
               x: 0.04,
               y: 0.5,
             },
+            attrs: {
+              text: { text: 'in6_1' },
+            },
           },
           {
             id: 'in6_2',
@@ -405,6 +472,9 @@ export default class common
             {
               x: 0.96,
               y: 0.5,
+            },
+            attrs: {
+              text: { text: 'in6_2' },
             },
           }
         ]
@@ -456,6 +526,9 @@ export default class common
             {
               x: 0.96,
               y: 0.5,
+            },
+            attrs: {
+              text: { text: 'in7_1' },
             },
           }
         ]
@@ -563,6 +636,9 @@ export default class common
               x: 0.96,
               y: 0.5,
             },
+            attrs: {
+              text: { text: 'in9_1' },
+            },
           }
         ]
       }
@@ -619,6 +695,9 @@ export default class common
               x: 0.96,
               y: 0.28,
             },
+            attrs: {
+              text: { text: 'in10_1' },
+            },
           },
           {
             id: 'in10_2',
@@ -627,6 +706,9 @@ export default class common
             {
               x: 0.96,
               y: 0.72,
+            },
+            attrs: {
+              text: { text: 'in10_2' },
             },
           },
           {
@@ -637,6 +719,9 @@ export default class common
               x: 0.04,
               y: 0.28,
             },
+            attrs: {
+              text: { text: 'in10_3' },
+            },
           },
           {
             id: 'in10_4',
@@ -645,6 +730,9 @@ export default class common
             {
               x: 0.04,
               y: 0.72,
+            },
+            attrs: {
+              text: { text: 'in10_4'},
             },
           }
         ]
@@ -704,8 +792,9 @@ export default class common
           },
           text:
           {
-            fontSize: 10,
+            fontSize: 16,
             fill: '#888',
+            display:'none',
           },
         },
         position:
@@ -713,7 +802,7 @@ export default class common
           name: 'absolute',
         },
         label: {
-          position: 'top', // 标签位置
+          position: 'outside', // 标签位置
         }
       },
       inline:
@@ -748,8 +837,9 @@ export default class common
           },
           text:
           {
-            fontSize: 10,
+            fontSize: 16,
             fill: '#888',
+            display:'none',
           },
         },
         position:
@@ -795,8 +885,9 @@ export default class common
           
           text:
           {
-            fontSize: 10,
+            fontSize: 16,
             fill: '#888',
+            display:'none',
           },
         },
         position:
@@ -804,7 +895,7 @@ export default class common
           name: 'absolute',
         },
         label: {
-          position: 'left', // 标签位置
+          position: 'outside', // 标签位置
         }
       }
     }
