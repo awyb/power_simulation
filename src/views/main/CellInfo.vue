@@ -179,7 +179,7 @@ export default defineComponent({
     watch(() => props.params, (newValue, oldValue) =>
     {
      
-      if (oldValue&&newValue.type==oldValue.type)
+      if (oldValue&&(newValue.type==='blank'&&oldValue.type==='blank'))
         return
       updVal()
       graphType.value = newValue.type
@@ -193,7 +193,7 @@ export default defineComponent({
       }
       else if (props.params.type==='edge')
       {
-        actTab.value = (actTab.value==='globalVariable')?'param':'format'
+        actTab.value = (actTab.value==='globalVariable'||actTab.value==='param')?'param':'format'
         description.icon = 'icon-xian'
         description.name = '线'
         description.namec = '连接线'
@@ -201,7 +201,7 @@ export default defineComponent({
       }
       else
       {
-        actTab.value = (actTab.value==='globalVariable')?'param':'format'
+        actTab.value = (actTab.value==='globalVariable'||actTab.value==='param')?'param':'format'
         description.icon = 'icon-node'
         description.name = newValue.data.namec
         description.namec = newValue.data.namec
