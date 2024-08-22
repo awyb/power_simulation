@@ -117,7 +117,6 @@ import common from '@/components/common'
 import { useStore } from 'vuex'
 import VarForm from '@/components/VarForm.vue'
 import DynForm from '@/components/DynForm.vue'
-// import eveBus from '@/components/eveBus'
 import { type UseDraggableReturn, type SortableEvent, VueDraggable } from 'vue-draggable-plus'
 // 接收菜单信息
 interface info
@@ -276,22 +275,22 @@ export default defineComponent({
     expose({})
     return {
       disabled,
-      onStart,
-      onEnd,
-      onUpdate,
-      updState,
       actTab,
       configForm,
       isValue,
-      handleClick,
       attConfig,
       collapseExp,
       graphType,
       global,
-      addGlobal,
       description,
       flds,
-      csparams
+      csparams,
+      onStart,
+      onEnd,
+      onUpdate,
+      updState,
+      handleClick,
+      addGlobal,
     }
   }
 })

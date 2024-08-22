@@ -5,12 +5,15 @@
     .drag-box { float: left;cursor: pointer;margin: 10px;padding: 5px; width: calc(30% - 20px);text-align: center;
       &:hover { background: #c1c1c18e}}
     img { width: 100%;height: 60px;object-fit: contain;}
-    /deep/ .el-collapse {--el-collapse-border-color: #dfdfdf;}
+    /deep/ .el-collapse {--el-collapse-border-color: #d9d9d9;}
   }
 </style>
 
 <template>
   <el-container class="container">
+    <el-aside :width="leftSideW" style="padding: 0;background: #484848;">
+      
+    </el-aside>
     <el-aside :width="collapseL?leftMenuW:'0px'" style="padding: 0;">
       <div style="width: 100%;height: 100%;background: #f3f3f3;">
         <el-collapse v-model="expArr">
@@ -72,8 +75,15 @@
       </div>
     </el-aside>
     <RightClickMenu ref="rightClickMenu" :menus="[1]"></RightClickMenu>
-    <el-button class="collapse-btn" size="small" :style="{left:collapseL?leftMenuW:'0px'}" @click="collapseL=!collapseL" :icon="collapseL?DArrowLeft:DArrowRight"></el-button>
-    <el-button class="collapse-btn" size="small" :style="{right:collapseR?rightMenuW:'0px'}" @click="collapseR=!collapseR" :icon="!collapseR?DArrowLeft:DArrowRight"></el-button>
+    <el-button class="collapse-btn" size="small" :style="{left:collapseL?calcDis(leftMenuW,leftSideW):leftSideW}" @click="collapseL=!collapseL" :icon="collapseL?DArrowLeft:DArrowRight" />
+    <el-button class="collapse-btn" size="small" :style="{right:collapseR?calcDis(rightMenuW,10):'10px'}" @click="collapseR=!collapseR" :icon="!collapseR?DArrowLeft:DArrowRight" />
+    <el-dialog v-model="dialogVisible"
+      title="Tips"
+      width="500"
+      draggable
+      overflow>
+      <component v-bind:is="currentTabComponent" :key="keyN"></component>
+    </el-dialog>
   </el-container>
 </template>
 
@@ -114,6 +124,8 @@ export default defineComponent({
     const store = useStore()
     const collapseL = ref<boolean>(true)
     const collapseR = ref<boolean>(true)
+    const dialogVisible = ref<boolean>(true)
+    const keyN = ref<number>(0)
     // const router = useRouter()
     // const childRef = ref(null)
     // router.push('/demo1')
@@ -155,10 +167,27 @@ export default defineComponent({
     {
       return store.state.leftMenuW + 'px'
     })
+    const leftSideW = computed(()=>
+    {
+      return store.state.leftSideW + 'px'
+    })
     const rightMenuW = computed(()=>
     {
       return store.state.rightMenuW + 'px'
     })
+    const currentTabComponent = computed(()=>
+    {
+      // eslint-disable-next-line
+      keyN.value = keyN.value + 1
+      // eslint-disable-next-line
+      dialogVisible.value = true
+      return store.state.curComp
+    })
+    
+    function calcDis(a:string|number, b:string|number)
+    {
+      return parseInt(a as string) + parseInt(b as string) + 'px'
+    }
     onMounted(()=>
     {
       collapseL.value = true
@@ -167,18 +196,23 @@ export default defineComponent({
     return {
       leftMenuW,
       rightMenuW,
+      leftSideW,
       childRef,
       rightClickMenu,
       collapseR,
       collapseL,
+      expArr,
+      nodeInfo,
+      moduleList,
+      dialogVisible,
+      currentTabComponent,
+      keyN,
       DArrowRight,
       DArrowLeft,
-      moduleList,
       handleDragEnd,
       handleRightClick,
       acceptData,
-      expArr,
-      nodeInfo
+      calcDis
     }
   }
 })

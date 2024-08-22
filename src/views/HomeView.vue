@@ -15,7 +15,7 @@
         <MainPage></MainPage>
       </el-main>
       <el-footer :height="pageFooterH" style="padding: 0;">
-        <!-- <Footer></Footer> -->
+        <Footer></Footer>
       </el-footer>
     </el-container>
   </div>
