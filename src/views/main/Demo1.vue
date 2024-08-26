@@ -607,7 +607,7 @@ export default defineComponent({
       eveBus.on('graph-export-toJson', () =>
       {
         const json = JSON.stringify(graph)
-        const data = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' })
+        const data = new Blob([json], { type: 'application/json' })
         const url = URL.createObjectURL(data)
         const a = document.createElement('a')
         a.href = url
@@ -618,8 +618,20 @@ export default defineComponent({
       })
       eveBus.on('graph-import-toJson', async() =>
       {
-        const comp = await import('@/views/header/Header.vue').then(module => module.default)
-        store.dispatch('changeUrl', comp)
+        const comp = await import('@/components/Upload.vue').then(module => module.default)
+        store.dispatch('changeUrl',
+          {
+            comp,
+            id: Math.random(),
+            title:'数据导入',
+            onOk: (att: any) =>
+            {
+              const ojson = graph.toJSON()
+              const njson = JSON.parse(att)
+              const json = { cells: [...ojson.cells, ...njson.cells] }
+              graph.fromJSON(json)
+            }
+          })
       })
     }
     onMounted(() =>
@@ -627,11 +639,11 @@ export default defineComponent({
       renderGraph()
       bindKey()
       loadDefNode()
-      const testJson = fetch('static/graph.json')
-      testJson.then(res=>res.json().then(json=>
-      {
-        graph.fromJSON(json)
-      }))
+      // const testJson = fetch('static/graph.json')
+      // testJson.then(res=>res.json().then(json=>
+      // {
+      //   graph.fromJSON(json)
+      // }))
     })
   
     onBeforeUnmount(() =>

@@ -6,6 +6,20 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "10902517",
+      "name": "全屏",
+      "font_class": "fullscreen",
+      "unicode": "e60a",
+      "unicode_decimal": 58890
+    },
+    {
+      "icon_id": "15340139",
+      "name": "取消全屏",
+      "font_class": "quxiaoquanping",
+      "unicode": "e6bb",
+      "unicode_decimal": 59067
+    },
+    {
       "icon_id": "1049981",
       "name": "保存",
       "font_class": "baocun",
@@ -32,13 +46,6 @@
       "font_class": "dakaiwenjianjia",
       "unicode": "e66a",
       "unicode_decimal": 58986
-    },
-    {
-      "icon_id": "23768610",
-      "name": "电力",
-      "font_class": "a-guihuatubiaoyuanwenjianFarlim_huaban1fuben11",
-      "unicode": "e60b",
-      "unicode_decimal": 58891
     },
     {
       "icon_id": "9826664",

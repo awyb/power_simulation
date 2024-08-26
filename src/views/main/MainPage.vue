@@ -1,11 +1,12 @@
 <style scoped lang="less">
   .container { width: 100%;height: 100%;
-    .collapse-btn { position: absolute;top: 0;}
+    .collapse-btn { position: absolute;top: 0;height: var(--collapse-button-height);width: var(--collapse-button-width);z-index:10;}
     /deep/ .el-collapse-item__header { padding-left:20px;}
     .drag-box { float: left;cursor: pointer;margin: 10px;padding: 5px; width: calc(30% - 20px);text-align: center;
       &:hover { background: #c1c1c18e}}
     img { width: 100%;height: 60px;object-fit: contain;}
     /deep/ .el-collapse {--el-collapse-border-color: #d9d9d9;}
+    .top-menu{height:30px;background: #e8e8e880;position: absolute;z-index:9;}
   }
 </style>
 
@@ -67,7 +68,7 @@
     </el-aside>
     <el-main style="padding: 0;overflow: hidden;">
       <!-- <router-view></router-view> -->
-       <Demo1 ref="childRef" @accept-data="acceptData" :widthL="collapseL?parseInt(leftMenuW):0"></Demo1>
+      <Demo1 ref="childRef" @accept-data="acceptData" :widthL="collapseL?parseInt(leftMenuW):0"/>
     </el-main>
     <el-aside :width="collapseR?rightMenuW:'0px'" style="padding: 0;">
       <div style="width: 100%;height: 100%;background: #f3f3f3;">
@@ -75,21 +76,25 @@
       </div>
     </el-aside>
     <RightClickMenu ref="rightClickMenu" :menus="[1]"></RightClickMenu>
-    <el-button class="collapse-btn" size="small" :style="{left:collapseL?calcDis(leftMenuW,leftSideW):leftSideW}" @click="collapseL=!collapseL" :icon="collapseL?DArrowLeft:DArrowRight" />
-    <el-button class="collapse-btn" size="small" :style="{right:collapseR?calcDis(rightMenuW,10):'10px'}" @click="collapseR=!collapseR" :icon="!collapseR?DArrowLeft:DArrowRight" />
+    <el-button class="collapse-btn" type="text" :style="{left:collapseL?calcDis(leftMenuW,leftSideW):leftSideW}" @click="collapseL=!collapseL" :icon="collapseL?DArrowLeft:DArrowRight" />
+    <el-button class="collapse-btn" type="text" :style="{right:collapseR?calcDis(rightMenuW,10):'10px'}" @click="collapseR=!collapseR" :icon="!collapseR?DArrowLeft:DArrowRight" />
+    <div class="top-menu" :style="{width: `calc(100% - ${calcDis(90,leftMenuW,rightMenuW)})`,left:calcDis(leftMenuW,40)}">
+      <div style="background: white;height: 100%;width: fit-content;"><span style="padding: 5px 50px;">图纸1</span></div>
+    </div>
     <el-dialog v-model="dialogVisible"
-      title="Tips"
       width="500"
       draggable
-      overflow>
-      <component v-bind:is="currentTabComponent" :key="keyN"></component>
+      overflow
+      :title="currentTabComponent?.title"
+     >
+      <component v-bind:is="currentTabComponent?.comp" @read-success="currentTabComponent?.onOk" @close="closeModal" :key="currentTabComponent?.id"></component>
     </el-dialog>
   </el-container>
 </template>
 
 <script lang="ts">
 import { DArrowRight, DArrowLeft } from '@element-plus/icons-vue'
-import { defineComponent, onMounted, ref, onBeforeUnmount, Ref, computed} from 'vue'
+import { defineComponent, onMounted, ref, onBeforeUnmount, Ref, computed, watch, reactive} from 'vue'
 // import { useRouter } from 'vue-router'
 import Demo1 from '@/views/main/Demo1.vue'
 import common from '@/components/common'
@@ -104,11 +109,18 @@ interface HTMLElement
 }
 interface Img
 {
-  id:number,
+  id: number,
   name: string,
   src: string,
   type:number,
   config: object
+}
+interface component
+{
+  id: number,
+  comp: component,
+  title: string,
+  onOk: () => void
 }
 
 export default defineComponent({
@@ -124,14 +136,13 @@ export default defineComponent({
     const store = useStore()
     const collapseL = ref<boolean>(true)
     const collapseR = ref<boolean>(true)
-    const dialogVisible = ref<boolean>(true)
-    const keyN = ref<number>(0)
+    const dialogVisible = ref<boolean>(false)
     // const router = useRouter()
     // const childRef = ref(null)
     // router.push('/demo1')
     const childRef: Ref<HTMLElement | null> = ref(null)
     const rightClickMenu: Ref<HTMLElement | null> = ref(null)
-   
+    const currentTabComponent: Ref<component | null> = ref(null)
     // 列表
     const moduleList = ref<Img[]>([])
     const expArr = ref<string[]>(['3'])
@@ -175,18 +186,24 @@ export default defineComponent({
     {
       return store.state.rightMenuW + 'px'
     })
-    const currentTabComponent = computed(()=>
+    watch(()=>store.state.curComp, (n)=>
     {
-      // eslint-disable-next-line
-      keyN.value = keyN.value + 1
-      // eslint-disable-next-line
       dialogVisible.value = true
-      return store.state.curComp
+      currentTabComponent.value = n
     })
     
-    function calcDis(a:string|number, b:string|number)
+    function calcDis(a:string|number, b:string|number, ...args:(string|number)[])
     {
-      return parseInt(a as string) + parseInt(b as string) + 'px'
+      let dis = parseInt(a as string) + parseInt(b as string)
+      args.forEach(n=>
+      {
+        dis += parseInt(n as string)
+      })
+      return dis + 'px'
+    }
+    function closeModal()
+    {
+      dialogVisible.value = false
     }
     onMounted(()=>
     {
@@ -206,13 +223,13 @@ export default defineComponent({
       moduleList,
       dialogVisible,
       currentTabComponent,
-      keyN,
       DArrowRight,
       DArrowLeft,
       handleDragEnd,
       handleRightClick,
       acceptData,
-      calcDis
+      calcDis,
+      closeModal
     }
   }
 })
