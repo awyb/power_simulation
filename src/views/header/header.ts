@@ -1,0 +1,1 @@
+export interface FullConfig { content: string, icon: string }
