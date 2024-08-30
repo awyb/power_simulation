@@ -12,7 +12,7 @@
   }
   .logo { height: 80%; }
   .oper-box { cursor: pointer; }
-  .iconfont { font-size: var(--icon-font-size); margin-left: var(--header-icon-distance); }
+  .iconfont { font-size: var(--icon-font-size); margin-left: var(--header-icon-distance); color: var(--color2); }
 }
 </style>
 <template>
@@ -40,7 +40,7 @@
   </div>
 </template>
 <script lang="ts" setup name="Header">
-import eveBus from '@/components/eveBus'
+import eveBus from '@/components/ts/eveBus'
 import { reactive, ref } from 'vue'
 import { FullConfig } from './header'
 import { useI18n } from 'vue-i18n'

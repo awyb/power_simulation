@@ -30,7 +30,6 @@ import { useStore } from 'vuex'
 import Header from '@/views/header/Header.vue'
 import MainPage from '@/views/main/MainPage.vue'
 import Footer from '@/views/footer/Footer.vue'
-
 @Options({
   components:
   {
@@ -44,5 +43,9 @@ export default class HomeView extends Vue
   private store = useStore()
   public pageHeaderH = this.store.state.pageHeaderH + 'px'
   public pageFooterH = this.store.state.pageFooterH + 'px'
+  created(): void
+  {
+    this.store.dispatch('variable/init')
+  }
 }
 </script>

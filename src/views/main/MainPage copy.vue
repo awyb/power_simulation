@@ -7,7 +7,7 @@
         }
       }
       .center{display: flex; flex: 1;}
-      .lable{padding: var(--tab-menu-lable-padding);height: var(--tab-menu-height);line-height: var(--tab-menu-height);cursor: pointer;border-left: var(--tab-menu-left-border);}
+      .lable{padding: var(--tab-menu-lable-padding);height: var(--tab-menu-height);line-height: var(--tab-menu-height);}
     }
   }
 </style>
@@ -17,7 +17,7 @@
     <el-aside :width="leftSideW" style="padding: 0;background: var(--left-aside-bg-color);">
     </el-aside>
     <el-aside :width="leftMenuW" style="padding: 0;">
-      <left-menu :cellsList="cellsList" expand-first @drag-end="handleDragEnd" />
+       <left-menu :cellsList="cellsList" @drag-end="handleDragEnd" />
     </el-aside>
     <el-main style="padding: 0;overflow: hidden;">
       <!-- <router-view></router-view> -->
@@ -26,13 +26,8 @@
           <i :class="`iconfont icon-${collapseL?'left':'right'}-arrow`" />
         </el-button>
         <div class="center">
-          <div class="lable"
-            v-for="page in pageDirs"
-            :key="page.name"
-            :style="{background: page.name==selPage?'var(--tab-menu-check-bg-color)':''}"
-            @click="selPage=page.name">
-            <i class="iconfont icon-niantie"></i>{{ page.namec }}
-          </div>
+          <div class="lable"><i class="iconfont icon-niantie"></i>图纸1</div>
+          <div class="lable" style="background: white;"><i class="iconfont icon-niantie"></i>图纸2</div>
         </div>
         <el-button class="collapse-btn" type="text" @click="collapseR=!collapseR">
            <i :class="`iconfont icon-${!collapseR?'left':'right'}-arrow`" />
@@ -55,71 +50,81 @@
         @close="closeModal"
         :key="currentTabComponent?.id"/>
     </el-dialog>
-    <RightClickMenu ref="rightClickMenu"/>
   </el-container>
 </template>
 
 <script lang="ts" setup name="MainPage">
-// 导入模块
-import { onMounted, ref, Ref, computed, watch, defineAsyncComponent, defineComponent, onBeforeUnmount } from 'vue'
-import { cellsList, dlgComponent, graphRef, pageDirectory, RightMenuEvent } from '@/views/main/interfaceBase'
+import { onMounted, ref, Ref, computed, watch, defineAsyncComponent, defineComponent } from 'vue'
+import { cellsList, cellNode, component, graphRef } from '@/views/main/interfaceBase'
 import { useStore } from 'vuex'
-import eveBus from '@/components/ts/eveBus'
-// 引入接口
+// import { useRouter } from 'vue-router'
+
 import common from '@/components/ts/common'
-// 引入组件
+
 import GraphPage from '@/views/main/GraphPage.vue'
 import CellInfo from '@/views/main/CellInfo.vue'
-import RightClickMenu from '@/components/RightClickMenu.vue'
-// 定义变量
-const selPage = ref<string>('') // 当前图纸
-const pageDirs = ref<Array<pageDirectory>>([{ name: 'page1', namec:'图纸1'}, {name: 'page2', namec:'图纸2'}]) // 图纸目录
-const store = useStore() // 使用useStore()函数获取store实例
-const collapseL = ref<boolean>(false) // 左侧菜单栏是否折叠
-const collapseR = ref<boolean>(true) // 右侧菜单栏是否折叠
-const dialogVisible = ref<boolean>(false) // 弹窗是否显示
-const childRef: Ref<graphRef | null> = ref(null) // 子组件的引用
-const currentTabComponent: Ref<dlgComponent | null> = ref(null) // 当前弹窗组件
-const cellsList = ref<cellsList[]>([]) // 原件列表
-const nodeInfo = ref<object>({}) // 结点信息
-const LeftMenu = ref<ReturnType<typeof defineComponent> | null>(null) // 左侧菜单栏组件，用于动态加载
-const rightClickMenu: Ref<RightMenuEvent | null> = ref(null)
-// 计算属性
-const leftMenuW = computed(()=> // 获取左侧菜单宽度
+// import LeftMenu from '@/views/main/leftMenu/LeftMenu.vue'
+
+
+const store = useStore()
+const collapseL = ref<boolean>(true)
+const collapseR = ref<boolean>(true)
+const dialogVisible = ref<boolean>(false)
+// const router = useRouter()
+// const childRef = ref(null)
+// router.push('/demo1')
+const childRef: Ref<graphRef | null> = ref(null)
+const currentTabComponent: Ref<component | null> = ref(null)
+// 列表
+const cellsList = ref<cellsList[]>([])
+const nodeInfo = ref<object>({})
+const LeftMenu = ref<ReturnType<typeof defineComponent> | null>(null)
+   
+const leftMenuW = computed(()=>
 {
   return (collapseL.value? store.state.leftMenuW:0) + 'px'
 })
-const leftSideW = computed(()=> // 监听左侧侧边栏宽度
+const leftSideW = computed(()=>
 {
   return store.state.leftSideW + 'px'
 })
-const rightMenuW = computed(()=> // 获取右侧菜单宽度
+const rightMenuW = computed(()=>
 {
   return (collapseR.value? store.state.rightMenuW:0)+ 'px'
 })
-// 监听
-watch(()=>store.state.curComp, (n)=>// 动态组件接收
+watch(()=>store.state.curComp, (n)=>
 {
   dialogVisible.value = true
   currentTabComponent.value = n
 })
-// 方法
-function handleDragEnd({clientX, clientY, node}:any) // 结点拖拽结束
+function getVarVal(varName:string)
+{
+  return getComputedStyle(document.documentElement).getPropertyValue(varName)
+}
+function handleDragEnd({clientX, clientY, node}:any)
 {
   childRef.value?.dragEnd(clientX, clientY, node)
 }
-function acceptData(data:object) // 接收子组件传来的数据
+function acceptData(data:object)
 {
   nodeInfo.value = data
 }
-
-function closeModal() // 关闭弹窗
+function calcDis(a:string|number, b:string|number, ...args:(string|number)[])
+{
+  let dis = parseInt(a as string) + parseInt(b as string)
+  args.forEach(n=>
+  {
+    dis += parseInt(n as string)
+  })
+  return dis + 'px'
+}
+function closeModal()
 {
   dialogVisible.value = false
 }
-async function initNodes() // 初始化结点
+async function initNodes()
 {
-  const nodes = await common._getNodes()
+  const nodes = common.getNodes()
   cellsList.value = await common.getDirectory()
   cellsList.value?.forEach((dir) =>
   {
@@ -127,22 +132,11 @@ async function initNodes() // 初始化结点
   })
   LeftMenu.value = defineAsyncComponent(() =>import('@/views/main/leftMenu/LeftMenu.vue'))
 }
-// 组件挂载
+initNodes()
 onMounted(()=>
 {
-  // 当组件挂载时，将collapseL和collapseR的值设置为true, 先让画布加载
   collapseL.value = true
   collapseR.value = true
-  if (pageDirs.value.length)
-    selPage.value = pageDirs.value[0].name
 })
-onBeforeUnmount(()=>
-{
-  eveBus.all.clear()
-})
-eveBus.on('right-menu', (params:any) =>
-{
-  rightClickMenu.value?.open(params.e, params.menus, params.data)
-})
-initNodes()
+
 </script>

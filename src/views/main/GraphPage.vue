@@ -1,6 +1,6 @@
 <style scoped lang="less">
-  .container { width: 100%;height: 100%;font-size:14px;
-    .context-menu { position: absolute;border: 1px solid #ccc;background-color: white;list-style: none;padding: 0;margin: 0;z-index: 1000; }
+  .container { width: 100%;height: 100%;
+    .context-menu { position: absolute;border: 1px solid #ccc;background-color: white;list-style: none;padding: 0;margin: 0;z-index: 1000;font-size:14px; }
     .context-menu li { display: flex;align-items: center;justify-content: space-between; padding: 10px 15px;width:200px; cursor: pointer;
       span:nth-child(2) { color: #a8a8a8;font-style: italic;font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif; }
     }
@@ -8,59 +8,16 @@
     .el-icon { margin-right: 5px;}
     i { margin-right:5px; }
   }
-  
 </style>
 
 <template>
    <div class="container">
     <div class="container" ref="container"></div>
-    <ul v-if="contextMenuVisible" ref="rightmenu" :style="{ top: `${menuPosition.y}px`, left: `${menuPosition.x}px`,transform:translatecss }" class="context-menu">
-      <li @click="editEdge">
-        <span><el-icon><component :is="'Edit'"/></el-icon>编辑</span>
-        <span></span>
-      </li>
-      <li @click="excute('delete')">
-        <span><i class="iconfont icon-shanchu"></i>删除</span>
-        <span>Delete</span>
-      </li>
-      <li @click="excute('cut')">
-        <span><i class="iconfont icon-cut"></i>剪切</span>
-        <span>Ctrl+X</span>
-      </li>
-      <li @click="excute('copy')">
-        <span><i class="iconfont icon-copy"></i>复制</span>
-        <span>Ctrl+C</span>
-      </li>
-      <li @click="pasteFun">
-        <span><i class="iconfont icon-niantie"></i>粘贴</span>
-        <span>Ctrl+V</span>
-      </li>
-      <li @click="excute('create')">
-        <span><i class="iconfont icon-xinjian"></i>创建副本</span>
-        <span>Ctrl+D</span>
-      </li>
-      <li @click="excute('rotateR')">
-        <span><i class="iconfont icon-a-xuanzhuanmianban-rotatepanel-1"></i>顺时针旋转</span>
-        <span>Ctrl+R</span>
-      </li>
-      <li @click="excute('rotateL')">
-        <span><i class="iconfont icon-a-xuanzhuanmianban-rotatepanel-anti-1"></i>逆时针旋转</span>
-        <span>Ctrl+Shift+R</span>
-      </li>
-      <li @click="excute('undo')">
-        <span><i class="iconfont icon-undo"></i>撤销</span>
-        <span>Ctrl+Z</span>
-      </li>
-      <li @click="excute('redo')">
-        <span><i class="iconfont icon-zhongzuo"></i>重做</span>
-        <span>Ctrl+Y</span>
-      </li>
-    </ul>
   </div>
 </template>
 
 <script lang="ts">
-import { Graph, Shape, Cell, Node, Edge } from '@antv/x6'
+import { Graph, Shape, Cell, Edge } from '@antv/x6'
 import { Transform } from '@antv/x6-plugin-transform'
 import { Selection } from '@antv/x6-plugin-selection'
 import { Snapline } from '@antv/x6-plugin-snapline'
@@ -68,16 +25,18 @@ import { Keyboard } from '@antv/x6-plugin-keyboard'
 import { Clipboard } from '@antv/x6-plugin-clipboard'
 import { History } from '@antv/x6-plugin-history'
 import { Scroller } from '@antv/x6-plugin-scroller'
+import { useStore } from 'vuex'
+import { defineComponent, onMounted, ref, onBeforeUnmount, reactive, h, Ref } from 'vue'
+import { ElNotification } from 'element-plus'
 
 import { graphEvents } from './graphEvents'
-import common from '@/components/common'
+import common from '@/components/ts/common'
 import graphcom from './graph'
-import { useStore } from 'vuex'
-import { defineComponent, onMounted, ref, onBeforeUnmount, reactive } from 'vue'
-import { ElNotification } from 'element-plus'
-import eveBus from '@/components/eveBus'
+import eveBus from '@/components/ts/eveBus'
+
+import { RightMenuEvent, RightMenu } from '@/views/main/interfaceBase'
 export default defineComponent({
-  name: 'Demo1',
+  name: 'GraphPage',
   props:{
     widthL: {
       type: Number,
@@ -86,6 +45,7 @@ export default defineComponent({
   },
   setup(props, { expose, emit })
   {
+    const rightClickMenu: Ref<RightMenuEvent | null> = ref(null)
     const container = ref<HTMLElement | null>(null)
     const rightmenu = ref<HTMLElement | null>(null)
     const contextMenuVisible = ref(false)
@@ -93,25 +53,126 @@ export default defineComponent({
     const toolsConfig = common.toolsConfig()
     const translatecss = ref('')
     
+    const menus = ref<RightMenu[]>([
+      {
+        name: 'edit',
+        namec: '编辑',
+        icon: 'iconfont icon-edit',
+        keybord:'',
+        click: () =>
+        {
+          editEdge()
+        },
+      },
+      {
+        name: 'delete',
+        namec: '删除',
+        icon: 'iconfont icon-shanchu',
+        keybord:'Delete',
+        click: () =>
+        {
+          excute('delete')
+        },
+      },
+      {
+        name: 'cut',
+        namec: '剪切',
+        icon: 'iconfont icon-cut',
+        keybord:'Ctrl+X',
+        click: () =>
+        {
+          excute('cut')
+        },
+      },
+      {
+        name: 'copy',
+        namec: '剪切',
+        icon: 'iconfont icon-copy',
+        keybord:'Ctrl+C',
+        click: () =>
+        {
+          excute('copy')
+        },
+      },
+      {
+        name: 'stick',
+        namec: '粘贴',
+        icon: 'iconfont icon-niantie',
+        keybord:'Ctrl+V',
+        click: () =>
+        {
+          pasteFun()
+        },
+      },
+      {
+        name: 'create',
+        namec: '创建副本',
+        icon: 'iconfont icon-xinjian',
+        keybord:'Ctrl+D',
+        click: () =>
+        {
+          excute('create')
+        },
+      },
+      {
+        name: 'rotateR',
+        namec: '顺时针旋转',
+        icon: 'iconfont icon-a-xuanzhuanmianban-rotatepanel-1',
+        keybord:'Ctrl+R',
+        click: () =>
+        {
+          excute('rotateR')
+        },
+      },
+      {
+        name: 'rotateL',
+        namec: '逆时针旋转',
+        icon: 'iconfont icon-a-xuanzhuanmianban-rotatepanel-anti-1',
+        keybord:'Ctrl+Shift+R',
+        click: () =>
+        {
+          excute('rotateL')
+        },
+      },
+      {
+        name: 'undo',
+        namec: '撤销',
+        icon: 'iconfont icon-undo',
+        keybord:'Ctrl+Z',
+        click: () =>
+        {
+          excute('undo')
+        },
+      },
+      {
+        name: 'redo',
+        namec: '重做',
+        icon: 'iconfont icon-zhongzuo',
+        keybord:'Ctrl+Y',
+        click: () =>
+        {
+          excute('redo')
+        },
+      }])
     let checkEdge: Edge|null, selectedCell: Cell|null, graph: Graph, excuteGraph:object|null, scroller:Scroller|null
     let [gridColor, showLabel, showPortLabel, dragPage] = ['#ddd', 'none', 'none', false]
     const store = useStore()
     const pageHeaderH = store.state.pageHeaderH
     
     // 拖拽结束,渲染到画布上
-    const dragEnd = (x:number, y:number, config:object)=>
+    const dragEnd = (x:number, y:number, node:object)=>
     {
       if (!container.value) return
 
-      const n = Object(config)
+      const n = Object(node)
       const p = graph.pageToLocal(x, y)
       const [X, Y] = [p.x - n.width/2, p.y - n.height/2]
       // 添加节点到画布
-      const node = graph.addNode(Object({...n, x:X, y:Y}))
-      node.attr('label/display', showLabel)
-      node.getPorts().forEach(port =>
+      const _node = graph.addNode(Object({...n, x:X, y:Y}))
+      _node.attr('label/display', showLabel)
+      _node.getPorts().forEach(port =>
       {
-        node.portProp(port.id+'', 'attrs/text/display', showPortLabel)
+        _node.portProp(port.id+'', 'attrs/text/display', showPortLabel)
       })
     }
     const editEdge = () =>
@@ -147,23 +208,30 @@ export default defineComponent({
       graph.cleanSelection()
       graph.select(cells)
     }
+    function handleRightClick(e:MouseEvent)
+    {
+      eveBus.emit('right-menu', { e, menus:menus.value, data:{} })
+    }
     const bindKey = ()=>
     {
       graph.on('cell:contextmenu', ({ cell, e }) =>
       {
         if (!container.value) return
-        e.preventDefault()
+        // e.preventDefault()
         const pos = graph.clientToGraph(e.clientX+props.widthL, e.clientY)
         menuPosition.x = e.clientX
         menuPosition.y = e.clientY-store.state.pageHeaderH
 
         translatecss.value = `translate(${window.innerWidth-e.clientX<=store.state.rmenuBoxW?'-100%':'0'},${window.innerHeight-e.clientY-pageHeaderH<(rightmenu&&rightmenu.value?rightmenu.value.offsetHeight:400)?'-100%':'0'})`
-        
-        selectedCell = cell
+        graph.select(cell)
+        // selectedCell = cell
         contextMenuVisible.value = true
+        eveBus.emit('right-menu', { e, menus:menus.value, data:{} })
       })
-      graph.on('blank:contextmenu', ({ e }) =>
+      graph.on('blank:contextmenu', (args) =>
       {
+        console.log(args)
+        const e = args.e
         if (!container.value) return
         e.preventDefault()
         const pos = graph.clientToGraph(e.clientX+props.widthL, e.clientY)
@@ -174,8 +242,8 @@ export default defineComponent({
         // 屏幕宽度:window.screen.width
         // 浏览器窗口宽度:window.innerWidth e.clientX
         // container.value.offsetHeight
-       
         contextMenuVisible.value = true
+        eveBus.emit('right-menu', { e, menus:menus.value, data:{} })
       })
       graph.on('edge:connected', async(args) =>
       {
@@ -192,15 +260,14 @@ export default defineComponent({
         const target = args.edge.getTargetCell()
         if (source && target)
         {
-          if (getNodeType(source) && getNodeType(target)&&getNodeType(source) !== getNodeType(target))
+          if (getNodeDimension(source) && getNodeDimension(target)&&getNodeDimension(source) !== getNodeDimension(target))
           {
-            const Icon = await import('./Icon.vue').then(module => module.default)
             ElNotification({
               title: '连接失败',
               position: 'bottom-right',
-              message: `引脚 X 维度不相等，首端维度 ${getNodeType(source)}，末端维度 ${getNodeType(target)}`,
+              message: `引脚 X 维度不相等，首端维度 ${getNodeDimension(source)}，末端维度 ${getNodeDimension(target)}`,
               showClose: true,
-              icon: Icon,
+              icon: h('i', {class:'iconfont icon-jinggao', style:'color:#faad14;'}, ''),
               duration: 20000,
               customClass:'msg-warning'
             })
@@ -340,12 +407,12 @@ export default defineComponent({
       //   gNodes.push(graph.addNode(Object(node)))
       // })
     }
-    const getNodeType = (cell:Cell|null|undefined) =>
+    const getNodeDimension = (cell:Cell|null|undefined) =>
     {
       if (!cell) return null
       if (!cell.isNode) return null
-      if (cell.data && Object.prototype.hasOwnProperty.call(cell.data, 'type'))
-        return cell.data.type
+      if (cell.data && Object.prototype.hasOwnProperty.call(cell.data, 'dimension'))
+        return cell.data.dimension
       return null
     }
     const renderGraph = ()=>
@@ -449,8 +516,8 @@ export default defineComponent({
           },
           validateConnection(args)
           {
-            // if (getNodeType(args.sourceCell) && getNodeType(args.targetCell))
-            //   return getNodeType(args.sourceCell) === getNodeType(args.targetCell)
+            // if (getNodeDimension(args.sourceCell) && getNodeDimension(args.targetCell))
+            //   return getNodeDimension(args.sourceCell) === getNodeDimension(args.targetCell)
             if (args.targetCell?.id===args.sourceCell?.id)
               return Boolean(args.sourcePort!==args.targetPort)
             return Boolean(args.targetView?.isEdgeView()||args.targetMagnet)
@@ -660,8 +727,10 @@ export default defineComponent({
       container,
       rightmenu,
       contextMenuVisible,
+      rightClickMenu,
       menuPosition,
       translatecss,
+      handleRightClick,
       editEdge,
       dragEnd,
       excute,

@@ -1,18 +1,23 @@
 <style scoped lang="less">
-  .cell-info { height: calc(100% - 40px);width: 100%; padding: 20px 0; display: flex;flex-direction: column;
+  .cell-info { height: calc(100% - 40px);width: 100%; padding: 20px 0; display: flex;flex-direction: column;background: var(--color1);
     .top{width: 100%;height: 70px;
       .description{margin: 5px;}
       .title{font-size: 10px;margin-left: 20px;color:#676767e8}
     }
     .info-tabs { flex: 1;position: relative;height:0%;
       /deep/ .el-tabs__content{height: calc(100% - 50px);overflow-y: auto;}
-      .el-input, .el-select, .el-switch {width: 150px;height: 30px;}
-      .end-label {font-size: 16px;font-weight: bold;cursor: pointer;margin-left: 5px;height: 30px;}
+      .el-input, .el-select, .el-switch {width: 140px;height: 30px;}
+      .end-label {font-size: 16px;font-weight: bold;cursor: pointer;margin-left: 5px;height: 30px;margin-right:10px;width: 20px;}
     }
   }
   /deep/.el-form-item__label {white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline;}
   /deep/.el-tabs__nav{transform: translateX(30px) !important;}
   /deep/.el-form-item{margin-bottom:5px;}
+  /deep/.el-form-item__content{justify-content: end;}
+  /deep/ .el-collapse-item__header { padding-left:20px; }
+  /deep/ .el-collapse { --el-collapse-border-color: var(--collapse-border-color); }
+  /deep/ .el-collapse:first-of-type{border: none;}
+  /deep/ .el-collapse-item__content{padding-bottom:0;}
   .add-global{text-align: center;cursor: pointer;font-size: 14px;color:rgba(0, 0, 0,0.6);font-weight: bold;}
   .line-config{width: 100%;height: 100%;display: flex;align-items: center;justify-content: center;}
 </style>
@@ -36,8 +41,8 @@
                     <span>{{label}}</span>
                   </el-tooltip>
                 </template>
-                <el-input v-if="item.disptype===1||!item.isValue" v-model="item.value" class="el-input">
-                  <template v-if="item.isValue" #suffix>{{ item.unit }}</template>
+                <el-input v-if="item.disptype===1||!item.isval" v-model="item.value" class="el-input">
+                  <template v-if="item.isval" #suffix>{{ item.unit }}</template>
                 </el-input>
                 <el-select v-else-if="item.disptype===2" v-model="item.value" class="el-select">
                   <el-option
@@ -48,7 +53,7 @@
                   />
                 </el-select>
                 <el-switch v-else-if="item.disptype===3" size="small" v-model="item.value" :active-text="item.value?'是':'否'" class="el-switch"/>
-                <label class="end-label" @click="item.isValue=!item.isValue" v-html="item.isValue?'(x)':'ƒ<sub>x</sub>'"></label>
+                <label class="end-label" @click="item.isval=!item.isval" v-html="item.isval?'(x)':'ƒ<sub>x</sub>'"></label>
               </el-form-item>
             </el-form>
           </el-collapse-item>
@@ -62,8 +67,8 @@
                         <span>{{label}}</span>
                       </el-tooltip>
                     </template>
-                    <el-input v-if="item.disptype===1||!item.isValue" v-model="configForm[item.name]" class="el-input">
-                      <template v-if="item.isValue" #suffix>{{ item.unit }}</template>
+                    <el-input v-if="item.disptype===1||!item.isval" v-model="configForm[item.name]" class="el-input">
+                      <template v-if="item.isval" #suffix>{{ item.unit }}</template>
                     </el-input>
                     <el-select v-else-if="item.disptype===2" v-model="configForm[item.name]" class="el-select">
                       <el-option
@@ -73,13 +78,24 @@
                         :key="i"
                       />
                     </el-select>
-                    <label class="end-label" @click="item.isValue=!item.isValue" v-html="item.isValue?'(x)':'ƒ<sub>x</sub>'"></label>
+                    <label class="end-label" @click="item.isval=!item.isval" v-html="item.isval?'(x)':'ƒ<sub>x</sub>'"></label>
                   </el-form-item>
                 </el-form>
               </el-collapse-item>
-              <el-collapse-item name="2" title="Configuration-SFEMT">
-              </el-collapse-item>
             </el-collapse>
+          </el-collapse-item>
+           <el-collapse-item name="3" title="引脚" v-if="graphType==='node'">
+            <el-form :model="configForm" label-width="120px" style="width: 300px;padding: 10px 20px 10px 40px;">
+              <el-form-item :label="port.name" v-for="(port,index) in ports" :key="index">
+                <template #label="{label}">
+                  <el-tooltip :content="label" placement="left">
+                    <span>{{label}}</span>
+                  </el-tooltip>
+                </template>
+                <el-input v-model="configForm[port.name]" class="el-input"/>
+                <label class="end-label" @click="port.isval=!port.isval" v-html="port.isval?'(x)':'ƒ<sub>x</sub>'"></label>
+              </el-form-item>
+            </el-form>
           </el-collapse-item>
         </el-collapse>
         <div class="line-config" v-else-if="graphType==='edge'">
@@ -100,7 +116,7 @@
           @start="onStart"
           @update="onUpdate"
           @end="onEnd">
-          <var-form v-for="g in global" :key="g.id" :params="{...g,value:g.default,isValue:g.isFunc}"></var-form>
+          <var-form v-for="g in global" :key="g.id" :params="{...g,value:g.defval}"></var-form>
         </Draggable>
         <div class="add-global" @click="addGlobal">(x)新建全局变量</div>
       </el-tab-pane>
@@ -113,7 +129,7 @@
 
 <script lang="ts">
 import { reactive, ref, defineComponent, onMounted, watch} from 'vue'
-import common from '@/components/common'
+import common from '@/components/ts/common'
 import { useStore } from 'vuex'
 import VarForm from '@/components/VarForm.vue'
 import DynForm from '@/components/DynForm.vue'
@@ -124,7 +140,7 @@ interface info
   name: string,
   label: string,
   unit: string,
-  isValue: boolean,
+  isval: boolean,
   disptype: number,
   fldValue: { colname: string, dbvalue: number, disp: string, dispc: string }[],
   value:any
@@ -162,7 +178,7 @@ export default defineComponent({
     const _fld = common.getFlds()
     const _fldvalue = common.getFldValues()
     const actTab = ref<string>('globalVariable')
-    const isValue = ref<boolean>(true)
+    const isval = ref<boolean>(true)
     const graphType = ref<string>('blank')
     const description = reactive({name:'图纸', namec:'电力仿真-画布', icon:'icon-huabu'})
     const configForm:{[key: string]: any} = reactive({})
@@ -171,10 +187,11 @@ export default defineComponent({
       children:['1', '2']
     })
     const attConfig = reactive<info[]>([
-      {name:'enable', label: '启用', unit: '', isValue:true, disptype:3, fldValue:[], value:true},
-      {name:'outlinelevel', label: '大纲级别', unit: '', isValue:true, disptype:1, fldValue:[], value:0},
+      {name:'enable', label: '启用', unit: '', isval:true, disptype:3, fldValue:[], value:true},
+      {name:'outlinelevel', label: '大纲级别', unit: '', isval:true, disptype:1, fldValue:[], value:0},
     ])
     let flds = reactive<info[]>([])
+    const ports = ref<any[]>([])
     watch(() => props.params, (newValue, oldValue) =>
     {
      
@@ -200,6 +217,7 @@ export default defineComponent({
       }
       else
       {
+        ports.value = newValue.data.data.ports.map((p:any)=>({...p, isval:true, unit:''}))
         actTab.value = (actTab.value==='globalVariable'||actTab.value==='param')?'param':'format'
         description.icon = 'icon-node'
         description.name = newValue.data.namec
@@ -218,9 +236,9 @@ export default defineComponent({
           if (configuration.hasOwnProperty(key)&& temp)
           {
             if (temp.disptype===1)
-              flds.push({name:key, label: temp.label, unit: temp.unit, isValue:true, disptype:1, fldValue:[], value:''})
+              flds.push({name:key, label: temp.label, unit: temp.unit, isval:true, disptype:1, fldValue:[], value:''})
             else if (temp.disptype===2)
-              flds.push({name:key, label: temp.label, unit: temp.unit, isValue:true, disptype:2, fldValue: _fldvalue.filter(item => item.colname === key), value:''})
+              flds.push({name:key, label: temp.label, unit: temp.unit, isval:true, disptype:2, fldValue: _fldvalue.filter(item => item.colname === key&&item.tabname === newValue.data.data.name), value:''})
           }
         })
       }
@@ -277,13 +295,14 @@ export default defineComponent({
       disabled,
       actTab,
       configForm,
-      isValue,
+      isval,
       attConfig,
       collapseExp,
       graphType,
       global,
       description,
       flds,
+      ports,
       csparams,
       onStart,
       onEnd,

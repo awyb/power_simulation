@@ -1,101 +1,63 @@
 <style scoped lang="less">
-.rightMenu {
-  position: fixed;
-  z-index: 99999999;
-  cursor: pointer;
-  padding: 30px;
-  border: 1px solid #eee;
-  box-shadow: 0 0.5em 1em 2px rgba(0, 0, 0, 0.1);
-  border-radius: 6px;
-  color: #606266;
-  font-size: 14px;
-  background: #fff;
-}
-
-.rightMenu ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-radius: 6px;
-}
-
-.rightMenu ul li {
-  padding: 6px 10px;
-  border-bottom: 1px solid #c8c9cc;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-}
-
-.rightMenu ul li:last-child {
-  border: none;
-}
-
-.rightMenu ul li:hover {
-  transition: all 0.5s;
-  background: #EBEEF5;
-  
-}
-.rightMenu ul li:hover {
-  transition: all 0.5s;
-  background: #EBEEF5;
-}
-
-.rightMenu ul li:first-child {
-  border-radius: 6px 6px 0 0;
-}
-.rightMenu ul li:last-child {
-  border-radius: 0 0 6px 6px;
+.rightMenu { position: fixed;padding: 5px 10px;z-index: 999;cursor: pointer;border: 1px solid #eee;box-shadow: 0 0.5em 1em 2px rgba(0, 0, 0, 0.1);border-radius: 6px;color: #606266;font-size: 14px;background: #fff;
+  li { display: flex;align-items: center;justify-content: space-between; padding: 10px 20px 10px 10px; cursor: pointer;
+    span:nth-child(2) { color: #a8a8a8;font-style: italic;font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;padding-left: 20px; }
+    &:hover { background-color: #f0f0f0; }
+    .iconfont { margin-right: 5px;}
+  }
 }
 </style>
 <template>
   <!-- 右键菜单 -->
-  <div class="rightMenu" v-show="showMenu" :style="{left: position.x + 'px', top: position.y + 'px'}">
-      右键菜单
-  </div>
+  <ul ref="rightMenu" class="rightMenu" v-show="showMenu" :style="{left: position.x + 'px', top: position.y + 'px'}" @contextmenu.prevent>
+    <li v-for="(menu,index) in menus" :key="index" @click="menu.click(_data)">
+      <span><i :class="menu.icon"></i>{{ menu.namec }}</span>
+      <span>{{ menu.keybord }}</span>
+    </li>
+  </ul>
 </template>
 
 <script lang="ts">
 import { reactive, ref, defineComponent} from 'vue'
 // 接收菜单信息
-
+import { RightMenu } from '@/views/main/interfaceBase'
 export default defineComponent({
   name: 'RightClickMenu',
-  props:{
-    menus: {
-      type: Object,
-      default: ()=>({}),
-    }
-  },
   setup(props, { expose })
   {
     const showMenu = ref(false)
     const position = reactive({x: 0, y: 0})
-
+    const _data = ref(null)
+    const rightMenu = ref(null)
+    const menus = ref<RightMenu[]>([])
     // 关闭菜单
     function close()
     {
       showMenu.value = false
     }
     // 打开菜单和显示位置
-    function open(event: MouseEvent)
+    function open(event: MouseEvent, _menus:RightMenu[], data:any)
     {
+      menus.value = _menus
       // 阻止系统默认行为
       event.preventDefault()
       // 先关闭
       showMenu.value = false
       // 显示位置
-      position.x = event.clientX
-      position.y = event.clientY
+      const right = document.documentElement.clientWidth - event.clientX
+      const bottom = document.documentElement.clientHeight - event.clientY
+      position.x = right > (rightMenu.value as any)?.offsetWidth ? event.clientX : event.clientX - (rightMenu.value as any)?.offsetWidth
+      position.y = bottom > (rightMenu.value as any)?.offsetHeight ? event.clientY : event.clientY - (rightMenu.value as any)?.offsetHeight
+
       // 显示
       showMenu.value = true
+      _data.value = data
       // 注册点击侦听事件
       document.addEventListener('click', close)
     }
     // 暴露方法
     expose({ open, close })
-    return {showMenu, position}
+    return {showMenu, position, _data, rightMenu, menus}
   }
 })
 

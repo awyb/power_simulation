@@ -1,5 +1,6 @@
 
-import eveBus from '@/components/eveBus'
+import eveBus from '@/components/ts/eveBus'
+import { query } from '@/request'
 
 export default class common
 {
@@ -96,7 +97,16 @@ export default class common
       {name:'Frequency', label:'频率', unit:'Hz', disptype:1},
       {name:'Resistance', label:'内阻', unit:'Ω', disptype:1},
       {name:'Voltage Ramp Up Time', label:'启动时间', unit:'s', disptype:1},
-      {name:'Voltage Input Time Constant', label:'启动时间常数', unit:'s', disptype:1},
+      { name: 'Voltage Input Time Constant', label: '启动时间常数', unit: 's', disptype: 1 },
+
+      { name: 'Poles', label: '极数（不是极对数）', unit: '', disptype: 1 },
+      { name: 'Rated Power', label: '额定容量', unit: 'MVA', disptype: 1 },
+      { name: 'Rated Voltage (L-G, RMS)', label: '额定相电压有效值', unit: 'kV', disptype: 1 },
+      { name: 'Base Operation Frequency', label: '额定频率', unit: 'Hz', disptype: 1 },
+      { name: 'Neutral Resistance', label: '中性点电阻', unit: 'p.u.', disptype: 1 },
+      { name: 'Parameter Format', label: '参数输入方式', unit: '', disptype: 2 },
+      { name: 'Model Type', label: '选择电机模型', unit: '', disptype: 2 },
+      
 
     ]
     return _fld
@@ -105,27 +115,31 @@ export default class common
   static getFldValues()
   {
     const _fldvalue = [
-      { colname:'Parameter Format', dbvalue:1, disp:'R, X, B (p.u.)', dispc:'标幺值' },
-      { colname:'Parameter Format', dbvalue:2, disp:'R, Xl, Xc (Ω)', dispc:'有名值' },
-      { colname:'0 Seq. Data', dbvalue:1, disp:'Same as + Seq. Data', dispc:'同正序数据' },
-      { colname:'0 Seq. Data', dbvalue:2, disp:'Enter 0 Seq. Data', dispc:'输入零序数据' },
-      { colname:'Has the Data Been Corrected for Long Line Effects?', dbvalue:1, disp:'NO', dispc:'否' },
-      { colname:'Has the Data Been Corrected for Long Line Effects?', dbvalue:2, disp:'YES', dispc:'是' },
-      { colname:'Model Type', dbvalue:1, disp:'Lumped π-Model', dispc:'零序模型' },
-      { colname:'Model Type', dbvalue:2, disp:'Bergeron Line Model', dispc:'Bergeron模型' },
-      { colname:'Set This Line as a Network Partition Line?', dbvalue:1, disp:'NO', dispc:'否' },
-      { colname:'Set This Line as a Network Partition Line?', dbvalue:2, disp:'YES', dispc:'是' },
-      { colname:'Set This Line as a Multi-machine Network Partition Line?', dbvalue:1, disp:'NO', dispc:'否' },
-      { colname:'Set This Line as a Multi-machine Network Partition Line?', dbvalue:2, disp:'YES', dispc:'是' },
-      { colname:'Is Star Point Grounded?', dbvalue:1, disp:'NO', dispc:'否' },
-      { colname:'Is Star Point Grounded?', dbvalue:2, disp:'YES', dispc:'是' },
-      { colname:'Function Type', dbvalue:1, disp:'PQ', dispc:'PQ' },
-      { colname:'Function Type', dbvalue:2, disp:'PV', dispc:'PV' },
-      { colname:'Start-up Type', dbvalue:1, disp:'Linear', dispc:'线性' },
-      { colname:'Start-up Type', dbvalue:2, disp:'Real Pole Ramp', dispc:'实际极点斜坡' },
-      { colname:'阻抗输入方式', dbvalue:1, disp:'填写等效电阻和电抗', dispc:'填写等效电阻和电抗' },
-      { colname:'阻抗输入方式', dbvalue:2, disp:'填写等效阻抗的幅值和相角', dispc:'填写等效阻抗的幅值和相角' },
-      { colname:'阻抗输入方式', dbvalue:3, disp:'填写短路电流', dispc:'填写短路电流' },
+      { colname: 'Parameter Format', tabname:'hree phase transmission line', dbvalue:1, disp:'R, X, B (p.u.)', dispc:'标幺值' },
+      { colname: 'Parameter Format', tabname: 'hree phase transmission line', dbvalue:2, disp:'R, Xl, Xc (Ω)', dispc:'有名值' },
+      { colname: '0 Seq. Data', tabname:'Three phase transmission line', dbvalue:1, disp:'Same as + Seq. Data', dispc:'同正序数据' },
+      { colname: '0 Seq. Data', tabname: 'Three phase transmission line', dbvalue:2, disp:'Enter 0 Seq. Data', dispc:'输入零序数据' },
+      { colname: 'Has the Data Been Corrected for Long Line Effects?', tabname:'Three phase transmission line', dbvalue:1, disp:'NO', dispc:'否' },
+      { colname: 'Has the Data Been Corrected for Long Line Effects?', tabname: 'Three phase transmission line', dbvalue:2, disp:'YES', dispc:'是' },
+      { colname: 'Model Type', dbvalue: 1, disp: 'Lumped π-Model', tabname: 'Three phase transmission line', dispc:'零序模型' },
+      { colname: 'Model Type', dbvalue: 2, disp: 'Bergeron Line Model', tabname: 'Three phase transmission line', dispc:'Bergeron模型' },
+      { colname: 'Set This Line as a Network Partition Line?', tabname: 'Three phase transmission line', dbvalue:1, disp:'NO', dispc:'否' },
+      { colname: 'Set This Line as a Network Partition Line?', tabname: 'Three phase transmission line', dbvalue:2, disp:'YES', dispc:'是' },
+      { colname: 'Set This Line as a Multi-machine Network Partition Line?', tabname: 'Three phase transmission line', dbvalue:1, disp:'NO', dispc:'否' },
+      { colname: 'Set This Line as a Multi-machine Network Partition Line?', tabname: 'Three phase transmission line', dbvalue:2, disp:'YES', dispc:'是' },
+      { colname: 'Is Star Point Grounded?', tabname: 'Three phase AC voltage source', dbvalue:1, disp:'NO', dispc:'否' },
+      { colname: 'Is Star Point Grounded?', tabname: 'Three phase AC voltage source', dbvalue:2, disp:'YES', dispc:'是' },
+      { colname: 'Function Type', tabname: 'Three phase AC voltage source', dbvalue:1, disp:'PQ', dispc:'PQ' },
+      { colname: 'Function Type', tabname: 'Three phase AC voltage source', dbvalue:2, disp:'PV', dispc:'PV' },
+      { colname: 'Start-up Type', tabname: 'Three phase AC voltage source', dbvalue:1, disp:'Linear', dispc:'线性' },
+      { colname: 'Start-up Type', tabname: 'Three phase AC voltage source', dbvalue:2, disp:'Real Pole Ramp', dispc:'实际极点斜坡' },
+      { colname: '阻抗输入方式', tabname: 'Three phase Thevenin equivalent voltage source', dbvalue:1, disp:'填写等效电阻和电抗', dispc:'填写等效电阻和电抗' },
+      { colname: '阻抗输入方式', tabname: 'Three phase Thevenin equivalent voltage source', dbvalue:2, disp:'填写等效阻抗的幅值和相角', dispc:'填写等效阻抗的幅值和相角' },
+      { colname: '阻抗输入方式', tabname: 'Three phase Thevenin equivalent voltage source', dbvalue: 3, disp: '填写短路电流', dispc: '填写短路电流' },
+      { colname: 'Parameter Format', tabname: 'Synchronous motor', dbvalue: 1, disp: 'Equivalent Circuit Data', dispc: '等效电路参数' },
+      { colname: 'Parameter Format', tabname: 'Synchronous motor', dbvalue: 2, disp: 'Experimental Data', dispc: '试验参数' },
+      { colname: 'Model Type', tabname: 'Synchronous motor', dbvalue: 1, disp: 'PD(Constant Conductance)', dispc: 'PD(Constant Conductance)' },
+      { colname: 'Model Type', tabname: 'Synchronous motor', dbvalue: 2, disp: 'VBR-dq0', dispc: 'VBR-dq0' },
       
     ]
     return _fldvalue
@@ -211,15 +225,204 @@ export default class common
     }
     return points
   }
+  static async getDirectory()
+  {
+    return new Promise<any>((resolve, reject) =>
+    {
+      query({tabname:'node_dirs'}).then(res =>
+      {
+        const ret = res.data
+        ret.forEach((r:any)=>
+        {
+          r.children = []
+        })
+        resolve(res.data)
+      }).catch(reject)
+    })
+   
+  }
+
+  static handlePorts(cellid:number, ports:any[])
+  {
+    const rets:any = []
+    const _ports = ports.filter(p => p.cellid === cellid)
+    _ports.forEach(p =>
+    {
+      if (p._group === 'out' || p._group === 'in')
+      {
+        rets.push({
+          id: p.id+'',
+          group: p._group,
+          args: JSON.parse(p.args),
+          attrs: JSON.parse(p.attrs)
+        })
+      }
+      else if (p._group === 'inline')
+      {
+        const args = JSON.parse(p.args)
+        if (args.x instanceof Array && args.y instanceof Array && args.x.length===2 && args.y.length===2)
+        {
+          this.equidistributePors({ x: args.x[0], y: args.y[0] }, { x: args.x[1], y: args.y[1] }, args.dis ? args.dis : 4 / 160).forEach((_p, i) =>
+          {
+            rets.push({
+              id: p.id + '_' + (i + 1),
+              group: 'inline',
+              args:
+              {
+                ..._p
+              },
+            })
+          })
+        }
+        
+      }
+    })
+    return rets
+  }
+  static _getNodes()
+  {
+    const groups = common.getGrounps()
+    return new Promise<any[]>((resolve, reject) =>
+    {
+      Promise.all([query({ tabname: 'node_cells' }), query({ tabname: 'node_ports' })]).then(ret=>
+      {
+        const nodes: any = []
+        const ports: any[] = ret[1].data
+        ret[0].data.forEach((node:any) =>
+        {
+          nodes.push({
+            width: node.width,
+            height: node.height,
+            shape: 'image',
+            namec: node.namec,
+            label: node.namec + '_1',
+            attrs: {
+              image: {
+                'xlink:href': node.src,
+              },
+              ...this.commAttrs()
+            },
+            data: { ...node, params: this.getNodeParams(node.name), ports: ports.filter(p => p.cellid === node.id) },
+            ports:
+            {
+              groups: groups,
+              items: this.handlePorts(node.id, ret[1].data)
+            }
+          })
+        })
+        resolve(nodes)
+      }).catch(reject)
+    })
+  }
+  static getNodeParams(cellName:string)
+  {
+    const parmas:any = {
+      'Parallel capacitor/reactor': {
+        Configuration: {
+          'Name': '',
+          'Rated Frequency': 50,
+          'Rated Voltage (L-L, RMS)': 110,
+          'Input Capacity': 1
+        }
+      },
+      'Synchronous motor': {
+        Configuration: {
+          'Name': '',
+          'Poles': 4,
+          'Rated Power': 325,
+          'Rated Voltage (L-G, RMS)': 11.547,
+          'Base Operation Frequency': 50,
+          'Neutral Resistance': 10000,
+          'Parameter Format': 1,
+          'Model Type': 1
+        }
+      },
+      'Static load': {
+        Configuration: {
+          'Name': '',
+          'Rated Voltage (L-L, RMS)': 500,
+          'Rated Frequency': 50,
+          'Rated Active Power (3 Phase)': 50,
+          'Rated Reactive Power (3 Phase)': 20,
+          'Voltage Index for P': 2,
+          'Voltage Index for Q': 2,
+          'Freq Index for P': 0,
+          'Freq Index for Q': 0,
+          'Initial Voltage': 1
+        }
+      },
+      'Three phase transmission line': {
+        Configuration: {
+          'Name': '',
+          'Steady-state Frequency': 50,
+          'Length of Line': 1,
+          'Parameter Format': 1, // R, X, B (p.u.)|| R, Xl, Xc (Ω)
+          '0 Seq. Data': 2, // Same as + Seq. Data||Enter 0 Seq. Data
+          'Has the Data Been Corrected for Long Line Effects?': 1, // NO||YES
+          'Model Type': 2, // Lumped π-Model||Bergeron Line Model
+          'Set This Line as a Network Partition Line?': 1, // NO||YES
+          'Set This Line as a Multi-machine Network Partition Line?': 1 // NO||YES
+        }
+      },
+      'Three phase Thevenin equivalent voltage source': {
+        Configuration: {
+          'Name': '',
+          'Is Star Point Grounded?': 1, // NO||YES
+          'Rated Voltage (L-L, RMS)': 230,
+          'Function Type': 1, // Sine||Cosine
+          'Frequency': 50,
+          'Start-up Type': 1, // Linear Ramp||Real Pole Ramp
+          '阻抗输入方式': 1 // 填写等效电阻和电抗||填写等效阻抗的幅值和相角||填写短路电流
+        }
+      },
+      'Three phase AC busbar': {
+        Configuration: {
+          'Name': '',
+          'Rated Frequency': 50,
+          'Ramping Time': 0.06,
+          'Voltage Angle': 0,
+          'Voltage Magnitude (L-L, RMS)': 1,
+          'Base Voltage (L-L, RMS)': 110,
+        }
+      },
+      'Three phase AC voltage source': {
+        Configuration: {
+          'Source Name	': '',
+          'Is Star Point Grounded?': 2, // NO||YES
+          'Rated Voltage (L-L, RMS)': 230,
+          'Function Type': 1,
+          'Initial Phase': 0,
+          'Frequency': 60,
+          'Resistance': 0,
+          'Start-up Type': 1,
+          'Voltage Ramp Up Time': 0.05,
+          'Voltage Input Time Constant': 0.05
+        }
+      },
+      'Single phase transformer': {
+        Configuration: {
+          'Source Name	': '',
+          'Is Star Point Grounded?': 2, // NO||YES
+          'Rated Voltage (L-L, RMS)': 230,
+          'Function Type': 1,
+          'Initial Phase': 0,
+          'Frequency': 60,
+          'Resistance': 0,
+          'Start-up Type': 1,
+          'Voltage Ramp Up Time': 0.05,
+          'Voltage Input Time Constant': 0.05
+        }
+      }
+    }
+    return parmas[cellName]
+  }
   static getNodes()
   {
     const nodes = []
     const groups = common.getGrounps()
     nodes.push({
-      x: 400,
-      y: 400,
-      width: 160,
-      height: 160,
+      width: 120,
+      height: 120,
       shape: 'image',
       namec: '同步电机',
       label: '同步电机_1',
@@ -229,13 +432,29 @@ export default class common
           stroke: '#d9d9d9',
         },
         image: {
-          'xlink:href': '/static/image/nodeSvg/同步电机.svg',
-          width: 160,
-          height: 160,
+          'xlink:href': 'static/image/nodeSvg/同步电机.svg',
+          width: 120,
+          height: 120,
         },
       },
-      data:{
-        type:2,
+      data: {
+        entityid: 1,
+        disporder:1,
+        glid: 3,
+        dimension: 2,
+        src: 'static/image/nodeSvg/同步电机.svg',
+        params: {
+          Configuration: {
+            'Name': '',
+            'Poles': 4,
+            'Rated Power': 325,
+            'Rated Voltage (L-G, RMS)': 11.547,
+            'Base Operation Frequency': 50,
+            'Neutral Resistance': 10000,
+            'Parameter Format': 1,
+            'Model Type': 1
+          }
+        }
       },
       ports:
       {
@@ -306,10 +525,8 @@ export default class common
       }
     })
     nodes.push({
-      x: 400,
-      y: 160,
-      width: 160,
-      height: 160,
+      width: 120,
+      height: 120,
       shape: 'image',
       namec: '并联电容/电抗器',
       label: '并联电容/电抗器_1',
@@ -320,12 +537,16 @@ export default class common
         },
         image: {
           'xlink:href': '/static/image/nodeSvg/并联电容_电抗器.svg',
-          width: 160,
-          height: 160,
+          width: 120,
+          height: 120,
         },
       },
-      data:{
-        type:2,
+      data: {
+        entityid: 2,
+        disporder: 2,
+        glid: 3,
+        dimension: 2,
+        src: '/static/image/nodeSvg/并联电容_电抗器.svg',
         params:{
           Configuration:{
             'Name':'',
@@ -356,10 +577,8 @@ export default class common
       }
     })
     nodes.push({
-      x: 400,
-      y: 160,
-      width: 160,
-      height: 160,
+      width: 120,
+      height: 120,
       shape: 'image',
       namec: '静态负载',
       label: '静态负载_1',
@@ -370,13 +589,17 @@ export default class common
         },
         image: {
           'xlink:href': '/static/image/nodeSvg/静态负载.svg',
-          width: 160,
-          height: 160,
+          width: 120,
+          height: 120,
         },
       },
       
       data:{
-        type:2,
+        entityid: 3,
+        disporder: 3,
+        dimension: 2,
+        glid: 3,
+        src: '/static/image/nodeSvg/静态负载.svg',
         params:{
           Configuration:{
             'Name':'',
@@ -413,10 +636,8 @@ export default class common
       }
     })
     nodes.push({
-      x: 400,
-      y: 160,
-      width: 160,
-      height: 160,
+      width: 120,
+      height: 120,
       shape: 'image',
       namec: '三相传输线',
       label: '三相传输线_1',
@@ -427,13 +648,17 @@ export default class common
         },
         image: {
           'xlink:href': '/static/image/nodeSvg/三相传输线.svg',
-          width: 160,
-          height: 160,
+          width: 120,
+          height: 120,
         },
       },
       
-      data:{
-        type:2,
+      data: {
+        entityid: 4,
+        disporder: 4,
+        glid: 3,
+        dimension: 2,
+        src: '/static/image/nodeSvg/三相传输线.svg',
         params:{
           Configuration:{
             'Name':'',
@@ -481,10 +706,8 @@ export default class common
       }
     })
     nodes.push({
-      x: 400,
-      y: 160,
-      width: 160,
-      height: 160,
+      width: 120,
+      height: 120,
       shape: 'image',
       namec: '三相戴维南等值电压源',
       label: '三相戴维南等值电压源_1',
@@ -495,13 +718,17 @@ export default class common
         },
         image: {
           'xlink:href': '/static/image/nodeSvg/三相戴维南等值电压源.svg',
-          width: 160,
-          height: 160,
+          width: 120,
+          height: 120,
         },
       },
       
-      data:{
-        type:2,
+      data: {
+        entityid: 5,
+        disporder: 5,
+        glid: 3,
+        dimension: 2,
+        src: '/static/image/nodeSvg/三相戴维南等值电压源.svg',
         params:{
           Configuration:{
             'Name':'',
@@ -535,10 +762,8 @@ export default class common
       }
     })
     nodes.push({
-      x: 400,
-      y: 160,
-      width: 160,
-      height: 160,
+      width: 120,
+      height: 120,
       shape: 'image',
       namec: '三相交流母线',
       label: '三相交流母线_1',
@@ -549,13 +774,17 @@ export default class common
         },
         image: {
           'xlink:href': '/static/image/nodeSvg/三相交流母线.svg',
-          width: 160,
-          height: 160,
+          width: 120,
+          height: 120,
         },
       },
       
-      data:{
-        type:2,
+      data: {
+        entityid: 6,
+        disporder: 6,
+        glid: 3,
+        dimension: 2,
+        src: '/static/image/nodeSvg/三相交流母线.svg',
         params:{
           Configuration:{
             'Name':'',
@@ -586,10 +815,8 @@ export default class common
       }
     })
     nodes.push({
-      x: 400,
-      y: 160,
-      width: 160,
-      height: 160,
+      width: 120,
+      height: 120,
       zIndex:100,
       shape: 'image',
       namec: '三相交流电压源',
@@ -601,13 +828,17 @@ export default class common
         },
         image: {
           'xlink:href': '/static/image/nodeSvg/三相交流电压源.svg',
-          width: 160,
-          height: 160,
+          width: 120,
+          height: 120,
         },
       },
       
-      data:{
-        type:2,
+      data: {
+        entityid: 7,
+        disporder: 7,
+        glid: 3,
+        dimension: 2,
+        src: '/static/image/nodeSvg/三相交流电压源.svg',
         params:{
           Configuration:{
             'Source Name	':'',
@@ -644,10 +875,8 @@ export default class common
       }
     })
     nodes.push({
-      x: 400,
-      y: 160,
-      width: 160,
-      height: 160,
+      width: 120,
+      height: 120,
       zIndex:100,
       shape: 'image',
       namec: '单相变压器',
@@ -659,14 +888,18 @@ export default class common
         },
         image: {
           'xlink:href': '/static/image/nodeSvg/单相变压器.svg',
-          width: 160,
-          height: 160,
+          width: 120,
+          height: 120,
         },
         
       },
       
-      data:{
-        type:1,
+      data: {
+        entityid: 7,
+        disporder: 7,
+        glid: 1,
+        dimension: 1,
+        src: '/static/image/nodeSvg/单相变压器.svg',
         params:{
           Configuration:{
             'Source Name	':'',
@@ -755,6 +988,21 @@ export default class common
     return nodes
   }
   
+  static commAttrs()
+  {
+    return {
+      label: {
+        refX: 0.5,
+        refY: '100%',
+        refY2: 4,
+        textAnchor: 'middle',
+        textVerticalAnchor: 'top',
+        fontSize: 14,
+        fontWeight: 'bold',
+        display: 'none'
+      }
+    }
+  }
   static getGrounps()
   {
     const groups =
@@ -792,7 +1040,7 @@ export default class common
           },
           text:
           {
-            fontSize: 16,
+            fontSize: 12,
             fill: '#888',
             display:'none',
           },
@@ -802,7 +1050,11 @@ export default class common
           name: 'absolute',
         },
         label: {
-          position: 'outside', // 标签位置
+          position:
+          {
+            name: 'radial', // 标签位置
+            args: { offset: 10 }
+          }
         }
       },
       inline:
@@ -837,7 +1089,7 @@ export default class common
           },
           text:
           {
-            fontSize: 16,
+            fontSize: 12,
             fill: '#888',
             display:'none',
           },
@@ -847,7 +1099,11 @@ export default class common
           name: 'absolute',
         },
         label: {
-          position: 'left', // 标签位置
+          position:
+          {
+            name: 'radial', // 标签位置
+            args: { offset: 10 }
+          }
         }
       },
       in:
@@ -885,7 +1141,7 @@ export default class common
           
           text:
           {
-            fontSize: 16,
+            fontSize: 12,
             fill: '#888',
             display:'none',
           },
@@ -893,9 +1149,14 @@ export default class common
         position:
         {
           name: 'absolute',
+          
         },
         label: {
-          position: 'outside', // 标签位置
+          position:
+          {
+            name: 'radial', // 标签位置
+            args: { offset: 10 }
+          }
         }
       }
     }

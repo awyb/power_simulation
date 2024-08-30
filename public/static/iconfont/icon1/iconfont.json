@@ -6,6 +6,41 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "201638",
+      "name": "编辑",
+      "font_class": "edit",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    },
+    {
+      "icon_id": "1353426",
+      "name": "菜单-向右收缩 icon",
+      "font_class": "right-arrow",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "14922886",
+      "name": "菜单-向左收缩 icon",
+      "font_class": "left-arrow",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    },
+    {
+      "icon_id": "3207739",
+      "name": "图纸",
+      "font_class": "icon-book",
+      "unicode": "e617",
+      "unicode_decimal": 58903
+    },
+    {
+      "icon_id": "8982092",
+      "name": "图纸-标准图纸树",
+      "font_class": "tuzhi-biaozhuntuzhishu",
+      "unicode": "e6ec",
+      "unicode_decimal": 59116
+    },
+    {
       "icon_id": "10902517",
       "name": "全屏",
       "font_class": "fullscreen",

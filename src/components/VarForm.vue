@@ -9,9 +9,9 @@
   <div class="form-container">
     <el-input v-model="values.name" class="name-input" style="width: 150px;"/>
     <el-input v-model="values.value" class="value-input" style="width: 180px;">
-      <template v-if="values.isValue" #suffix>{{ values.unit }}</template>
+      <template v-if="!!values.isval" #suffix>{{ values.unit }}</template>
     </el-input>
-    <label class="end-label" @click="values.isValue=!values.isValue" v-html="values.isValue?'(x)':'ƒ<sub>x</sub>'"></label>
+    <label class="end-label" @click="values.isval = (values.isval+1)%2" v-html="!!values.isval?'(x)':'ƒ<sub>x</sub>'"></label>
     <i class="iconfont icon-drag" draggable></i>
   </div>
 </template>
@@ -24,7 +24,7 @@ export default defineComponent({
   props:{
     params: {
       type: Object,
-      default: ()=>({name:'', value:'', unit:'', isValue:true}),
+      default: ()=>({name:'', value:'', unit:'', isval:true}),
     }
   },
   setup(props, { expose })

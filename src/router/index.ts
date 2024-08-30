@@ -7,9 +7,9 @@ const routes: Array<RouteRecordRaw> = [
     name: 'home',
     component: HomeView,
     children:[{
-      path: '/Demo1',
-      name: 'demo1',
-      component: () => import('@/views/main/Demo1.vue')
+      path: '/GraphPage',
+      name: 'graphpage',
+      component: () => import('@/views/main/GraphPage.vue')
     }]
   },
   
