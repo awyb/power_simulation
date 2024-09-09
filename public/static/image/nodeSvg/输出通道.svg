@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="三相交流母线" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  class="preview-node"
+  style="--width: 114.375; --height: 78.65625; --scale: 0.997622101135011; --scale-level: 9.996565331832633; --apx: 1.002383566745648; --rpx: 1.0017871429571583;"
+  width="114.375" height="78.65625"
+  viewBox="-4.1363102232667455 -4.1363102232667455 114.6476204465335 27.61352953744258">
+  <g data-cell-id="e001a563-4f8c-4d97-bcfa-6bfd4d620e3f" data-shape="diagram-component" class="x6-cell x6-node"
+    data-definition="model/CloudPSS/_newChannel" data-enabled="true" style=" " transform="translate(0,0)">
+    <path fill="#eee" fill-opacity="1" stroke="#000" stroke-opacity="1" stroke-width="calc(1px*2)"
+      d="m19.340909090909093 0l9.670454545454547 9.670454545454545l-9.670454545454547 9.670454545454545l58.02272727272727 0a9.670454545454545 9.670454545454545 0 1 0 0 -19.34090909090909z">
+    </path>
+    <path fill="transparent" fill-opacity="1" stroke="#000" stroke-opacity="1" stroke-width="calc(1px*2)"
+      d="m0 9.670454545454545h19.340909090909093m-9.670454545454547 -9.670454545454545l9.670454545454547 9.670454545454545l-9.670454545454547 9.670454545454545">
+    </path>
+    <path fill="transparent" fill-opacity="1" stroke="transparent" stroke-opacity="1" stroke-width="calc(1px*2)"
+      d="m87.0340909090909 0h19.340909090909093v19.34090909090909h-19.340909090909093z"></path><text y="0.35em"
+      fill="var(--text)" fill-opacity="var(--text-opacity)" font-size="calc(1px*12)"
+      font-family="Arial, Helvetica, sans-serif" text-anchor="middle" stroke="transparent" stroke-width="calc(1px*2)"
+      transform="matrix(1,0,0,1,55.6,9.7)" style="transform: matrix(1, 0, 0, 1, 55.6, 9.7);">To Scope</text>
+  </g>
+</svg>

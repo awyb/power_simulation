@@ -5,7 +5,9 @@
     .left { justify-content: flex-start;
       &:first-child { padding-left:var(--header-left); }
     }
-    .center { justify-content: center; }
+    .center { justify-content: center;
+      .dot {display: inline-block;width: 8px; height: 8px; background-color: black; border-radius: 50%; margin-right: 5px;vertical-align: middle; }
+    }
     .right { justify-content: flex-end;
       &:last-child { padding-right:var(--header-right); }
     }
@@ -27,7 +29,7 @@
         </span>
       </el-col>
       <el-col :span="7" class="center">
-        <label>{{ label }}</label>
+        <label><span v-show="needSave" class="dot"></span><span>{{ label }}</span></label>
       </el-col>
       <el-col :span="7" class="right">
         <span class="oper-box" @click="fullClick">
@@ -41,9 +43,11 @@
 </template>
 <script lang="ts" setup name="Header">
 import eveBus from '@/components/ts/eveBus'
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { FullConfig } from './header'
 import { useI18n } from 'vue-i18n'
+import { useStore } from 'vuex'
+const store = useStore()
 const { t } = useI18n()
 const btns = [
   { key: 'open', title: t('header.btn.open'), icon: 'iconfont icon-dakaiwenjianjia', click: handleOpen },
@@ -56,6 +60,10 @@ const fullConfig: FullConfig = reactive({
   icon:'iconfont icon-fullscreen'
 })
 const label = ref('未命名项目-')
+const needSave = computed(() =>
+{
+  return store.state.needSave
+})
 let isFull = false
 function fullClick()
 {

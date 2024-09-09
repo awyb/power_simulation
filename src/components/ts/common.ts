@@ -1,6 +1,9 @@
 
 import eveBus from '@/components/ts/eveBus'
 import { query } from '@/request'
+import { fldsObject, collapseItem, nodeParams, dbvalueBase } from '@/components/interface/interfaceBase'
+import { orderBy } from 'element-plus/es/components/table/src/util'
+
 
 export default class common
 {
@@ -60,9 +63,54 @@ export default class common
     ]
     return flds
   }
+
+  static getAttr()
+  {
+    return new Promise<fldsObject>((resolve, reject) =>
+    {
+      Promise.all([query({ tabname: 'node_attr' }), query({ tabname: 'fldvalues', exp:`tabname = 'node_attr'` })]).then(ret =>
+      {
+        const res: fldsObject = { flds:[], fldvalues:[] }
+        if (ret[0].status == 200) res.flds = ret[0].data
+        if (ret[1].status == 200) res.fldvalues = ret[1].data
+        resolve(res)
+      }).catch(reject)
+    })
+  }
+
+  static getNodeConfig(nodename: string)
+  {
+    return new Promise<collapseItem[]>((resolve, reject) =>
+    {
+      const res: collapseItem[] = []
+      Promise.all(
+        [
+          query({ tabname: 'node_params', exp: `nodename = '${nodename}'`, orderby:'cla_disporder,disporder' }),
+          query({ tabname: 'fldvalues', exp: `tabname = '${nodename}'`, orderby: 'disporder' })
+        ])
+        .then(ret=>
+        {
+          const fldvalues: dbvalueBase[] = (ret[1].status === 200)?ret[1].data:[]
+          if (ret[0].status === 200)
+          {
+            ret[0].data.forEach((item: nodeParams) =>
+            {
+              item.ufunc = (item.ufunc?JSON.parse(item.ufunc):null)
+              const f = res.find((i: collapseItem) => i.classify === item.classify)
+              const _filter = fldvalues.filter((i: dbvalueBase) => i.colname === item.name).map(v => ({ ...v, nodename: v.tabname, name: v.colname }))
+              if (f)
+                f.children.push({ ...item, fldvalue: _filter })
+              else
+                res.push({ classify: item.classify, classifydescribe: item.classifydescribe, children: [{ ...item, fldvalue: _filter }] })
+            })
+          }
+          resolve(res)
+        }).catch(reject)
+    })
+  }
+
   static getFlds()
   {
-
     const _fld = [
       {name:'Name', label:'名称', unit:'', disptype:1},
       {name:'Rated Frequency', label:'额定频率', unit:'Hz', disptype:1},
@@ -106,9 +154,14 @@ export default class common
       { name: 'Neutral Resistance', label: '中性点电阻', unit: 'p.u.', disptype: 1 },
       { name: 'Parameter Format', label: '参数输入方式', unit: '', disptype: 2 },
       { name: 'Model Type', label: '选择电机模型', unit: '', disptype: 2 },
-      
-
     ]
+    // return new Promise<nodeParams[]>((resolve, reject) =>
+    // {
+    //   query({ tabname: 'node_params' }).then(res =>
+    //   {
+    //     if (res.status == 200) resolve(res.data)
+    //     resolve([])
+    // })
     return _fld
   }
 
@@ -140,7 +193,6 @@ export default class common
       { colname: 'Parameter Format', tabname: 'Synchronous motor', dbvalue: 2, disp: 'Experimental Data', dispc: '试验参数' },
       { colname: 'Model Type', tabname: 'Synchronous motor', dbvalue: 1, disp: 'PD(Constant Conductance)', dispc: 'PD(Constant Conductance)' },
       { colname: 'Model Type', tabname: 'Synchronous motor', dbvalue: 2, disp: 'VBR-dq0', dispc: 'VBR-dq0' },
-      
     ]
     return _fldvalue
   }
@@ -229,7 +281,7 @@ export default class common
   {
     return new Promise<any>((resolve, reject) =>
     {
-      query({tabname:'node_dirs'}).then(res =>
+      query({tabname:'node_dirs', orderby:'disporder'}).then(res =>
       {
         const ret = res.data
         ret.forEach((r:any)=>
@@ -279,38 +331,55 @@ export default class common
     })
     return rets
   }
+  static getNodeFormat()
+  {
+    return
+  }
+  static getSvgContent(src:string)
+  {
+    return new Promise<string>((resolve, reject) =>
+    {
+      fetch(src).then(r=>r.text().then(resolve)).catch(reject)
+    })
+  }
   static _getNodes()
   {
     const groups = common.getGrounps()
     return new Promise<any[]>((resolve, reject) =>
     {
-      Promise.all([query({ tabname: 'node_cells' }), query({ tabname: 'node_ports' })]).then(ret=>
+      Promise.all([query({ tabname: 'node_cells' }), query({ tabname: 'node_ports', orderby:'disporder' })]).then(ret=>
       {
         const nodes: any = []
         const ports: any[] = ret[1].data
-        ret[0].data.forEach((node:any) =>
+        ret[0].data.forEach(async(node:any, index:number) =>
         {
+          // const svgTest = await common.getSvgContent(node.src)
           nodes.push({
             width: node.width,
             height: node.height,
+            // shape: 'custom-svg',
             shape: 'image',
             namec: node.namec,
-            label: node.namec + '_1',
+            label: node.namec,
+            // svg: svgTest,
             attrs: {
               image: {
                 'xlink:href': node.src,
               },
               ...this.commAttrs()
             },
-            data: { ...node, params: this.getNodeParams(node.name), ports: ports.filter(p => p.cellid === node.id) },
+            // data: { ...node, params: this.getNodeParams(node.name), ports: ports.filter(p => p.cellid === node.id) },
+            data: { ...node, ports: ports.filter(p => p.cellid === node.id) },
             ports:
             {
               groups: groups,
               items: this.handlePorts(node.id, ret[1].data)
             }
           })
+          if (index === ret[0].data.length - 1)
+            resolve(nodes)
         })
-        resolve(nodes)
+       
       }).catch(reject)
     })
   }
@@ -325,7 +394,7 @@ export default class common
           'Input Capacity': 1
         }
       },
-      'Synchronous motor': {
+      'Synchronous generator': {
         Configuration: {
           'Name': '',
           'Poles': 4,
@@ -335,6 +404,12 @@ export default class common
           'Neutral Resistance': 10000,
           'Parameter Format': 1,
           'Model Type': 1
+        },
+        'Configuration-SFEMT': {
+          'Numerical Integration Method': '1',
+        },
+        'Equivalent Circuit Data': {
+          'Stator Resistance': 0.000301
         }
       },
       'Static load': {
@@ -423,7 +498,7 @@ export default class common
     nodes.push({
       width: 120,
       height: 120,
-      shape: 'image',
+      shape: 'foreignObject',
       namec: '同步电机',
       label: '同步电机_1',
       attrs: {
@@ -527,7 +602,7 @@ export default class common
     nodes.push({
       width: 120,
       height: 120,
-      shape: 'image',
+      shape: 'foreignObject',
       namec: '并联电容/电抗器',
       label: '并联电容/电抗器_1',
       attrs: {
@@ -579,7 +654,7 @@ export default class common
     nodes.push({
       width: 120,
       height: 120,
-      shape: 'image',
+      shape: 'foreignObject',
       namec: '静态负载',
       label: '静态负载_1',
       attrs: {
@@ -638,7 +713,7 @@ export default class common
     nodes.push({
       width: 120,
       height: 120,
-      shape: 'image',
+      shape: 'foreignObject',
       namec: '三相传输线',
       label: '三相传输线_1',
       attrs: {
@@ -708,7 +783,7 @@ export default class common
     nodes.push({
       width: 120,
       height: 120,
-      shape: 'image',
+      shape: 'foreignObject',
       namec: '三相戴维南等值电压源',
       label: '三相戴维南等值电压源_1',
       attrs: {
@@ -764,7 +839,7 @@ export default class common
     nodes.push({
       width: 120,
       height: 120,
-      shape: 'image',
+      shape: 'foreignObject',
       namec: '三相交流母线',
       label: '三相交流母线_1',
       attrs: {
@@ -818,7 +893,7 @@ export default class common
       width: 120,
       height: 120,
       zIndex:100,
-      shape: 'image',
+      shape: 'foreignObject',
       namec: '三相交流电压源',
       label: '三相交流电压源',
       attrs: {
@@ -878,7 +953,7 @@ export default class common
       width: 120,
       height: 120,
       zIndex:100,
-      shape: 'image',
+      shape: 'foreignObject',
       namec: '单相变压器',
       label: '单相变压器_1',
       attrs: {
@@ -1053,7 +1128,7 @@ export default class common
           position:
           {
             name: 'radial', // 标签位置
-            args: { offset: 10 }
+            args: { offset: 20 }
           }
         }
       },
@@ -1065,6 +1140,16 @@ export default class common
         //     selector: 'rect',
         //   }
         // ],
+        markup: [
+          {
+            tagName: 'circle',
+            selector: 'outcircle',
+          },
+          {
+            tagName: 'circle',
+            selector: 'circle',
+          }
+        ],
         attrs:
         {
           // rect:
@@ -1078,9 +1163,17 @@ export default class common
           //   strokeWidth:0.1,
           //   fill: 'transparent',
           // },
+          outcircle: // 添加一个外部圆圈,更容易选中
+          {
+            r: 4,
+            magnet: true,
+            stroke: 'transparent',
+            strokeWidth: 0.1,
+            fill: 'transparent',
+          },
           circle:
           {
-            r: 1.9,
+            r: 2,
             magnet: true,
             stroke: 'transparent',
             strokeWidth: 0.1,
@@ -1102,7 +1195,7 @@ export default class common
           position:
           {
             name: 'radial', // 标签位置
-            args: { offset: 10 }
+            args: { offset: 20 }
           }
         }
       },
@@ -1155,7 +1248,7 @@ export default class common
           position:
           {
             name: 'radial', // 标签位置
-            args: { offset: 10 }
+            args: { offset: 20 }
           }
         }
       }

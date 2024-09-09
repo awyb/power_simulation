@@ -7,7 +7,6 @@ export interface GraphConfig {
   celllabel: boolean;
   portlabel: boolean;
 }
-
 const state: GraphConfig = {
   bgcolor: '#fff', // 背景色
   gridtype:'doubleMesh', // 网格类型

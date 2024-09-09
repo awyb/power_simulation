@@ -15,9 +15,10 @@
 <template>
   <el-container class="container">
     <el-aside :width="leftSideW" style="padding: 0;background: var(--left-aside-bg-color);">
+
     </el-aside>
     <el-aside :width="leftMenuW" style="padding: 0;">
-      <left-menu :cellsList="cellsList" expand-first @drag-end="handleDragEnd" />
+      <left-menu :cellsList="cellsList_" expand-first @drag-end="handleDragEnd" />
     </el-aside>
     <el-main style="padding: 0;overflow: hidden;">
       <!-- <router-view></router-view> -->
@@ -35,7 +36,7 @@
           </div>
         </div>
         <el-button class="collapse-btn" type="text" @click="collapseR=!collapseR">
-           <i :class="`iconfont icon-${!collapseR?'left':'right'}-arrow`" />
+          <i :class="`iconfont icon-${!collapseR?'left':'right'}-arrow`"></i>
         </el-button>
       </div>
       <div style="width: 100%;height: calc(100% - var(--tab-menu-height));">
@@ -62,14 +63,14 @@
 <script lang="ts" setup name="MainPage">
 // 导入模块
 import { onMounted, ref, Ref, computed, watch, defineAsyncComponent, defineComponent, onBeforeUnmount } from 'vue'
-import { cellsList, dlgComponent, graphRef, pageDirectory, RightMenuEvent } from '@/views/main/interfaceBase'
+import { cellsList, dlgComponent, graphRef, pageDirectory, RightMenuEvent } from '@/components/interface/interfaceBase'
 import { useStore } from 'vuex'
 import eveBus from '@/components/ts/eveBus'
 // 引入接口
 import common from '@/components/ts/common'
 // 引入组件
 import GraphPage from '@/views/main/GraphPage.vue'
-import CellInfo from '@/views/main/CellInfo.vue'
+import CellInfo from '@/views/main/cellInfo/CellInfo.vue'
 import RightClickMenu from '@/components/RightClickMenu.vue'
 // 定义变量
 const selPage = ref<string>('') // 当前图纸
@@ -80,8 +81,8 @@ const collapseR = ref<boolean>(true) // 右侧菜单栏是否折叠
 const dialogVisible = ref<boolean>(false) // 弹窗是否显示
 const childRef: Ref<graphRef | null> = ref(null) // 子组件的引用
 const currentTabComponent: Ref<dlgComponent | null> = ref(null) // 当前弹窗组件
-const cellsList = ref<cellsList[]>([]) // 原件列表
-const nodeInfo = ref<object>({}) // 结点信息
+const cellsList_ = ref<cellsList[]>([]) // 原件列表
+const nodeInfo = ref<object>({type:'blank'}) // 结点信息
 const LeftMenu = ref<ReturnType<typeof defineComponent> | null>(null) // 左侧菜单栏组件，用于动态加载
 const rightClickMenu: Ref<RightMenuEvent | null> = ref(null)
 // 计算属性
@@ -112,7 +113,6 @@ function acceptData(data:object) // 接收子组件传来的数据
 {
   nodeInfo.value = data
 }
-
 function closeModal() // 关闭弹窗
 {
   dialogVisible.value = false
@@ -120,8 +120,8 @@ function closeModal() // 关闭弹窗
 async function initNodes() // 初始化结点
 {
   const nodes = await common._getNodes()
-  cellsList.value = await common.getDirectory()
-  cellsList.value?.forEach((dir) =>
+  cellsList_.value = await common.getDirectory()
+  cellsList_.value?.forEach((dir) =>
   {
     dir.children = nodes.filter((node) => node.data.glid === dir.id)
   })

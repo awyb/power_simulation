@@ -12,27 +12,37 @@
       <template v-if="!!values.isval" #suffix>{{ values.unit }}</template>
     </el-input>
     <label class="end-label" @click="values.isval = (values.isval+1)%2" v-html="!!values.isval?'(x)':'ƒ<sub>x</sub>'"></label>
-    <i class="iconfont icon-drag" draggable></i>
+    <i class="iconfont icon-drag" @contextmenu.prevent="handleRightClick($event)"></i>
   </div>
 </template>
 
 <script lang="ts">
 import { reactive, ref, defineComponent, onMounted, watch} from 'vue'
-
+import eveBus from '@/components/ts/eveBus'
 export default defineComponent({
   name: 'VarForm',
   props:{
     params: {
       type: Object,
-      default: ()=>({name:'', value:'', unit:'', isval:true}),
+      default: ()=>({name:'', value:'', isval:1}),
+    },
+    menus: {
+      type: Array,
+      default: ()=>([])
     }
   },
   setup(props, { expose })
   {
     const values = reactive(props.params)
+    function handleRightClick(e:MouseEvent)
+    {
+      e.preventDefault()
+      eveBus.emit('right-menu', { e, menus: props.menus, data:values })
+    }
     expose({})
     return {
-      values
+      values,
+      handleRightClick
     }
   }
 })

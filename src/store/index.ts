@@ -1,6 +1,11 @@
 import { createStore } from 'vuex'
 import { module as moduleA } from './variable'
 import { module as moduleB } from './graphConfig'
+import { module as moduleC } from './savePage'
+const func = (event: BeforeUnloadEvent) =>
+{
+  event.preventDefault()
+}
 export default createStore({
   state: {
     pageHeaderH: 40,
@@ -10,14 +15,20 @@ export default createStore({
     rightMenuW: 350,
     rmenuBoxW: 232,
     rmenuBoxH: 400,
-    curComp:null
+    curComp: null,
+    needSave: false,
   },
   getters: {
   },
   mutations: {
-    async changeUrl(state, comp)
+    changeUrl(state, comp)
     {
       state.curComp = comp
+    },
+    changeNeedSave(state, bool)
+    {
+      bool ? window.addEventListener('beforeunload', func): window.removeEventListener('beforeunload', func)
+      state.needSave = bool
     }
   },
   actions: {
@@ -28,6 +39,7 @@ export default createStore({
   },
   modules: {
     variable: moduleA,
-    graphConfig: moduleB
+    graphConfig: moduleB,
+    savePage: moduleC
   }
 })

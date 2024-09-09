@@ -34,7 +34,8 @@ import common from '@/components/ts/common'
 import graphcom from './graph'
 import eveBus from '@/components/ts/eveBus'
 
-import { RightMenuEvent, RightMenu } from '@/views/main/interfaceBase'
+import { RightMenuEvent, RightMenu } from '@/components/interface/interfaceBase'
+import { query } from '@/request'
 export default defineComponent({
   name: 'GraphPage',
   props:{
@@ -86,7 +87,7 @@ export default defineComponent({
       },
       {
         name: 'copy',
-        namec: '剪切',
+        namec: '复制',
         icon: 'iconfont icon-copy',
         keybord:'Ctrl+C',
         click: () =>
@@ -273,21 +274,28 @@ export default defineComponent({
             })
             args.edge.remove()
           }
+          else
+            store.commit('savePage/addExcute', {type:'add', exp:''})
         }
-        
+      })
+     
+      graph.on('cell:removed', ({ cell, index, options }) =>
+      {
+        store.commit('savePage/addExcute', {type:'delete', exp:''})
+      })
+      graph.on('node:added', ({ node, index, options }) =>
+      {
+        if (!node.getProp('autoConnection'))
+          store.commit('savePage/addExcute', {type:'add', exp:''})
       })
       // 监听连线的 mouseenter 和 mouseleave 事件
       graph.on('edge:added', ({ edge }) =>
       {
-        console.log(edge)
-        if (edge.getProp('manualConnection'))
+        if (!edge.getProp('autoConnection'))
           graphcom.showPorts('visible', graph)
 
-        
-        if (!edge.isEdge()) return
         if (edge && edge.attrs && edge.attrs.line)
         {
-          console.log(edge)
           const { connectionPoints } = edge.attrs.line
           if (connectionPoints&& Array.isArray(connectionPoints))
           {
@@ -363,6 +371,15 @@ export default defineComponent({
         graphcom.showPorts('hidden', graph)
         emit('accept-data', {type:'blank'})
       })
+      graph.on('node:change:*', (args) =>
+      {
+        if (args.key!=='ports')
+          store.commit('savePage/addExcute', {type:'update', exp:''})
+      })
+      graph.on('edge:change:vertices', (args) =>
+      {
+        store.commit('savePage/addExcute', {type:'update', exp:''})
+      })
       // 手动新增连接桩
       // graph.on('node:click', ({e, node}) =>
       // {
@@ -400,12 +417,50 @@ export default defineComponent({
     }
     const loadDefNode = ()=>
     {
-      // const nodes = common.getNodes()
-      // const gNodes: Node<Node.Properties>[] | { id: string }[] = []
-      // nodes.slice(0, 3).forEach(node=>
-      // {
-      //   gNodes.push(graph.addNode(Object(node)))
-      // })
+      Promise.all([query({ tabname: 'project_nodes', exp: 'prjid = 1' }), query({ tabname: 'project_edges', exp: 'prjid = 1' })]).then(async ret =>
+      {
+        if (ret[0].data && ret[0].data.length)
+        {
+          const nodes = await common._getNodes()
+          ret[0].data.forEach((n:any) =>
+          {
+            const node = nodes.find((node: any) => node.data.id === n.cellid)
+            if (node)
+            {
+              graph.addNode({
+                ...node, ...JSON.parse(n.format),
+                label: n.namec,
+                namec: n.namec,
+                id: n.cellkey,
+                autoConnection: true,
+                data: { ...node.data, params: n.params ? JSON.parse(n.params) : {} }
+              })
+            }
+            
+          })
+          ret[1].data.forEach((edge:any)=>
+          {
+            graph.addEdge({
+              attrs: {
+                line: {
+                  targetMarker:{ tagName: 'circle', r: 2, cx: -1, },
+                  sourceMarker:{ tagName: 'circle', r: 2, cx: -1, },
+                  stroke: '#000000',
+                  strokeWidth:2,
+                },
+              },
+              id: edge.cellkey,
+              namec: edge.namec,
+              autoConnection: true, // 自动连接接
+              source: JSON.parse(edge.source),
+              vertices: edge.vertices?JSON.parse(edge.vertices):[],
+              target: JSON.parse(edge.target),
+              ...JSON.parse(edge.format),
+            })
+          })
+        }
+           
+      })
     }
     const getNodeDimension = (cell:Cell|null|undefined) =>
     {
@@ -477,7 +532,7 @@ export default defineComponent({
           // 设置连接点
           allowBlank: false,  // 不允许连接到空白处
           // allowMulti: 'withPort',  // 允许多个连接到同一个节点，但不同的端口
-          // allowLoop: false,  // 不允许连接回自身
+          allowLoop: false,  // 不允许连接回自身
           highlight: true,  // 在拖动连接时高亮显示连接点
           // connector: 'smooth',  // 设置连接器的样式
           connectionPoint: 'anchor',  // 设置连接点样式
@@ -511,7 +566,7 @@ export default defineComponent({
                 },
               },
               tools:[toolsConfig.segments, toolsConfig.vertices],
-              manualConnection: true // 手动连接
+              autoConnection: false // 自动连接
             })
           },
           validateConnection(args)
@@ -539,8 +594,8 @@ export default defineComponent({
         pageVisible: true,
         pannable: true,
         modifiers: 'ctrl',
-        // pageHeight: 800,
-        // pageWidth: 800,
+        pageHeight: 801,
+        pageWidth: 961,
         // padding:200
       })
       graph
@@ -700,12 +755,36 @@ export default defineComponent({
             }
           })
       })
+      eveBus.on('graph-update-port-label', (params: any) =>
+      {
+        const node = graph.getCellById(params.cellid)
+        if (node.isNode()&&node.setPortProp instanceof Function)
+          node.setPortProp(params.portid + '', 'attrs/text/text', params.conn)
+        
+      })
+
+    }
+    async function loadSvg(url:string)
+    {
+      const response = await fetch(url)
+      const svgText = await response.text()
+      return svgText
     }
     onMounted(() =>
     {
       renderGraph()
       bindKey()
       loadDefNode()
+      // 自定义 SVG 形状
+      Shape.HTML.register({
+        shape: 'custom-svg',
+        width: 100,
+        height: 100,
+        html: function(options:any)
+        {
+          return options.getProp('svg')
+        },
+      })
       // const testJson = fetch('static/graph.json')
       // testJson.then(res=>res.json().then(json=>
       // {

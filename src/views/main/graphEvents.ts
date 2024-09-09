@@ -77,7 +77,7 @@ export class graphEvents
     {
       this.graph.copy(cells)
 
-      const _cells = this.graph.paste({ offset: 32 })
+      const _cells = this.graph.paste({ offset: 32, nodeProps: { autoConnection: false }, edgeProps: { autoConnection: false } })
       this.graph.cleanSelection()
       this.graph.select(_cells)
     }

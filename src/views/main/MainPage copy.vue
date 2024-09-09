@@ -55,7 +55,7 @@
 
 <script lang="ts" setup name="MainPage">
 import { onMounted, ref, Ref, computed, watch, defineAsyncComponent, defineComponent } from 'vue'
-import { cellsList, cellNode, component, graphRef } from '@/views/main/interfaceBase'
+import { cellsList, cellNode, component, graphRef } from '@/components/interface/interfaceBase'
 import { useStore } from 'vuex'
 // import { useRouter } from 'vue-router'
 

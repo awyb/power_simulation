@@ -1,5 +1,4 @@
 import http from './base'
-// get有值
 function reqBase(type: string, params: any)
 {
   return http.request({

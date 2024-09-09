@@ -12,35 +12,46 @@
     .col-3{ width: calc(30% - 20px);
       img { height: var(--cells-img-height-col-3); }
     }
+    .el-footer {--el-footer-height: 40px;display: flex;align-items: center;justify-content: flex-start;}
   }
 </style>
 
 <template>
-  <el-container>
-    <el-collapse v-model="expArr" style="width: 100%;">
-      <el-collapse-item v-for="item in nodelist" :name="item.name" :title="item.namec" :key="item.name">
-        <div class="drag-box col-2"
-          v-for="node in item.children"
-          :key="node.data.entityid"
-          draggable="true"
-          @dragend.capture="handleDragEnd($event, node)"
-          @contextmenu.prevent="handleRightClick($event, node)">
-          <el-tooltip placement="right" effect="light">
-            <img :src="node.data.src" :alt="node.data.name" style="width: 100%;object-fit: contain;"/>
-            <template #content>
-              <p>{{ node.namec }}</p>
-            </template>
-          </el-tooltip>
-        </div>
-      </el-collapse-item>
-    </el-collapse>
+  <el-container class="left-menu">
+    <el-main style="padding: 0;">
+      <el-collapse v-model="expArr" style="width: 100%;">
+        <el-collapse-item v-for="item in nodelist" :name="item.name" :title="item.namec" :key="item.name">
+          <div class="drag-box col-2"
+            v-for="node in item.children"
+            :key="node.data.entityid"
+            draggable="true"
+            @dragend.capture="handleDragEnd($event, node)"
+            @contextmenu.prevent="handleRightClick($event, node)">
+            <el-tooltip placement="right" effect="light">
+              <img :src="node.data.src" :alt="node.data.name" style="width: 100%;object-fit: contain;"/>
+              <template #content>
+                <p>{{ node.namec }}</p>
+              </template>
+            </el-tooltip>
+          </div>
+        </el-collapse-item>
+      </el-collapse>
+    </el-main>
+    <el-footer>
+      <el-button>
+        <i class="iconfont icon-xinjian"></i>新增
+      </el-button>
+      <el-button>
+        <i class="iconfont icon-edit"></i>编辑
+      </el-button>
+    </el-footer>
   </el-container>
 </template>
 
 <script lang="ts" setup name="LeftMenu">
 // 导入模块
 import { ref, defineProps, defineEmits} from 'vue'
-import { cellsList, cellNode, RightMenu } from '../interfaceBase'
+import { cellsList, cellNode, RightMenu } from '../../../components/interface/interfaceBase'
 import eveBus from '@/components/ts/eveBus'
 
 

@@ -10,6 +10,7 @@
       .end-label {font-size: 16px;font-weight: bold;cursor: pointer;margin-left: 5px;height: 30px;margin-right:10px;width: 20px;}
     }
   }
+
   /deep/.el-form-item__label {white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline;}
   /deep/.el-tabs__nav{transform: translateX(30px) !important;}
   /deep/.el-form-item{margin-bottom:5px;}
@@ -20,6 +21,8 @@
   /deep/ .el-collapse-item__content{padding-bottom:0;}
   .add-global{text-align: center;cursor: pointer;font-size: 14px;color:rgba(0, 0, 0,0.6);font-weight: bold;}
   .line-config{width: 100%;height: 100%;display: flex;align-items: center;justify-content: center;}
+  .keyname{font-weight: bold;color: green;padding:2px; margin-left: 5px;background: rgb(233, 233, 233);font-style: italic;border-radius: 4px;}
+
 </style>
 <template>
   <div class="cell-info">
@@ -28,49 +31,36 @@
         <i :class="'iconfont '+description.icon" style="font-size: 20px;vertical-align: middle;"></i>
         <el-input v-model="description.name" class="name-input" style="width: 300px;"/>
       </div>
-      <label class="title">{{ description.namec }}</label>
+      <label class="title">{{ description.type }}</label>
     </div>
     <el-tabs v-model="actTab" class="info-tabs" @tab-click="handleClick">
       <el-tab-pane label="参数" name="param" v-if="graphType==='node'||graphType==='edge'" style="height: 100%;">
         <el-collapse v-model="collapseExp.main" v-if="graphType==='node'">
-          <el-collapse-item name="1" title="属性">
-            <el-form label-width="120px" style="width: 300px;padding: 10px 20px;">
-              <el-form-item :label="item.label" v-for="(item,index) in attConfig" :key="index">
-                <template #label="{label}">
-                  <el-tooltip :content="label" placement="left">
-                    <span>{{label}}</span>
+          <el-collapse-item name="attr" title="属性">
+            <AttForm v-if="attConfig" :attFlds="attConfig" style="width: 300px;padding: 10px 20px 10px 40px;"></AttForm>
+          </el-collapse-item>
+          <el-collapse-item name="param" title="参数">
+            <el-collapse v-model="collapseExp.param" style="padding-left: 20px;">
+              <el-collapse-item v-for="collapse in collapseItem" :key="collapse.classify" :name="collapse.classify" :title="collapse.classify">
+                <template #title>
+                  <el-tooltip :content="collapse.classifydescribe" placement="left" effect="light">
+                    <span>{{ collapse.classify }}</span>
                   </el-tooltip>
                 </template>
-                <el-input v-if="item.disptype===1||!item.isval" v-model="item.value" class="el-input">
-                  <template v-if="item.isval" #suffix>{{ item.unit }}</template>
-                </el-input>
-                <el-select v-else-if="item.disptype===2" v-model="item.value" class="el-select">
-                  <el-option
-                    v-for="(sel,i) in item.fldValue"
-                    :label="sel.disp"
-                    :value="sel.dbvalue"
-                    :key="i"
-                  />
-                </el-select>
-                <el-switch v-else-if="item.disptype===3" size="small" v-model="item.value" :active-text="item.value?'是':'否'" class="el-switch"/>
-                <label class="end-label" @click="item.isval=!item.isval" v-html="item.isval?'(x)':'ƒ<sub>x</sub>'"></label>
-              </el-form-item>
-            </el-form>
-          </el-collapse-item>
-          <el-collapse-item name="2" title="参数">
-            <el-collapse v-model="collapseExp.children" style="padding-left: 20px;">
-              <el-collapse-item name="1" title="Configuration">
-                <el-form :model="configForm" label-width="120px" style="width: 300px;padding: 10px 20px;">
+                <AttForm :attFlds="collapse.children"  style="width: 300px;padding: 10px 20px;"></AttForm>
+              </el-collapse-item>
+              <!-- <el-collapse-item name="config" title="Configuration">
+                <el-form :model="portForm" label-width="120px" style="width: 300px;padding: 10px 20px;">
                   <el-form-item :label="item.label" v-for="(item,index) in flds" :key="index">
                     <template #label="{label}">
                       <el-tooltip :content="label" placement="left">
                         <span>{{label}}</span>
                       </el-tooltip>
                     </template>
-                    <el-input v-if="item.disptype===1||!item.isval" v-model="configForm[item.name]" class="el-input">
+                    <el-input v-if="item.disptype===1||!item.isval" v-model="portForm[item.name]" class="el-input">
                       <template v-if="item.isval" #suffix>{{ item.unit }}</template>
                     </el-input>
-                    <el-select v-else-if="item.disptype===2" v-model="configForm[item.name]" class="el-select">
+                    <el-select v-else-if="item.disptype===2" v-model="portForm[item.name]" class="el-select">
                       <el-option
                         v-for="(sel,i) in item.fldValue"
                         :label="sel.disp"
@@ -81,18 +71,24 @@
                     <label class="end-label" @click="item.isval=!item.isval" v-html="item.isval?'(x)':'ƒ<sub>x</sub>'"></label>
                   </el-form-item>
                 </el-form>
-              </el-collapse-item>
+              </el-collapse-item> -->
             </el-collapse>
           </el-collapse-item>
-           <el-collapse-item name="3" title="引脚" v-if="graphType==='node'">
-            <el-form :model="configForm" label-width="120px" style="width: 300px;padding: 10px 20px 10px 40px;">
+           <el-collapse-item name="pin" title="引脚" v-if="graphType==='node'">
+            <el-form :model="portForm" label-width="120px" style="width: 300px;padding: 10px 20px 10px 40px;">
               <el-form-item :label="port.name" v-for="(port,index) in ports" :key="index">
                 <template #label="{label}">
-                  <el-tooltip :content="label" placement="left">
+                  <el-tooltip :content="label" placement="left" effect="light">
+                    <template #content>
+                      <span style="font-weight: bold;">{{port.name}}</span>
+                      <span class="keyname" v-if="port.keyname">{{port.keyname}}</span>
+                      <hr />
+                      <span>{{port.describe}}</span>
+                    </template>
                     <span>{{label}}</span>
                   </el-tooltip>
                 </template>
-                <el-input v-model="configForm[port.name]" class="el-input"/>
+                <el-input v-model="portForm[port.name]" class="el-input" @blur="updatePort(port)"/>
                 <label class="end-label" @click="port.isval=!port.isval" v-html="port.isval?'(x)':'ƒ<sub>x</sub>'"></label>
               </el-form-item>
             </el-form>
@@ -106,17 +102,16 @@
         Config
       </el-tab-pane>
       <el-tab-pane label="全局变量" name="globalVariable" v-if="graphType==='blank'">
-        <Draggable
-          ref="dragEl"
+        <Draggable ref="dragEl"
+          ghostClass="ghost"
+          handle=".icon-drag"
           :modelValue="global"
           :disabled="disabled"
           :animation="150"
-          ghostClass="ghost"
-          handle=".icon-drag"
           @start="onStart"
           @update="onUpdate"
           @end="onEnd">
-          <var-form v-for="g in global" :key="g.id" :params="{...g,value:g.defval}"></var-form>
+          <var-form v-for="g in global" :key="g.id" :params="g" :menus="menus"></var-form>
         </Draggable>
         <div class="add-global" @click="addGlobal">(x)新建全局变量</div>
       </el-tab-pane>
@@ -128,37 +123,71 @@
 </template>
 
 <script lang="ts">
-import { reactive, ref, defineComponent, onMounted, watch} from 'vue'
+import { reactive, ref, defineComponent, onMounted, watch } from 'vue'
+import AttForm from '@/components/AttForm.vue'
 import common from '@/components/ts/common'
 import { useStore } from 'vuex'
 import VarForm from '@/components/VarForm.vue'
 import DynForm from '@/components/DynForm.vue'
+import { variable, nodeParams, nodeDbValue, nodeAttr, attFld, collapseItem } from '@/components/interface/interfaceBase'
+import { query } from '@/request'
+import eveBus from '@/components/ts/eveBus'
 import { type UseDraggableReturn, type SortableEvent, VueDraggable } from 'vue-draggable-plus'
+let isFirst = true
 // 接收菜单信息
-interface info
-{
-  name: string,
-  label: string,
-  unit: string,
-  isval: boolean,
-  disptype: number,
-  fldValue: { colname: string, dbvalue: number, disp: string, dispc: string }[],
-  value:any
-}
 export default defineComponent({
-  components:{ VarForm, DynForm, Draggable:VueDraggable},
+  components:{ VarForm, DynForm, Draggable:VueDraggable, AttForm},
   name: 'CellInfo',
   props:{
     params: {
       type: Object,
-      default: ()=>({}),
+      default: ()=>({type:'blank'}),
     }
   },
   setup(props, { expose })
   {
     const store = useStore()
     const disabled = ref(false)
+    const menus = reactive([{
+      name: 'delete',
+      namec: '删除',
+      icon: 'iconfont icon-shanchu',
+      click: (data: any) =>
+      {
+        store.commit('variable/removeGlobal', data)
+      },
+    }])
+    
 
+    const csparams = reactive({
+      form:{},
+      flds:common.getGConfigFlds()
+    })
+    const global = ref<variable[]>([])
+    let _fld = common.getFlds()
+    // common.getFlds().then(res=>
+    // {
+    //   _fld = res
+    // })
+    const _fldvalue = common.getFldValues()
+    const actTab = ref<string>('globalVariable')
+    const isval = ref<boolean>(true)
+    const graphType = ref<string>('blank')
+    const description = reactive({name:'图纸', type:'电力仿真-画布', icon:'icon-huabu'})
+    const portForm:{[key: string]: any} = reactive({})
+    const collapseExp:{[key: string]: any} = reactive({
+      main:['attr', 'param', 'pin'],
+      param:[]
+    })
+    const attConfig = ref<attFld[]|null>(null)
+    // const attConfig = reactive<nodeAttr[]>([
+    //   {name:'enable', namec: '启用', unit: '',disptype:3, fldvalue:[], value:true},
+    //   {name:'outlinelevel', namec: '大纲级别', unit: '', disptype:1, fldvalue:[], value:0},
+    // ])
+    let flds = reactive<nodeParams[]>([])
+    const collapseItem = ref<collapseItem[]>([])
+    const ports = ref<any[]>([])
+    
     const updVal = () =>
     {
       const graphConfig = store.state.graphConfig
@@ -168,83 +197,68 @@ export default defineComponent({
           fld.value = graphConfig[fld.name]
       })
     }
-
-    const csparams = reactive({
-      form:{},
-      flds:common.getGConfigFlds()
-    })
-    
-    const global = reactive(store.state.variable.global)
-    const _fld = common.getFlds()
-    const _fldvalue = common.getFldValues()
-    const actTab = ref<string>('globalVariable')
-    const isval = ref<boolean>(true)
-    const graphType = ref<string>('blank')
-    const description = reactive({name:'图纸', namec:'电力仿真-画布', icon:'icon-huabu'})
-    const configForm:{[key: string]: any} = reactive({})
-    const collapseExp:{[key: string]: any} = reactive({
-      main:['1', '2'],
-      children:['1', '2']
-    })
-    const attConfig = reactive<info[]>([
-      {name:'enable', label: '启用', unit: '', isval:true, disptype:3, fldValue:[], value:true},
-      {name:'outlinelevel', label: '大纲级别', unit: '', isval:true, disptype:1, fldValue:[], value:0},
-    ])
-    let flds = reactive<info[]>([])
-    const ports = ref<any[]>([])
-    watch(() => props.params, (newValue, oldValue) =>
+    watch(() => store.state.variable.global, ()=>
     {
-     
+      if (isFirst)
+        isFirst = false
+      else
+        store.commit('changeNeedSave', true)
+    }, { deep: true })
+    watch(() => props.params, async(newValue, oldValue) =>
+    {
       if (oldValue&&(newValue.type==='blank'&&oldValue.type==='blank'))
         return
       updVal()
       graphType.value = newValue.type
-      if (props.params.type==='blank')
+      if (props.params.type==='blank') // 画布
       {
         actTab.value =(actTab.value==='param')?'globalVariable':'graphConfig'
         description.name = '图纸'
         description.icon = 'icon-huabu'
-        description.namec = '电力仿真-画布'
+        description.type = '电力仿真-画布'
         return
       }
-      else if (props.params.type==='edge')
+      else if (props.params.type==='edge') // 连接线
       {
         actTab.value = (actTab.value==='globalVariable'||actTab.value==='param')?'param':'format'
         description.icon = 'icon-xian'
-        description.name = '线'
-        description.namec = '连接线'
+        description.name = newValue.data.namec
+        description.type = '连接线'
         return
       }
-      else
+      else // 节点
       {
         ports.value = newValue.data.data.ports.map((p:any)=>({...p, isval:true, unit:''}))
         actTab.value = (actTab.value==='globalVariable'||actTab.value==='param')?'param':'format'
         description.icon = 'icon-node'
         description.name = newValue.data.namec
-        description.namec = newValue.data.namec
-      }
-     
-      try
-      {
-        let temp
-        flds.length = 0
-        const configuration = newValue.data.data.params.Configuration
-        Object.keys(configuration).forEach(key =>
+        description.type = newValue.data.data.namec
+        const config = await common.getNodeConfig(newValue.data.data.name)
+        config.forEach(c =>
         {
-          configForm[key] = configuration[key]
-          temp = _fld.find(item => item.name === key)
-          if (configuration.hasOwnProperty(key)&& temp)
+          collapseExp.param.push(c.classify)
+          if (c.children)
           {
-            if (temp.disptype===1)
-              flds.push({name:key, label: temp.label, unit: temp.unit, isval:true, disptype:1, fldValue:[], value:''})
-            else if (temp.disptype===2)
-              flds.push({name:key, label: temp.label, unit: temp.unit, isval:true, disptype:2, fldValue: _fldvalue.filter(item => item.colname === key&&item.tabname === newValue.data.data.name), value:''})
+            c.children.forEach(cc =>
+            {
+              cc.isval = 1
+              cc.value = cc.defval
+              cc.value_ = cc.defval
+              if (newValue.data.data.params && newValue.data.data.params[cc.classify])
+              {
+                cc.value = newValue.data.data.params[cc.classify][cc.name]
+                cc.value_ = newValue.data.data.params[cc.classify][cc.name]
+              }
+              if (cc.disptype === 2)
+              {
+                const f = cc.fldvalue?.find(i => i.colname === cc.name && i.dbvalue === cc.value)
+                if (f)
+                  cc.value_ = f.dispc
+              }
+            })
           }
         })
-      }
-      catch (error)
-      {
-        
+        collapseItem.value = config
       }
     })
     const updState = (param:any)=>
@@ -256,7 +270,6 @@ export default defineComponent({
         obj[param.name] = param.value
         store.commit('graphConfig/updState', obj)
       }
-   
     }
     const handleClick = () =>
     {
@@ -264,37 +277,59 @@ export default defineComponent({
     }
     const addGlobal = ()=>
     {
-      const add = { id:global.length+1, name:'variable_'+(global.length+1), label:'', unit:'', disptype:1, default:'', isFunc:false}
+      const add = { name:'variable_'+(global.value?.length+1), value:'', isval:1, prjid:1, expression:''}
       store.commit('variable/addGlobal', add)
     }
-
     const onStart = (e: SortableEvent) =>
     {
       console.log('start', e)
     }
-
     const onEnd = (e: SortableEvent) =>
     {
-      // console.log('onEnd', e)
       const { newIndex, oldIndex } = e
       store.commit('variable/changeGlobal', {oldIndex:Number(oldIndex), newIndex:Number(newIndex)})
-     
     }
     const onUpdate = () =>
     {
       console.log('update')
     }
+    function updatePort(port:any)
+    {
+      eveBus.emit('graph-update-port-label', {cellid:props.params.data.id, portid:port.id, portname:port.name, conn:portForm[port.name]})
+    }
+    (function()
+    {
+      query({ tabname: 'global_var', exp:`prjid = 1`, orderby: 'disporder'}).then(res=>
+      {
+        store.commit('variable/initGlobal', res.data)
+        global.value = res.data
+      })
+      common.getAttr().then(obj =>
+      {
+        const temp:attFld[] = []
+        obj.flds.forEach(fld=>
+        {
+          const t = { ...fld, isval: 1, value: fld.defval, value_: fld.defval, disabled: false}
+          if (fld.disptype === 2)
+          {
+            const f = obj.fldvalues.find(i => i.colname === fld.name && i.dbvalue === t.value)
+            if (f)
+              t.value_ = f.dispc
+          }
+          temp.push(t)
+        })
+        attConfig.value = temp
+      })
+    })()
     updVal()
-    // onMounted(() =>
-    // {
-    
-    // })
     // 暴露方法
     expose({})
     return {
+      collapseItem,
       disabled,
       actTab,
-      configForm,
+      menus,
+      portForm,
       isval,
       attConfig,
       collapseExp,
@@ -310,6 +345,7 @@ export default defineComponent({
       updState,
       handleClick,
       addGlobal,
+      updatePort
     }
   }
 })

@@ -18,9 +18,9 @@
 </template>
 
 <script lang="ts">
-import { reactive, ref, defineComponent} from 'vue'
+import { reactive, ref, defineComponent, nextTick} from 'vue'
 // 接收菜单信息
-import { RightMenu } from '@/views/main/interfaceBase'
+import { RightMenu } from '@/components/interface/interfaceBase'
 export default defineComponent({
   name: 'RightClickMenu',
   setup(props, { expose })
@@ -36,22 +36,22 @@ export default defineComponent({
       showMenu.value = false
     }
     // 打开菜单和显示位置
-    function open(event: MouseEvent, _menus:RightMenu[], data:any)
+    async function open(event: MouseEvent, _menus:RightMenu[], data:any)
     {
-      menus.value = _menus
       // 阻止系统默认行为
       event.preventDefault()
-      // 先关闭
-      showMenu.value = false
+      menus.value = _menus
+      // 显示
+      showMenu.value = true
+      _data.value = data
+      await nextTick()
       // 显示位置
       const right = document.documentElement.clientWidth - event.clientX
       const bottom = document.documentElement.clientHeight - event.clientY
       position.x = right > (rightMenu.value as any)?.offsetWidth ? event.clientX : event.clientX - (rightMenu.value as any)?.offsetWidth
       position.y = bottom > (rightMenu.value as any)?.offsetHeight ? event.clientY : event.clientY - (rightMenu.value as any)?.offsetHeight
-
-      // 显示
-      showMenu.value = true
-      _data.value = data
+      
+      
       // 注册点击侦听事件
       document.addEventListener('click', close)
     }

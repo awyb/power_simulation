@@ -45,7 +45,16 @@ export default class HomeView extends Vue
   public pageFooterH = this.store.state.pageFooterH + 'px'
   created(): void
   {
-    this.store.dispatch('variable/init')
+    document.addEventListener('keydown', (event: KeyboardEvent)=>
+    {
+      if (event.ctrlKey && event.key === 's')
+      {
+        event.preventDefault()
+        // 在这里执行你想要的操作
+        this.store.dispatch('variable/update')
+        this.store.commit('changeNeedSave', false)
+      }
+    })
   }
 }
 </script>

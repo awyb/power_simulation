@@ -16,15 +16,14 @@ class HttpRequest
     let token = localStorage.getItem('Token')
     if (token)
     {
+      // console.log(token, 'token1')
       token = 'Bearer ' + token
-      console.log(token, 'token1')
-
     }
     else
     {
       // router.push('/');
       token = '913ed069-8194-4119-a036-ad20e7090171'
-      console.log(token, 'token2')
+      // console.log(token, 'token2')
 
     }
     const config = {
@@ -56,11 +55,11 @@ class HttpRequest
     {
       // debugger;
       const { data } = res
-      console.log('返回数据处理', res)
+      // console.log('返回数据处理', res)
       return data
     }, (error: any) =>
     {
-      console.log('error==>', error)
+      // console.log('error==>', error)
       if (error.response && error.response.status === 401)
       {
         // 尝试从本地存储获取新的token
