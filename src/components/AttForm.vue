@@ -12,7 +12,7 @@
     <el-form-item :label="fld.namec" v-for="(fld,index) in flds" :key="index">
       <template #label>
         <el-tooltip :content="fld.describe" placement="left" effect="light">
-          <template #content>
+          <template #content >
             <span style="font-weight: bold;">{{fld.name}}</span>
             <span class="keyname" v-if="fld.keyname">{{fld.keyname}}</span>
             <span v-if="fld.unit" style="margin-left: 5px;">[{{fld.unit}}]</span>
@@ -21,7 +21,7 @@
             <br />
             <span>{{fld.describe}}</span>
           </template>
-          <span>{{fld.name}}</span>
+          <span :style="{color:fld.disabled?'var(--el-disabled-text-color)':'var(--el-text-color-regular)'}">{{fld.name}}</span>
         </el-tooltip>
       </template>
       <el-input v-if="fld.disptype===1||!fld.isval" v-model="fld.value" :disabled="fld.disabled" class="el-input" @focus="onFocus(fld)" @blur="onblur(fld)">
@@ -36,7 +36,7 @@
         />
       </el-select>
       <el-switch v-else-if="fld.disptype===3" v-model="fld.value" :disabled="fld.disabled" :active-text="fld.value?'是':'否'" class="el-switch"/>
-      <label class="end-label" @click="fld.isval = (fld.isval+1)%2" v-html="fld.isval?'(x)':'ƒ<sub>x</sub>'"></label>
+      <label :style="{color:fld.disabled?'var(--el-disabled-text-color)':'var(--el-text-color-regular)'}" class="end-label" @click="fld.isval = (fld.isval+1)%2" v-html="fld.isval?'(x)':'ƒ<sub>x</sub>'"></label>
     </el-form-item>
   </el-form>
 </template>
@@ -54,20 +54,21 @@ export default defineComponent({
       default: ()=>([]),
     }
   },
-  setup(props, { expose })
+  emits:['hidden-classify'],
+  setup(props, { expose, emit })
   {
     const flds = reactive(props.attFlds)
     flds.forEach(fld =>
     {
-      setDisabled(fld)
+      parseUfunc(fld)
     })
-    function setDisabled(fld: attFld)
+    function parseUfunc(fld: attFld)
     {
       if (fld.ufunc&&Array.isArray(fld.ufunc) )
       {
         fld.ufunc.forEach((func)=>
         {
-          if (func.type === 'disabled')
+          if (func.type === 'disabled-fld')
           {
             const disabledIds = func.args[fld.value+'']
             if (disabledIds)
@@ -76,6 +77,8 @@ export default defineComponent({
               {
                 if (disabledIds.includes(fld.id))
                   fld.disabled = true
+                else
+                  fld.disabled = false
               })
             }
             else
@@ -83,9 +86,13 @@ export default defineComponent({
               flds.forEach(fld=>
               {
                 fld.disabled = false
-                 
               })
             }
+          }
+          else if (func.type === 'hidden-classify')
+          {
+            const hiddenClassify = func.args[fld.value + '']
+            emit('hidden-classify', hiddenClassify)
           }
         })
       }
@@ -102,7 +109,7 @@ export default defineComponent({
     }
     function onChange(fld: attFld)
     {
-      setDisabled(fld)
+      parseUfunc(fld)
       
     }
     expose({})

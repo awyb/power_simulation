@@ -126,6 +126,7 @@ export interface fldsObject {
 
 export interface collapseItem {
   classify: string,
+  show?: boolean,
   classifydescribe: string,
   children: nodeParams[]
 }

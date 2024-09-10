@@ -82,7 +82,7 @@ const dialogVisible = ref<boolean>(false) // 弹窗是否显示
 const childRef: Ref<graphRef | null> = ref(null) // 子组件的引用
 const currentTabComponent: Ref<dlgComponent | null> = ref(null) // 当前弹窗组件
 const cellsList_ = ref<cellsList[]>([]) // 原件列表
-const nodeInfo = ref<object>({type:'blank'}) // 结点信息
+const nodeInfo = ref<object>({}) // 结点信息
 const LeftMenu = ref<ReturnType<typeof defineComponent> | null>(null) // 左侧菜单栏组件，用于动态加载
 const rightClickMenu: Ref<RightMenuEvent | null> = ref(null)
 // 计算属性
@@ -104,14 +104,38 @@ watch(()=>store.state.curComp, (n)=>// 动态组件接收
   dialogVisible.value = true
   currentTabComponent.value = n
 })
+watch(() => selPage.value, (n) =>// 监听当前图纸
+{
+  const cur = pageDirs.value.find(page => page.name === n)
+  if (cur)
+    nodeInfo.value = { ...cur, type: 'blank', description: { namec:cur.namec, icon: 'icon-huabu', classify: '电力仿真-画布' } }
+})
 // 方法
 function handleDragEnd({clientX, clientY, node}:any) // 结点拖拽结束
 {
   childRef.value?.dragEnd(clientX, clientY, node)
 }
-function acceptData(data:object) // 接收子组件传来的数据
+function acceptData(params:any) // 接收子组件传来的数据
 {
-  nodeInfo.value = data
+  if (params.type === 'blank')
+  {
+    const cur = pageDirs.value.find(page => page.name === selPage.value)
+    if (cur)
+      nodeInfo.value = { ...cur, type: 'blank', description: { namec:cur.namec, icon: 'icon-huabu', classify: '电力仿真-画布' } }
+  }
+  else
+  {
+    nodeInfo.value = {
+      ...params, description:
+      {
+        namec: params.cell.namec,
+        icon: params.type === 'edge' ? 'icon-xian' : 'icon-node',
+        classify: params.type === 'edge' ? '连接线' : params.cell.data.namec
+      }
+    }
+  }
+  
+   
 }
 function closeModal() // 关闭弹窗
 {
@@ -134,7 +158,11 @@ onMounted(()=>
   collapseL.value = true
   collapseR.value = true
   if (pageDirs.value.length)
+  {
     selPage.value = pageDirs.value[0].name
+    nodeInfo.value = { ...pageDirs.value[0], type: 'blank', description: { namec:pageDirs.value[0].namec, icon: 'icon-huabu', classify: '电力仿真-画布' } }
+  }
+    
 })
 onBeforeUnmount(()=>
 {

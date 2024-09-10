@@ -349,7 +349,7 @@ export default defineComponent({
           checkEdge = cell
           graphcom.addTools(cell, ['vertices', 'segments', 'boundary', 'source-arrowhead', 'target-arrowhead'], toolsConfig)
         }
-        emit('accept-data', {data:cell.toJSON(), type:cell.isEdge()?'edge':'node'})
+        emit('accept-data', { cell: cell.toJSON(), type: cell.isEdge()?'edge':'node' })
       })
       
       // 监听边的取消选中事件
@@ -369,7 +369,7 @@ export default defineComponent({
           checkEdge = null
         }
         graphcom.showPorts('hidden', graph)
-        emit('accept-data', {type:'blank'})
+        emit('accept-data', { type:'blank' })
       })
       graph.on('node:change:*', (args) =>
       {
