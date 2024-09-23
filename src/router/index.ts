@@ -10,6 +10,24 @@ const routes: Array<RouteRecordRaw> = [
       path: '/GraphPage',
       name: 'graphpage',
       component: () => import('@/views/main/GraphPage.vue')
+    },
+    {
+      path: '/design',
+      name: 'design',
+      component: () => import('@/views/main/MainPage.vue'),
+      meta: {
+        keepAlive: true
+      }
+
+    },
+    {
+      path: '/run',
+      name: 'run',
+      component: () => import('@/views/main/run/Run.vue'),
+      meta: {
+        keepAlive: false
+      }
+
     }]
   },
   

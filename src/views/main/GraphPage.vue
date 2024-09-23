@@ -26,7 +26,7 @@ import { Clipboard } from '@antv/x6-plugin-clipboard'
 import { History } from '@antv/x6-plugin-history'
 import { Scroller } from '@antv/x6-plugin-scroller'
 import { useStore } from 'vuex'
-import { defineComponent, onMounted, ref, onBeforeUnmount, reactive, h, Ref } from 'vue'
+import { defineComponent, onMounted, ref, onBeforeUnmount, reactive, h, onActivated, onDeactivated, watch} from 'vue'
 import { ElNotification } from 'element-plus'
 
 import { graphEvents } from './graphEvents'
@@ -34,32 +34,29 @@ import common from '@/components/ts/common'
 import graphcom from './graph'
 import eveBus from '@/components/ts/eveBus'
 
-import { RightMenuEvent, RightMenu } from '@/components/interface/interfaceBase'
+import { RightMenu } from '@/components/interface/interfaceBase'
 import { query } from '@/request'
+let changeProject = false
 export default defineComponent({
   name: 'GraphPage',
-  props:{
-    widthL: {
-      type: Number,
-      default: 0,
+  props: {
+    projectId: {
+      type:Number
     }
   },
   setup(props, { expose, emit })
   {
-    const rightClickMenu: Ref<RightMenuEvent | null> = ref(null)
     const container = ref<HTMLElement | null>(null)
     const rightmenu = ref<HTMLElement | null>(null)
     const contextMenuVisible = ref(false)
     const menuPosition = reactive({ x: 0, y: 0 })
     const toolsConfig = common.toolsConfig()
-    const translatecss = ref('')
-    
     const menus = ref<RightMenu[]>([
       {
         name: 'edit',
         namec: '编辑',
         icon: 'iconfont icon-edit',
-        keybord:'',
+        keybord: '',
         click: () =>
         {
           editEdge()
@@ -69,7 +66,7 @@ export default defineComponent({
         name: 'delete',
         namec: '删除',
         icon: 'iconfont icon-shanchu',
-        keybord:'Delete',
+        keybord: 'Delete',
         click: () =>
         {
           excute('delete')
@@ -79,7 +76,7 @@ export default defineComponent({
         name: 'cut',
         namec: '剪切',
         icon: 'iconfont icon-cut',
-        keybord:'Ctrl+X',
+        keybord: 'Ctrl+X',
         click: () =>
         {
           excute('cut')
@@ -89,7 +86,7 @@ export default defineComponent({
         name: 'copy',
         namec: '复制',
         icon: 'iconfont icon-copy',
-        keybord:'Ctrl+C',
+        keybord: 'Ctrl+C',
         click: () =>
         {
           excute('copy')
@@ -99,7 +96,7 @@ export default defineComponent({
         name: 'stick',
         namec: '粘贴',
         icon: 'iconfont icon-niantie',
-        keybord:'Ctrl+V',
+        keybord: 'Ctrl+V',
         click: () =>
         {
           pasteFun()
@@ -109,7 +106,7 @@ export default defineComponent({
         name: 'create',
         namec: '创建副本',
         icon: 'iconfont icon-xinjian',
-        keybord:'Ctrl+D',
+        keybord: 'Ctrl+D',
         click: () =>
         {
           excute('create')
@@ -119,7 +116,7 @@ export default defineComponent({
         name: 'rotateR',
         namec: '顺时针旋转',
         icon: 'iconfont icon-a-xuanzhuanmianban-rotatepanel-1',
-        keybord:'Ctrl+R',
+        keybord: 'Ctrl+R',
         click: () =>
         {
           excute('rotateR')
@@ -129,7 +126,7 @@ export default defineComponent({
         name: 'rotateL',
         namec: '逆时针旋转',
         icon: 'iconfont icon-a-xuanzhuanmianban-rotatepanel-anti-1',
-        keybord:'Ctrl+Shift+R',
+        keybord: 'Ctrl+Shift+R',
         click: () =>
         {
           excute('rotateL')
@@ -139,7 +136,7 @@ export default defineComponent({
         name: 'undo',
         namec: '撤销',
         icon: 'iconfont icon-undo',
-        keybord:'Ctrl+Z',
+        keybord: 'Ctrl+Z',
         click: () =>
         {
           excute('undo')
@@ -149,31 +146,36 @@ export default defineComponent({
         name: 'redo',
         namec: '重做',
         icon: 'iconfont icon-zhongzuo',
-        keybord:'Ctrl+Y',
+        keybord: 'Ctrl+Y',
         click: () =>
         {
           excute('redo')
         },
       }])
-    let checkEdge: Edge|null, selectedCell: Cell|null, graph: Graph, excuteGraph:object|null, scroller:Scroller|null
+    let checkEdge: Edge | null, selectedCell: Cell | null, graph: Graph, excuteGraph: object | null, scroller: Scroller | null, scrollPosition: { left: number, top: number } | null
     let [gridColor, showLabel, showPortLabel, dragPage] = ['#ddd', 'none', 'none', false]
     const store = useStore()
-    const pageHeaderH = store.state.pageHeaderH
-    
+
     // 拖拽结束,渲染到画布上
-    const dragEnd = (x:number, y:number, node:object)=>
+    const dragEnd = (x: number, y: number, node: object) =>
     {
       if (!container.value) return
-
       const n = Object(node)
       const p = graph.pageToLocal(x, y)
-      const [X, Y] = [p.x - n.width/2, p.y - n.height/2]
+      const [X, Y] = [p.x - n.width / 2, p.y - n.height / 2]
       // 添加节点到画布
-      const _node = graph.addNode(Object({...n, x:X, y:Y}))
+      const sameNode = graph.getNodes().filter(node => node.data.id === n.data.id)
+      n.data.prjnodeInfo = {
+        name: n.data.keyname + '#' + (sameNode.length + 1),
+        namec: n.data.namec + '#' + (sameNode.length + 1),
+      }
+      n.data.func_memory = []
+      n.label = n.data.prjnodeInfo.namec
+      const _node = graph.addNode(Object({ ...n, x: X, y: Y }))
       _node.attr('label/display', showLabel)
       _node.getPorts().forEach(port =>
       {
-        _node.portProp(port.id+'', 'attrs/text/display', showPortLabel)
+        _node.portProp(port.id + '', 'attrs/text/display', showPortLabel)
       })
     }
     const editEdge = () =>
@@ -185,7 +187,7 @@ export default defineComponent({
       }
       contextMenuVisible.value = false
     }
-    const excute = (type:string)=>
+    const excute = (type: string) =>
     {
       if (excuteGraph)
         (excuteGraph as any)[type]()
@@ -196,55 +198,37 @@ export default defineComponent({
       if (graph.isClipboardEmpty()) return
       // menuPosition
       // 计算相对偏移量
-      let center = {x:0, y:0}
-      if (graph&&graph.getPlugin('clipboard'))
-      
-        center =Object(graph.getCellsBBox(Object(graph.getPlugin('clipboard')).cells.filter((n: { isNode: () => any })=>n.isNode()))).center
-
-      // const t1 = graph.localToPage(graph.graphToLocal(menuPosition))
-      // const t2 = graph.localToClient(graph.graphToLocal(center))
-      const t1 = graph.clientToLocal({...menuPosition, y:menuPosition.y+store.state.pageHeaderH})
+      let center = { x: 0, y: 0 }
+      if (graph && graph.getPlugin('clipboard'))
+        center = Object(graph.getCellsBBox(Object(graph.getPlugin('clipboard')).cells.filter((n: { isNode: () => any }) => n.isNode()))).center
+      const t1 = graph.clientToLocal({ ...menuPosition, y: menuPosition.y })
       const t2 = center
-      const cells =graph.paste({ offset:{dx:t1.x-t2.x, dy:t1.y-t2.y} })
+      const cells = graph.paste({ offset: { dx: t1.x - t2.x, dy: t1.y - t2.y } })
       graph.cleanSelection()
       graph.select(cells)
     }
-    function handleRightClick(e:MouseEvent)
-    {
-      eveBus.emit('right-menu', { e, menus:menus.value, data:{} })
-    }
-    const bindKey = ()=>
+    const bindKey = () =>
     {
       graph.on('cell:contextmenu', ({ cell, e }) =>
       {
         if (!container.value) return
-        // e.preventDefault()
-        const pos = graph.clientToGraph(e.clientX+props.widthL, e.clientY)
         menuPosition.x = e.clientX
-        menuPosition.y = e.clientY-store.state.pageHeaderH
-
-        translatecss.value = `translate(${window.innerWidth-e.clientX<=store.state.rmenuBoxW?'-100%':'0'},${window.innerHeight-e.clientY-pageHeaderH<(rightmenu&&rightmenu.value?rightmenu.value.offsetHeight:400)?'-100%':'0'})`
+        menuPosition.y = e.clientY
         graph.select(cell)
         // selectedCell = cell
         contextMenuVisible.value = true
-        eveBus.emit('right-menu', { e, menus:menus.value, data:{} })
+        eveBus.emit('right-menu', { e, menus: menus.value, data: {} })
       })
-      graph.on('blank:contextmenu', (args) =>
+      graph.on('blank:contextmenu', ({ e }) =>
       {
-        console.log(args)
-        const e = args.e
         if (!container.value) return
-        e.preventDefault()
-        const pos = graph.clientToGraph(e.clientX+props.widthL, e.clientY)
         menuPosition.x = e.clientX
-        menuPosition.y = e.clientY-store.state.pageHeaderH
-
-        translatecss.value = `translate(${window.innerWidth-e.clientX<=store.state.rmenuBoxW?'-100%':'0'},${window.innerHeight-e.clientY-pageHeaderH<(rightmenu&&rightmenu.value?rightmenu.value.offsetHeight:400)?'-100%':'0'})`
+        menuPosition.y = e.clientY
         // 屏幕宽度:window.screen.width
         // 浏览器窗口宽度:window.innerWidth e.clientX
         // container.value.offsetHeight
         contextMenuVisible.value = true
-        eveBus.emit('right-menu', { e, menus:menus.value, data:{} })
+        eveBus.emit('right-menu', { e, menus: menus.value, data: {} })
       })
       graph.on('edge:connected', async(args) =>
       {
@@ -259,45 +243,104 @@ export default defineComponent({
         // })
         const source = args.edge.getSourceCell()
         const target = args.edge.getTargetCell()
+        const sourcePortId = args.edge.getSourcePortId()
+        const targetPortId = args.edge.getTargetPortId()
+        
         if (source && target)
         {
-          if (getNodeDimension(source) && getNodeDimension(target)&&getNodeDimension(source) !== getNodeDimension(target))
+          const sourcePort = (source as any).getPort(sourcePortId)
+          const targetPort = (target as any).getPort(targetPortId)
+          if (getPortDimension(sourcePort) && getPortDimension(targetPort) && getPortDimension(sourcePort) !== getPortDimension(targetPort))
           {
             ElNotification({
               title: '连接失败',
               position: 'bottom-right',
-              message: `引脚 X 维度不相等，首端维度 ${getNodeDimension(source)}，末端维度 ${getNodeDimension(target)}`,
+              message: `引脚 X 维度不相等，首端维度 ${getPortDimension(sourcePort)}，末端维度 ${getPortDimension(targetPort)}`,
               showClose: true,
-              icon: h('i', {class:'iconfont icon-jinggao', style:'color:#faad14;'}, ''),
+              icon: h('i', { class: 'iconfont icon-jinggao', style: 'color:#faad14;' }, ''),
               duration: 20000,
-              customClass:'msg-warning'
+              customClass: 'msg-warning'
             })
             args.edge.remove()
           }
           else
-            store.commit('savePage/addExcute', {type:'add', exp:''})
+          {
+            const edges = graph.getEdges()
+            store.dispatch('savePage/addExcute', {
+              type: 'add', tabname: 'project_edges', index: args.edge.id,
+              args: {
+                id: args.edge.id,
+                name: 'edge#' + edges.length,
+                namec: '连接线#' + edges.length,
+                prjid: props.projectId,
+                source: args.edge.source,
+                target: args.edge.target,
+                cellkey: args.edge.id,
+                vertices: args.edge.vertices,
+                format: {
+                
+                }
+              }
+            })
+            args.edge.data = {
+              name: 'edge#' + edges.length,
+              namec: '连接线#' + edges.length,
+              prjid: props.projectId,
+              source: args.edge.source,
+              target: args.edge.target,
+              cellkey: args.edge.id,
+              vertices: args.edge.vertices,
+              format: {
+                
+              }
+            }
+          }
         }
       })
-     
+
       graph.on('cell:removed', ({ cell, index, options }) =>
       {
-        store.commit('savePage/addExcute', {type:'delete', exp:''})
+        if (!changeProject&&cell.data)
+        {
+          store.dispatch('savePage/addExcute', {
+            type: 'delete', tabname: cell.isNode() ? 'project_nodes' : 'project_edges', index:cell.id,
+            args:
+            {
+              id: cell.isNode()?cell.data.prjnodeInfo.id:cell.data.id
+            }
+          })
+        }
       })
       graph.on('node:added', ({ node, index, options }) =>
       {
         if (!node.getProp('autoConnection'))
-          store.commit('savePage/addExcute', {type:'add', exp:''})
+        {
+          node.data.prjnodeInfo = {
+            ...node.data.prjnodeInfo,
+            id: node.id,
+            prjid: props.projectId,
+            cellid: node.getData().id,
+            format: {...node.getPosition(), angle: node.getAngle()},
+            attribute:{},
+            params:{},
+            pin:{},
+            cellkey:node.id,
+          }
+          store.dispatch('savePage/addExcute', {
+            type: 'add', tabname: 'project_nodes', index: node.id,
+            args: node.data.prjnodeInfo
+          })
+        }
       })
       // 监听连线的 mouseenter 和 mouseleave 事件
       graph.on('edge:added', ({ edge }) =>
       {
         if (!edge.getProp('autoConnection'))
           graphcom.showPorts('visible', graph)
-
         if (edge && edge.attrs && edge.attrs.line)
         {
           const { connectionPoints } = edge.attrs.line
-          if (connectionPoints&& Array.isArray(connectionPoints))
+          if (connectionPoints && Array.isArray(connectionPoints))
           {
             connectionPoints.forEach((point: { x: number; y: number }) =>
             {
@@ -316,16 +359,16 @@ export default defineComponent({
           }
         }
       })
-      graph.on('cell:mouseleave', ({e, cell }) =>
+      graph.on('cell:mouseleave', ({ cell }) =>
       {
         if (cell.isEdge())
         {
-          cell.hasTool('vertices')&&cell.removeTool('vertices')
-          cell.hasTool('segments')&&cell.removeTool('segments')
+          cell.hasTool('vertices') && cell.removeTool('vertices')
+          cell.hasTool('segments') && cell.removeTool('segments')
         }
         if (cell.isNode())
           graphcom.showPorts('hidden', graph)
-        
+
       })
       // 控制连接桩显示/隐藏
       graph.on('cell:mouseenter', ({ cell }) =>
@@ -334,11 +377,11 @@ export default defineComponent({
         {
           cell.getPorts().forEach(port =>
           {
-            if (port.group!=='inline')
-              cell.portProp(port.id+'', 'attrs/circle/style/visibility', 'visible')
+            if (port.group !== 'inline')
+              cell.portProp(port.id + '', 'attrs/circle/style/visibility', 'visible')
           })
         }
-        else if (checkEdge&&cell.isEdge())
+        else if (checkEdge && cell.isEdge())
           graphcom.addTools(checkEdge, ['vertices', 'segments'], toolsConfig)
       })
       // 监听边的选中事件
@@ -349,9 +392,9 @@ export default defineComponent({
           checkEdge = cell
           graphcom.addTools(cell, ['vertices', 'segments', 'boundary', 'source-arrowhead', 'target-arrowhead'], toolsConfig)
         }
-        emit('accept-data', { cell: cell.toJSON(), type: cell.isEdge()?'edge':'node' })
+        emit('accept-data', { cell: cell, type: cell.isEdge() ? 'edge' : 'node' })
       })
-      
+
       // 监听边的取消选中事件
       graph.on('cell:unselected', ({ cell }) =>
       {
@@ -361,7 +404,7 @@ export default defineComponent({
           cell.removeTools()
         }
       })
-      graph.on('blank:click', ()=>
+      graph.on('blank:click', () =>
       {
         if (checkEdge)
         {
@@ -369,16 +412,46 @@ export default defineComponent({
           checkEdge = null
         }
         graphcom.showPorts('hidden', graph)
-        emit('accept-data', { type:'blank' })
+        emit('accept-data', { type: 'blank' })
       })
-      graph.on('node:change:*', (args) =>
+      graph.on('node:change:*', (args) => // 监听结点发生变化
       {
-        if (args.key!=='ports')
-          store.commit('savePage/addExcute', {type:'update', exp:''})
+        if (args.key !== 'ports')
+        {
+          if (args.key === 'position' || args.key === 'angle')
+          {
+            const oformat = JSON.parse(JSON.stringify(args.cell.data.prjnodeInfo.format))
+            const format = { ...oformat, ...(args.key === 'position' ? args.current : { angle: args.current }) }
+            store.dispatch('savePage/addExcute', {
+              type: 'update', index: args.cell.id, tabname: 'project_nodes',
+              args: {
+                id: args.cell.data.prjnodeInfo.id,
+                format
+              },
+              onCancle: () =>
+              {
+                args.cell.data.prjnodeInfo = { ...args.cell.data.prjnodeInfo, format: oformat }
+              }
+            })
+            args.cell.data.prjnodeInfo = { ...args.cell.data.prjnodeInfo, format }
+          }
+        }
       })
-      graph.on('edge:change:vertices', (args) =>
+      graph.on('edge:change:vertices', (args) => // 监听边发生变化发生变化
       {
-        store.commit('savePage/addExcute', {type:'update', exp:''})
+        const overtices = JSON.parse(JSON.stringify(args.cell.data.format))
+        store.dispatch('savePage/addExcute', {
+          type: 'update', index: args.cell.id, tabname: 'project_edges',
+          args: {
+            id: args.cell.data.id,
+            vertices: args.current,
+          },
+          onCancle: () =>
+          {
+            args.cell.data = { ...args.cell.data, vertices: overtices }
+          }
+        })
+        args.cell.data = {...args.cell.data, vertices:args.current}
       })
       // 手动新增连接桩
       // graph.on('node:click', ({e, node}) =>
@@ -389,16 +462,16 @@ export default defineComponent({
       //   const position = [local.x - nodePosition.x, local.y - nodePosition.y]
       //   console.log('相对于节点的坐标:', position)
       //   node.addPort({group: 'in', args:{x: position[0]/size.width, y: position[1]/size.height, }})
-        
+
       // })
       // 点击其他地方隐藏菜单
-      document.addEventListener('click', ()=>
+      document.addEventListener('click', () =>
       {
         contextMenuVisible.value = false
       })
       document.addEventListener('keydown', (event: KeyboardEvent) =>
       {
-        if ((event.ctrlKey||event.key==='Control') && dragPage)
+        if ((event.ctrlKey || event.key === 'Control') && dragPage)
         {
           graph.toggleRubberband(true)
           const plugin = Object(graph.getPlugin('scroller'))
@@ -407,7 +480,7 @@ export default defineComponent({
       })
       document.addEventListener('keyup', (event: KeyboardEvent) =>
       {
-        if ((event.ctrlKey||event.key==='Control') && dragPage)
+        if ((event.ctrlKey || event.key === 'Control') && dragPage)
         {
           graph.toggleRubberband(false)
           const plugin = Object(graph.getPlugin('scroller'))
@@ -415,65 +488,89 @@ export default defineComponent({
         }
       })
     }
-    const loadDefNode = ()=>
+    const loadDefNode = () =>
     {
-      Promise.all([query({ tabname: 'project_nodes', exp: 'prjid = 1' }), query({ tabname: 'project_edges', exp: 'prjid = 1' })]).then(async ret =>
-      {
-        if (ret[0].data && ret[0].data.length)
+      Promise.all([
+        query({ tabname: 'project_nodes', exp: `prjid = ${props.projectId}` }),
+        query({ tabname: 'project_edges', exp: `prjid = ${props.projectId}` }),
+        query({ tabname: 'func_memory', exp: `prjid = ${props.projectId}` })])
+        .then(async ret =>
         {
-          const nodes = await common._getNodes()
-          ret[0].data.forEach((n:any) =>
+          const func_memory = ret[2].status === 200 ? ret[2].data : []
+          if (ret[0].data && ret[0].data.length)
           {
-            const node = nodes.find((node: any) => node.data.id === n.cellid)
-            if (node)
+            const nodes = await common._getNodes()
+            ret[0].data.forEach((n: any) =>
             {
-              graph.addNode({
-                ...node, ...JSON.parse(n.format),
-                label: n.namec,
-                namec: n.namec,
-                id: n.cellkey,
-                autoConnection: true,
-                data: { ...node.data, params: n.params ? JSON.parse(n.params) : {} }
-              })
-            }
-            
-          })
-          ret[1].data.forEach((edge:any)=>
-          {
-            graph.addEdge({
-              attrs: {
-                line: {
-                  targetMarker:{ tagName: 'circle', r: 2, cx: -1, },
-                  sourceMarker:{ tagName: 'circle', r: 2, cx: -1, },
-                  stroke: '#000000',
-                  strokeWidth:2,
-                },
-              },
-              id: edge.cellkey,
-              namec: edge.namec,
-              autoConnection: true, // 自动连接接
-              source: JSON.parse(edge.source),
-              vertices: edge.vertices?JSON.parse(edge.vertices):[],
-              target: JSON.parse(edge.target),
-              ...JSON.parse(edge.format),
+              const node = nodes.find((node: any) => node.data.id === n.cellid)
+              if (node)
+              {
+                const pin = n.pin ? JSON.parse(n.pin) : {}
+                const newNode = graph.addNode({
+                  ...node, ...JSON.parse(n.format),
+                  label: n.namec,
+                  id: n.cellkey,
+                  autoConnection: true,
+                  data: {
+                    ...node.data,
+                    func_memory: func_memory.filter((i:any)=>i.cellkey=== n.cellkey),
+                    prjnodeInfo: {
+                      ...n,
+                      params: n.params ? JSON.parse(n.params) : {},
+                      format: n.format ? JSON.parse(n.format) : {},
+                      attribute: n.attribute ? JSON.parse(n.attribute) : {},
+                      pin
+                    }
+                  }
+                })
+                node.data.ports.forEach((port: any) =>
+                {
+                  if (pin[port.name])
+                    newNode.setPortProp(port.id + '', 'attrs/text/text', pin[port.name])
+                })
+              }
             })
-          })
-        }
-           
-      })
+            ret[1].data.forEach((edge: any) =>
+            {
+              graph.addEdge({
+                attrs: {
+                  line: {
+                    targetMarker: { tagName: 'circle', r: 2, cx: -1, },
+                    sourceMarker: { tagName: 'circle', r: 2, cx: -1, },
+                    stroke: '#000000',
+                    strokeWidth: 2,
+                  },
+                },
+                id: edge.cellkey,
+                namec: edge.namec,
+                autoConnection: true, // 自动连接接
+                source: JSON.parse(edge.source),
+                vertices: edge.vertices ? JSON.parse(edge.vertices) : [],
+                target: JSON.parse(edge.target),
+                data: {
+                  ...edge,
+                  source: JSON.parse(edge.source),
+                  vertices: edge.vertices ? JSON.parse(edge.vertices) : [],
+                  target: JSON.parse(edge.target),
+                  format:JSON.parse(edge.format)
+                },
+                ...JSON.parse(edge.format),
+              })
+            })
+          }
+
+        })
     }
-    const getNodeDimension = (cell:Cell|null|undefined) =>
+    const getPortDimension = (port: any) =>
     {
-      if (!cell) return null
-      if (!cell.isNode) return null
-      if (cell.data && Object.prototype.hasOwnProperty.call(cell.data, 'dimension'))
-        return cell.data.dimension
-      return null
+      if (port&&port.dimension)
+        return Number(port.dimension.split('×').length?port.dimension.split('x')[0]:0)
+      return 0
     }
-    const renderGraph = ()=>
+    const renderGraph = () =>
     {
       if (!container.value) return
-      
+
       graph = new Graph({
         container: container.value,
         interacting: function(cellView)
@@ -527,7 +624,7 @@ export default defineComponent({
         //   },
         // },
         connecting: {
-          edgeAnchor:{name:'orth'},
+          edgeAnchor: { name: 'orth' },
           allowEdge: true,
           // 设置连接点
           allowBlank: false,  // 不允许连接到空白处
@@ -537,7 +634,7 @@ export default defineComponent({
           // connector: 'smooth',  // 设置连接器的样式
           connectionPoint: 'anchor',  // 设置连接点样式
           anchor: 'center',  // 设置锚点在中心
-          
+
           connector: {
             name: 'jumpover',
             args: {
@@ -557,25 +654,25 @@ export default defineComponent({
             return new Shape.Edge({
               attrs: {
                 line: {
-                  targetMarker:{ tagName: 'circle', r: 2, cx: -1, },
-                  sourceMarker:{ tagName: 'circle', r: 2, cx: -1, },
+                  targetMarker: { tagName: 'circle', r: 2, cx: -1, },
+                  sourceMarker: { tagName: 'circle', r: 2, cx: -1, },
                   stroke: '#000000',
-                  strokeWidth:2,
-                 
+                  strokeWidth: 2,
+
                   // targetMarker:null
                 },
               },
-              tools:[toolsConfig.segments, toolsConfig.vertices],
+              tools: [toolsConfig.segments, toolsConfig.vertices],
               autoConnection: false // 自动连接
             })
           },
           validateConnection(args)
           {
-            // if (getNodeDimension(args.sourceCell) && getNodeDimension(args.targetCell))
-            //   return getNodeDimension(args.sourceCell) === getNodeDimension(args.targetCell)
-            if (args.targetCell?.id===args.sourceCell?.id)
-              return Boolean(args.sourcePort!==args.targetPort)
-            return Boolean(args.targetView?.isEdgeView()||args.targetMagnet)
+            // if (getPortDimension(args.sourceCell) && getPortDimension(args.targetCell))
+            //   return getPortDimension(args.sourceCell) === getPortDimension(args.targetCell)
+            if (args.targetCell?.id === args.sourceCell?.id)
+              return Boolean(args.sourcePort !== args.targetPort)
+            return Boolean(args.targetView?.isEdgeView() || args.targetMagnet)
             // return Boolean(targetView?.isEdgeView()||targetMagnet?.getAttribute('port-group')||sourceMagnet?.getAttribute('port-group'))
             // if (targetMagnet && targetMagnet.getAttribute('port-group'))
             //   return true
@@ -606,10 +703,10 @@ export default defineComponent({
             maxWidth: 400,
             orthogonal: false,
             restrict: false,
-            preserveAspectRatio:true
+            preserveAspectRatio: true
           },
           rotating: true,
-          
+
         }),
         )
         .use(new Selection({
@@ -627,9 +724,9 @@ export default defineComponent({
         .use(new Clipboard())
         .use(new History({
           enabled: true,
-          beforeAddCommand:(type, data)=>
+          beforeAddCommand: (type, data) =>
           {
-            const nIncludes=['ports', 'tools']
+            const nIncludes = ['ports', 'tools']
             if (nIncludes.includes(Object(data).key))
               return false
             return true
@@ -641,14 +738,14 @@ export default defineComponent({
       excuteGraph = new graphEvents(graph)
       eveBus.on('change-graph-config', (data) =>
       {
-        if (graph&&data)
+        if (graph && data)
           // graph.drawBackground(data as Graph.BackgroundManager.Options)
           graph.container.style.background = (data as any).color
-       
+
       })
       eveBus.on('change-graph-grid', (data) =>
       {
-        if (graph&&data)
+        if (graph && data)
         {
           graph.showGrid()
           switch ((data as any).type)
@@ -657,40 +754,41 @@ export default defineComponent({
             graph.hideGrid()
             break
           case 'dot':
-            graph.drawGrid({type:'dot', args:[{color:gridColor}]})
+            graph.drawGrid({ type: 'dot', args: [{ color: gridColor }] })
             break
           case 'mesh':
-            graph.drawGrid({type:'mesh', args:[{color:gridColor}]})
+            graph.drawGrid({ type: 'mesh', args: [{ color: gridColor }] })
             break
           case 'doubleMesh':
-            graph.drawGrid({type:'doubleMesh', args:[
-              {
-                color: gridColor, // 主网格线颜色
-                thickness: 1, // 主网格线宽度
-              },
-              {
-                color: gridColor, // 次网格线颜色
-                thickness: 2, // 次网格线宽度
-                factor: 16, // 主次网格线间隔
-              },
-            ]})
+            graph.drawGrid({
+              type: 'doubleMesh', args: [
+                {
+                  color: gridColor, // 主网格线颜色
+                  thickness: 1, // 主网格线宽度
+                },
+                {
+                  color: gridColor, // 次网格线颜色
+                  thickness: 2, // 次网格线宽度
+                  factor: 16, // 主次网格线间隔
+                },
+              ]
+            })
           }
         }
       })
       eveBus.on('change-grid-color', (data) =>
       {
-        
-        if (graph&&data)
+        if (graph && data)
         {
           const grid = graph.options.grid
           gridColor = (data as any).color
-          if (grid.args&&Array.isArray(grid.args))
-            graph.drawGrid({...(grid as any), args:grid.args.map(arg=>({...arg, color:gridColor, thickness: arg.thickness || 1}))})
+          if (grid.args && Array.isArray(grid.args))
+            graph.drawGrid({ ...(grid as any), args: grid.args.map(arg => ({ ...arg, color: gridColor, thickness: arg.thickness || 1 })) })
         }
       })
       eveBus.on('show-page-split', (show) =>
       {
-        
+
         if (scroller)
         {
           const plugin = Object(graph.getPlugin('scroller'))
@@ -703,7 +801,7 @@ export default defineComponent({
         dragPage = Boolean(isDrag)
         graph.toggleRubberband(!!!isDrag)
         const plugin = Object(graph.getPlugin('scroller'))
-        plugin.options.modifiers = isDrag?null:'ctrl'
+        plugin.options.modifiers = isDrag ? null : 'ctrl'
       })
       eveBus.on('show-cell-label', (show) =>
       {
@@ -722,7 +820,7 @@ export default defineComponent({
         {
           node.getPorts().forEach(port =>
           {
-            node.portProp(port.id+'', 'attrs/text/display', showPortLabel)
+            node.portProp(port.id + '', 'attrs/text/display', showPortLabel)
           })
         })
       })
@@ -745,7 +843,7 @@ export default defineComponent({
           {
             comp,
             id: Math.random(),
-            title:'数据导入',
+            title: '数据导入',
             onOk: (att: any) =>
             {
               const ojson = graph.toJSON()
@@ -758,19 +856,29 @@ export default defineComponent({
       eveBus.on('graph-update-port-label', (params: any) =>
       {
         const node = graph.getCellById(params.cellid)
-        if (node.isNode()&&node.setPortProp instanceof Function)
+        if (node.isNode() && node.setPortProp instanceof Function&&params.type!=='inline')
           node.setPortProp(params.portid + '', 'attrs/text/text', params.conn)
-        
       })
 
     }
-    async function loadSvg(url:string)
+    async function loadSvg(url: string)
     {
       const response = await fetch(url)
       const svgText = await response.text()
       return svgText
     }
-    onMounted(() =>
+    watch(() => props.projectId, () =>
+    {
+      if (graph)
+      {
+        changeProject = true
+        graph.clearCells()
+        changeProject = false
+      }
+        
+      loadDefNode()
+    })
+    onMounted(async() =>
     {
       renderGraph()
       bindKey()
@@ -780,18 +888,28 @@ export default defineComponent({
         shape: 'custom-svg',
         width: 100,
         height: 100,
-        html: function(options:any)
+        html: function(options: any)
         {
           return options.getProp('svg')
         },
       })
+      
       // const testJson = fetch('static/graph.json')
       // testJson.then(res=>res.json().then(json=>
       // {
       //   graph.fromJSON(json)
       // }))
     })
-  
+    onDeactivated(() =>
+    {
+      if (graph.getScrollbarPosition())
+        scrollPosition = graph.getScrollbarPosition()
+    })
+    onActivated(() =>
+    {
+      if (scrollPosition)
+        graph.setScrollbarPosition(scrollPosition.left, scrollPosition.top)
+    })
     onBeforeUnmount(() =>
     {
       eveBus.all.clear()
@@ -806,10 +924,7 @@ export default defineComponent({
       container,
       rightmenu,
       contextMenuVisible,
-      rightClickMenu,
       menuPosition,
-      translatecss,
-      handleRightClick,
       editEdge,
       dragEnd,
       excute,

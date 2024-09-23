@@ -2,8 +2,6 @@
 import eveBus from '@/components/ts/eveBus'
 import { query } from '@/request'
 import { fldsObject, collapseItem, nodeParams, dbvalueBase } from '@/components/interface/interfaceBase'
-import { orderBy } from 'element-plus/es/components/table/src/util'
-
 
 export default class common
 {
@@ -11,55 +9,107 @@ export default class common
   {
     
   }
-  static getGVars()
+  static globalFunc()
   {
-    const global = [
-      {name:'Rs', label:'', unit:'', disptype:1, default:'0.0001', isFunc:false},
-      {name:'R2', label:'', unit:'', disptype:1, default:'0.228', isFunc:false},
-    ]
-    return global
+    const funcs = {
+      'change-graph-config': (val: string) =>
+      {
+        eveBus.emit('change-graph-config', { color: val })
+      },
+      'change-graph-grid':(val: string) =>
+      {
+        eveBus.emit('change-graph-grid', { type: val })
+      },
+      'change-grid-color': (val: string) =>
+      {
+        eveBus.emit('change-grid-color', { color: val })
+      },
+      'show-page-split': (val: boolean) =>
+      {
+        eveBus.emit('show-page-split', val)
+      },
+      'drag-graph-page':(val: boolean) =>
+      {
+        eveBus.emit('drag-graph-page', val)
+      },
+      'show-cell-label': (val: boolean) =>
+      {
+        eveBus.emit('show-cell-label', val)
+      },
+      'show-port-label': (val: boolean) =>
+      {
+        eveBus.emit('show-port-label', val)
+      }
+    }
+    return funcs
   }
   static getGConfigFlds()
   {
     const flds = [
-      {name:'bgcolor', value: null, unit:'', isValue:true, label:'背景颜色', disptype:6, expression:null,
-        callback:(val:string)=>
-        {
-          eveBus.emit('change-graph-config', {color:val})
-        }},
-      {name:'gridtype', value:null, unit:'', isValue:true, label:'网格类型', disptype:2,
-        fldValue:[
-          {colname:'hidden', dbvalue:'hidden', disp:'hidden', dispc:'隐藏'},
-          {colname:'point', dbvalue:'dot', disp:'dot', dispc:'点阵'},
-          {colname:'nets', dbvalue:'mesh', disp:'mesh', dispc:'网状'},
-          {colname:'dbnewts', dbvalue:'doubleMesh', disp:'doubleMesh', dispc:'双层网状'}
-        ], expression:null,
-        callback:(val:string)=>
-        {
-          eveBus.emit('change-graph-grid', {type:val})
-        }},
-      {name:'gridcolor', value: null, unit:'', isValue:true, label:'网格颜色', disptype:6, expression:null,
-        callback:(val:string)=>
-        {
-          eveBus.emit('change-grid-color', {color:val})
-        }
+      {
+        name: 'bgcolor', value: '#fff', value_: '', defval:'', unit: '', isval: 1, namec: '背景颜色', disptype: 6, disabled: false, disporder: 1,
+        ufunc: [
+          {
+            type: 'function',
+            args: { name: 'change-graph-config' }
+          }
+        ]
       },
-      {name:'pagesplit', value:null, unit:'', isValue:true, label:'页面分割线', disptype:5, expression:null, callback:(val:boolean)=>
       {
-        eveBus.emit('show-page-split', val)
-      }},
-      {name:'defdragpage', value: null, unit:'', isValue:true, label:'默认拖拽画布', disptype:5, expression:null, callback:(val:boolean)=>
+        name: 'gridtype', value: 'doubleMesh', value_: '', defval: '', unit: '', isval: 1, namec: '网格类型', disptype: 2, disabled: false, disporder: 2,
+        fldvalue:[
+          { tabname:'gridtype', colname: 'hidden', dbvalue: 'hidden', disp: 'hidden', dispc: '隐藏', disporder: 1 },
+          { tabname: 'gridtype', colname: 'point', dbvalue: 'dot', disp: 'dot', dispc: '点阵', disporder: 2 },
+          { tabname: 'gridtype', colname: 'nets', dbvalue: 'mesh', disp: 'mesh', dispc: '网状', disporder: 3 },
+          { tabname: 'gridtype', colname: 'dbnewts', dbvalue: 'doubleMesh', disp: 'doubleMesh', dispc: '双层网状', disporder: 4 }
+        ],
+        ufunc: [
+          {
+            type: 'function',
+            args: { name: 'change-graph-grid' }
+          }
+        ]},
       {
-        eveBus.emit('drag-graph-page', val)
-      }},
-      {name:'celllabel', value: null, unit:'', isValue:true, label:'元件标签', disptype:5, expression:null, callback:(val:boolean)=>
+        name: 'gridcolor', value: '#ddd', value_: '', defval: '', unit: '', isval: 1, namec: '网格颜色', disptype: 6, disabled: false, disporder: 3,
+        ufunc: [
+          {
+            type: 'function',
+            args: { name: 'change-grid-color' }
+          }
+        ]
+      },
       {
-        eveBus.emit('show-cell-label', val)
-      }},
-      {name:'portlabel', value: null, unit:'', isValue:true, label:'引脚标签', disptype:5, expression:null, callback:(val:boolean)=>
+        name: 'pagesplit', value: true, value_: '', defval: '', unit: '', isval: 1, namec: '页面分割线', disptype: 3, disabled: false, disporder: 4,
+        ufunc: [
+          {
+            type: 'function',
+            args: { name: 'show-page-split' }
+          }
+        ]},
       {
-        eveBus.emit('show-port-label', val)
-      }},
+        name: 'defdragpage', value: false, value_: '', defval: '', unit: '', isval: 1, namec: '默认拖拽画布', disptype: 3, disabled: false, disporder: 5,
+        ufunc: [
+          {
+            type: 'function',
+            args: { name: 'drag-graph-page' }
+          }
+        ]},
+      {
+        name: 'celllabel', value: false, value_: '', defval: '', unit: '', isval: 1, namec: '元件标签', disptype: 3, disabled: false, disporder: 6,
+        ufunc: [
+          {
+            type: 'function',
+            args: { name: 'show-cell-label' }
+          }
+        ]},
+      {
+        name: 'portlabel', value: false, value_: '', defval: '', unit: '', isval: 1, namec: '引脚标签', disptype: 3, disabled: false, disporder: 7,
+        ufunc: [
+          {
+            type: 'function',
+            args: { name: 'show-port-label' }
+          }
+        ]},
     ]
     return flds
   }
@@ -70,14 +120,33 @@ export default class common
     {
       Promise.all([query({ tabname: 'node_attr' }), query({ tabname: 'fldvalues', exp:`tabname = 'node_attr'` })]).then(ret =>
       {
-        const res: fldsObject = { flds:[], fldvalues:[] }
+        const res: fldsObject = { flds:[], fldvalue:[] }
         if (ret[0].status == 200) res.flds = ret[0].data
-        if (ret[1].status == 200) res.fldvalues = ret[1].data
+        if (ret[1].status == 200) res.fldvalue = ret[1].data
         resolve(res)
       }).catch(reject)
     })
   }
 
+  static getFuncList(nodeid: string)
+  {
+    return new Promise<Record<string, number[]>>((resolve, reject) =>
+    {
+      query({ tabname: 'func_memory', exp: `nodeid = ${nodeid}` }).then(res =>
+      {
+        const temp: Record<string, number[]> = {}
+        if (res.status == 200)
+        {
+          res.data.forEach((item: any) =>
+          {
+            temp[item.tabname] = item.fldids.split(',').map((i: string) => Number(i))
+          })
+          resolve(temp)
+        }
+        resolve({})
+      }).catch(reject)
+    })
+  }
   static getNodeConfig(nodename: string)
   {
     return new Promise<collapseItem[]>((resolve, reject) =>
@@ -107,98 +176,6 @@ export default class common
           resolve(res)
         }).catch(reject)
     })
-  }
-
-  static getFlds()
-  {
-    const _fld = [
-      {name:'Name', label:'名称', unit:'', disptype:1},
-      {name:'Rated Frequency', label:'额定频率', unit:'Hz', disptype:1},
-      {name:'Rated Voltage (L-L, RMS)', label:'额定电压', unit:'kV', disptype:1},
-      {name:'Input Capacity', label:'输入容量', unit:'MVar', disptype:1},
-      {name:'Rated Active Power (3 Phase)', label:'额定有功功率', unit:'MW', disptype:1},
-      {name:'Rated Reactive Power (3 Phase)', label:'额定无功功率', unit:'MVar', disptype:1},
-      {name:'Voltage Index for P', label:'电压系数', unit:'', disptype:1},
-      {name:'Voltage Index for Q', label:'电压系数', unit:'', disptype:1},
-      {name:'Freq Index for P', label:'频率系数', unit:'', disptype:1},
-      {name:'Freq Index for Q', label:'频率系数', unit:'', disptype:1},
-      {name:'Initial Voltage', label:'初始电压', unit:'p.u.', disptype:1},
-      {name:'Steady-state Frequency', label:'额定频率', unit:'Hz', disptype:1},
-      {name:'Length of Line', label:'线路长度', unit:'km', disptype:1},
-      {name:'Parameter Format', label:'参数输入方式', unit:'', disptype:2},
-      {name:'0 Seq. Data', label:'零序参数输入方法', unit:'', disptype:2},
-      {name:'Has the Data Been Corrected for Long Line Effects?', label:'填入的线路参数是否已进行过长导线修正?', unit:'', disptype:2},
-      {name:'Model Type', label:'传输线模型种类', unit:'', disptype:2},
-      {name:'Set This Line as a Network Partition Line?', label:'是否设置成网络分区线', unit:'', disptype:2},
-      {name:'Set This Line as a Multi-machine Network Partition Line?', label:'是否设置成多台机器网络分区线', unit:'', disptype:2},
-      {name:'Is Star Point Grounded?', label:'是否为星点接地', unit:'', disptype:2},
-      {name:'Rated Voltage (L-L, RMS)', label:'额定电压', unit:'kV', disptype:1},
-      {name:'Function Type', label:'函数类型', unit:'', disptype:2},
-      {name:'Frequency', label:'频率', unit:'Hz', disptype:1},
-      {name:'Start-up Type', label:'启动类型', unit:'', disptype:2},
-      {name:'阻抗输入方式', label:'阻抗输入方式', unit:'', disptype:2},
-      {name:'Ramping Time', label:'斜坡启动时间(仅初始化用)', unit:'s', disptype:1},
-      {name:'Voltage Angle', label:'母线电压相位', unit:'Deg', disptype:1},
-      {name:'Voltage Magnitude (L-L, RMS)', label:'母线电压幅值', unit:'p.u.', disptype:1},
-      {name:'Base Voltage (L-L, RMS)', label:'母线电压基值', unit:'kV', disptype:1},
-      {name:'Initial Phase', label:'初始相位', unit:'Deg', disptype:1},
-      {name:'Frequency', label:'频率', unit:'Hz', disptype:1},
-      {name:'Resistance', label:'内阻', unit:'Ω', disptype:1},
-      {name:'Voltage Ramp Up Time', label:'启动时间', unit:'s', disptype:1},
-      { name: 'Voltage Input Time Constant', label: '启动时间常数', unit: 's', disptype: 1 },
-
-      { name: 'Poles', label: '极数（不是极对数）', unit: '', disptype: 1 },
-      { name: 'Rated Power', label: '额定容量', unit: 'MVA', disptype: 1 },
-      { name: 'Rated Voltage (L-G, RMS)', label: '额定相电压有效值', unit: 'kV', disptype: 1 },
-      { name: 'Base Operation Frequency', label: '额定频率', unit: 'Hz', disptype: 1 },
-      { name: 'Neutral Resistance', label: '中性点电阻', unit: 'p.u.', disptype: 1 },
-      { name: 'Parameter Format', label: '参数输入方式', unit: '', disptype: 2 },
-      { name: 'Model Type', label: '选择电机模型', unit: '', disptype: 2 },
-    ]
-    // return new Promise<nodeParams[]>((resolve, reject) =>
-    // {
-    //   query({ tabname: 'node_params' }).then(res =>
-    //   {
-    //     if (res.status == 200) resolve(res.data)
-    //     resolve([])
-    // })
-    return _fld
-  }
-
-  static getFldValues()
-  {
-    const _fldvalue = [
-      { colname: 'Parameter Format', tabname:'hree phase transmission line', dbvalue:1, disp:'R, X, B (p.u.)', dispc:'标幺值' },
-      { colname: 'Parameter Format', tabname: 'hree phase transmission line', dbvalue:2, disp:'R, Xl, Xc (Ω)', dispc:'有名值' },
-      { colname: '0 Seq. Data', tabname:'Three phase transmission line', dbvalue:1, disp:'Same as + Seq. Data', dispc:'同正序数据' },
-      { colname: '0 Seq. Data', tabname: 'Three phase transmission line', dbvalue:2, disp:'Enter 0 Seq. Data', dispc:'输入零序数据' },
-      { colname: 'Has the Data Been Corrected for Long Line Effects?', tabname:'Three phase transmission line', dbvalue:1, disp:'NO', dispc:'否' },
-      { colname: 'Has the Data Been Corrected for Long Line Effects?', tabname: 'Three phase transmission line', dbvalue:2, disp:'YES', dispc:'是' },
-      { colname: 'Model Type', dbvalue: 1, disp: 'Lumped π-Model', tabname: 'Three phase transmission line', dispc:'零序模型' },
-      { colname: 'Model Type', dbvalue: 2, disp: 'Bergeron Line Model', tabname: 'Three phase transmission line', dispc:'Bergeron模型' },
-      { colname: 'Set This Line as a Network Partition Line?', tabname: 'Three phase transmission line', dbvalue:1, disp:'NO', dispc:'否' },
-      { colname: 'Set This Line as a Network Partition Line?', tabname: 'Three phase transmission line', dbvalue:2, disp:'YES', dispc:'是' },
-      { colname: 'Set This Line as a Multi-machine Network Partition Line?', tabname: 'Three phase transmission line', dbvalue:1, disp:'NO', dispc:'否' },
-      { colname: 'Set This Line as a Multi-machine Network Partition Line?', tabname: 'Three phase transmission line', dbvalue:2, disp:'YES', dispc:'是' },
-      { colname: 'Is Star Point Grounded?', tabname: 'Three phase AC voltage source', dbvalue:1, disp:'NO', dispc:'否' },
-      { colname: 'Is Star Point Grounded?', tabname: 'Three phase AC voltage source', dbvalue:2, disp:'YES', dispc:'是' },
-      { colname: 'Function Type', tabname: 'Three phase AC voltage source', dbvalue:1, disp:'PQ', dispc:'PQ' },
-      { colname: 'Function Type', tabname: 'Three phase AC voltage source', dbvalue:2, disp:'PV', dispc:'PV' },
-      { colname: 'Start-up Type', tabname: 'Three phase AC voltage source', dbvalue:1, disp:'Linear', dispc:'线性' },
-      { colname: 'Start-up Type', tabname: 'Three phase AC voltage source', dbvalue:2, disp:'Real Pole Ramp', dispc:'实际极点斜坡' },
-      { colname: '阻抗输入方式', tabname: 'Three phase Thevenin equivalent voltage source', dbvalue:1, disp:'填写等效电阻和电抗', dispc:'填写等效电阻和电抗' },
-      { colname: '阻抗输入方式', tabname: 'Three phase Thevenin equivalent voltage source', dbvalue:2, disp:'填写等效阻抗的幅值和相角', dispc:'填写等效阻抗的幅值和相角' },
-      { colname: '阻抗输入方式', tabname: 'Three phase Thevenin equivalent voltage source', dbvalue: 3, disp: '填写短路电流', dispc: '填写短路电流' },
-      { colname: 'Parameter Format', tabname: 'Synchronous motor', dbvalue: 1, disp: 'Equivalent Circuit Data', dispc: '等效电路参数' },
-      { colname: 'Parameter Format', tabname: 'Synchronous motor', dbvalue: 2, disp: 'Experimental Data', dispc: '试验参数' },
-      { colname: 'Model Type', tabname: 'Synchronous motor', dbvalue: 1, disp: 'PD(Constant Conductance)', dispc: 'PD(Constant Conductance)' },
-      { colname: 'Model Type', tabname: 'Synchronous motor', dbvalue: 2, disp: 'VBR-dq0', dispc: 'VBR-dq0' },
-    ]
-    return _fldvalue
-  }
-  static getPorts()
-  {
-    return
   }
 
   static toolsConfig()
@@ -306,7 +283,8 @@ export default class common
           id: p.id+'',
           group: p._group,
           args: JSON.parse(p.args),
-          attrs: JSON.parse(p.attrs)
+          attrs: JSON.parse(p.attrs),
+          dimension: p.dimension
         })
       }
       else if (p._group === 'inline')
@@ -323,6 +301,7 @@ export default class common
               {
                 ..._p
               },
+              dimension: p.dimension
             })
           })
         }
@@ -368,8 +347,7 @@ export default class common
               },
               ...this.commAttrs()
             },
-            // data: { ...node, params: this.getNodeParams(node.name), ports: ports.filter(p => p.cellid === node.id) },
-            data: { ...node, ports: ports.filter(p => p.cellid === node.id) },
+            data: { ...node, ports: ports.filter(p => p.cellid === node.id), prjnodeInfo :{}},
             ports:
             {
               groups: groups,
@@ -383,685 +361,6 @@ export default class common
       }).catch(reject)
     })
   }
-  static getNodeParams(cellName:string)
-  {
-    const parmas:any = {
-      'Parallel capacitor/reactor': {
-        Configuration: {
-          'Name': '',
-          'Rated Frequency': 50,
-          'Rated Voltage (L-L, RMS)': 110,
-          'Input Capacity': 1
-        }
-      },
-      'Synchronous generator': {
-        Configuration: {
-          'Name': '',
-          'Poles': 4,
-          'Rated Power': 325,
-          'Rated Voltage (L-G, RMS)': 11.547,
-          'Base Operation Frequency': 50,
-          'Neutral Resistance': 10000,
-          'Parameter Format': 1,
-          'Model Type': 1
-        },
-        'Configuration-SFEMT': {
-          'Numerical Integration Method': '1',
-        },
-        'Equivalent Circuit Data': {
-          'Stator Resistance': 0.000301
-        }
-      },
-      'Static load': {
-        Configuration: {
-          'Name': '',
-          'Rated Voltage (L-L, RMS)': 500,
-          'Rated Frequency': 50,
-          'Rated Active Power (3 Phase)': 50,
-          'Rated Reactive Power (3 Phase)': 20,
-          'Voltage Index for P': 2,
-          'Voltage Index for Q': 2,
-          'Freq Index for P': 0,
-          'Freq Index for Q': 0,
-          'Initial Voltage': 1
-        }
-      },
-      'Three phase transmission line': {
-        Configuration: {
-          'Name': '',
-          'Steady-state Frequency': 50,
-          'Length of Line': 1,
-          'Parameter Format': 1, // R, X, B (p.u.)|| R, Xl, Xc (Ω)
-          '0 Seq. Data': 2, // Same as + Seq. Data||Enter 0 Seq. Data
-          'Has the Data Been Corrected for Long Line Effects?': 1, // NO||YES
-          'Model Type': 2, // Lumped π-Model||Bergeron Line Model
-          'Set This Line as a Network Partition Line?': 1, // NO||YES
-          'Set This Line as a Multi-machine Network Partition Line?': 1 // NO||YES
-        }
-      },
-      'Three phase Thevenin equivalent voltage source': {
-        Configuration: {
-          'Name': '',
-          'Is Star Point Grounded?': 1, // NO||YES
-          'Rated Voltage (L-L, RMS)': 230,
-          'Function Type': 1, // Sine||Cosine
-          'Frequency': 50,
-          'Start-up Type': 1, // Linear Ramp||Real Pole Ramp
-          '阻抗输入方式': 1 // 填写等效电阻和电抗||填写等效阻抗的幅值和相角||填写短路电流
-        }
-      },
-      'Three phase AC busbar': {
-        Configuration: {
-          'Name': '',
-          'Rated Frequency': 50,
-          'Ramping Time': 0.06,
-          'Voltage Angle': 0,
-          'Voltage Magnitude (L-L, RMS)': 1,
-          'Base Voltage (L-L, RMS)': 110,
-        }
-      },
-      'Three phase AC voltage source': {
-        Configuration: {
-          'Source Name	': '',
-          'Is Star Point Grounded?': 2, // NO||YES
-          'Rated Voltage (L-L, RMS)': 230,
-          'Function Type': 1,
-          'Initial Phase': 0,
-          'Frequency': 60,
-          'Resistance': 0,
-          'Start-up Type': 1,
-          'Voltage Ramp Up Time': 0.05,
-          'Voltage Input Time Constant': 0.05
-        }
-      },
-      'Single phase transformer': {
-        Configuration: {
-          'Source Name	': '',
-          'Is Star Point Grounded?': 2, // NO||YES
-          'Rated Voltage (L-L, RMS)': 230,
-          'Function Type': 1,
-          'Initial Phase': 0,
-          'Frequency': 60,
-          'Resistance': 0,
-          'Start-up Type': 1,
-          'Voltage Ramp Up Time': 0.05,
-          'Voltage Input Time Constant': 0.05
-        }
-      }
-    }
-    return parmas[cellName]
-  }
-  static getNodes()
-  {
-    const nodes = []
-    const groups = common.getGrounps()
-    nodes.push({
-      width: 120,
-      height: 120,
-      shape: 'foreignObject',
-      namec: '同步电机',
-      label: '同步电机_1',
-      attrs: {
-        body: {
-          fill: '#f5f5f5',
-          stroke: '#d9d9d9',
-        },
-        image: {
-          'xlink:href': 'static/image/nodeSvg/同步电机.svg',
-          width: 120,
-          height: 120,
-        },
-      },
-      data: {
-        entityid: 1,
-        disporder:1,
-        glid: 3,
-        dimension: 2,
-        src: 'static/image/nodeSvg/同步电机.svg',
-        params: {
-          Configuration: {
-            'Name': '',
-            'Poles': 4,
-            'Rated Power': 325,
-            'Rated Voltage (L-G, RMS)': 11.547,
-            'Base Operation Frequency': 50,
-            'Neutral Resistance': 10000,
-            'Parameter Format': 1,
-            'Model Type': 1
-          }
-        }
-      },
-      ports:
-      {
-        groups: groups,
-        items:
-        [
-          {
-            id: 'in2_1',
-            group: 'in',
-            args:
-            {
-              x: 0.03,
-              y: 0.19,
-            },
-            attrs: {
-              text: { text: 'in2_1' },
-            },
-          },
-          {
-            id: 'in2_2',
-            group: 'in',
-            args:
-            {
-              x: 0.03,
-              y: 0.81,
-            },
-            attrs: {
-              text: { text: 'in2_2' },
-            },
-          },
-          {
-            id: 'in2_3',
-            group: 'in',
-            args:
-            {
-              x: 0.36,
-              y: 0.03,
-            },
-            attrs: {
-              text: { text: 'in2_3' },
-            },
-          },
-          {
-            id: 'out2_1',
-            group: 'out',
-            args:
-            {
-              x: 0.67,
-              y: 0.03,
-            },
-            attrs: {
-              text: { text: 'out2_1' },
-            },
-          },
-          {
-            id: 'out2_2',
-            group: 'out',
-            args:
-            {
-              x: 0.96,
-              y: 0.5,
-            },
-            attrs: {
-              text: { text: 'out2_2' },
-            },
-          }
-        ]
-      }
-    })
-    nodes.push({
-      width: 120,
-      height: 120,
-      shape: 'foreignObject',
-      namec: '并联电容/电抗器',
-      label: '并联电容/电抗器_1',
-      attrs: {
-        body: {
-          fill: '#f5f5f5',
-          stroke: '#d9d9d9',
-        },
-        image: {
-          'xlink:href': '/static/image/nodeSvg/并联电容_电抗器.svg',
-          width: 120,
-          height: 120,
-        },
-      },
-      data: {
-        entityid: 2,
-        disporder: 2,
-        glid: 3,
-        dimension: 2,
-        src: '/static/image/nodeSvg/并联电容_电抗器.svg',
-        params:{
-          Configuration:{
-            'Name':'',
-            'Rated Frequency':50,
-            'Rated Voltage (L-L, RMS)':110,
-            'Input Capacity':1
-          }
-        }
-      },
-      ports:
-      {
-        groups: groups,
-        items:
-        [
-          {
-            id: 'in4_1',
-            group: 'in',
-            args:
-            {
-              x: 0.5,
-              y: 0.05,
-            },
-            attrs: {
-              text: { text: 'in4_1' },
-            },
-          }
-        ]
-      }
-    })
-    nodes.push({
-      width: 120,
-      height: 120,
-      shape: 'foreignObject',
-      namec: '静态负载',
-      label: '静态负载_1',
-      attrs: {
-        body: {
-          fill: '#f5f5f5',
-          stroke: '#d9d9d9',
-        },
-        image: {
-          'xlink:href': '/static/image/nodeSvg/静态负载.svg',
-          width: 120,
-          height: 120,
-        },
-      },
-      
-      data:{
-        entityid: 3,
-        disporder: 3,
-        dimension: 2,
-        glid: 3,
-        src: '/static/image/nodeSvg/静态负载.svg',
-        params:{
-          Configuration:{
-            'Name':'',
-            'Rated Voltage (L-L, RMS)':500,
-            'Rated Frequency':50,
-            'Rated Active Power (3 Phase)':50,
-            'Rated Reactive Power (3 Phase)':20,
-            'Voltage Index for P':2,
-            'Voltage Index for Q':2,
-            'Freq Index for P':0,
-            'Freq Index for Q':0,
-            'Initial Voltage':1
-          }
-        }
-      },
-      ports:
-      {
-        groups: groups,
-        items:
-        [
-          {
-            id: 'in5_1',
-            group: 'in',
-            args:
-            {
-              x: 0.5,
-              y: 0.2,
-            },
-            attrs: {
-              text: { text: 'in5_1' },
-            },
-          }
-        ]
-      }
-    })
-    nodes.push({
-      width: 120,
-      height: 120,
-      shape: 'foreignObject',
-      namec: '三相传输线',
-      label: '三相传输线_1',
-      attrs: {
-        body: {
-          fill: '#f5f5f5',
-          stroke: '#d9d9d9',
-        },
-        image: {
-          'xlink:href': '/static/image/nodeSvg/三相传输线.svg',
-          width: 120,
-          height: 120,
-        },
-      },
-      
-      data: {
-        entityid: 4,
-        disporder: 4,
-        glid: 3,
-        dimension: 2,
-        src: '/static/image/nodeSvg/三相传输线.svg',
-        params:{
-          Configuration:{
-            'Name':'',
-            'Steady-state Frequency':50,
-            'Length of Line':1,
-            'Parameter Format':1, // R, X, B (p.u.)|| R, Xl, Xc (Ω)
-            '0 Seq. Data':2, // Same as + Seq. Data||Enter 0 Seq. Data
-            'Has the Data Been Corrected for Long Line Effects?':1, // NO||YES
-            'Model Type':2, // Lumped π-Model||Bergeron Line Model
-            'Set This Line as a Network Partition Line?':1, // NO||YES
-            'Set This Line as a Multi-machine Network Partition Line?':1 // NO||YES
-          }
-        }
-      },
-      ports:
-      {
-        groups: groups,
-        items:
-        [
-          {
-            id: 'in6_1',
-            group: 'in',
-            args:
-            {
-              x: 0.04,
-              y: 0.5,
-            },
-            attrs: {
-              text: { text: 'in6_1' },
-            },
-          },
-          {
-            id: 'in6_2',
-            group: 'in',
-            args:
-            {
-              x: 0.96,
-              y: 0.5,
-            },
-            attrs: {
-              text: { text: 'in6_2' },
-            },
-          }
-        ]
-      }
-    })
-    nodes.push({
-      width: 120,
-      height: 120,
-      shape: 'foreignObject',
-      namec: '三相戴维南等值电压源',
-      label: '三相戴维南等值电压源_1',
-      attrs: {
-        body: {
-          fill: '#f5f5f5',
-          stroke: '#d9d9d9',
-        },
-        image: {
-          'xlink:href': '/static/image/nodeSvg/三相戴维南等值电压源.svg',
-          width: 120,
-          height: 120,
-        },
-      },
-      
-      data: {
-        entityid: 5,
-        disporder: 5,
-        glid: 3,
-        dimension: 2,
-        src: '/static/image/nodeSvg/三相戴维南等值电压源.svg',
-        params:{
-          Configuration:{
-            'Name':'',
-            'Is Star Point Grounded?':1, // NO||YES
-            'Rated Voltage (L-L, RMS)':230,
-            'Function Type':1, // Sine||Cosine
-            'Frequency':50,
-            'Start-up Type':1, // Linear Ramp||Real Pole Ramp
-            '阻抗输入方式':1 // 填写等效电阻和电抗||填写等效阻抗的幅值和相角||填写短路电流
-          }
-        }
-      },
-      ports:
-      {
-        groups: groups,
-        items:
-        [
-          {
-            id: 'in7_1',
-            group: 'in',
-            args:
-            {
-              x: 0.96,
-              y: 0.5,
-            },
-            attrs: {
-              text: { text: 'in7_1' },
-            },
-          }
-        ]
-      }
-    })
-    nodes.push({
-      width: 120,
-      height: 120,
-      shape: 'foreignObject',
-      namec: '三相交流母线',
-      label: '三相交流母线_1',
-      attrs: {
-        body: {
-          fill: '#f5f5f5',
-          stroke: '#d9d9d9',
-        },
-        image: {
-          'xlink:href': '/static/image/nodeSvg/三相交流母线.svg',
-          width: 120,
-          height: 120,
-        },
-      },
-      
-      data: {
-        entityid: 6,
-        disporder: 6,
-        glid: 3,
-        dimension: 2,
-        src: '/static/image/nodeSvg/三相交流母线.svg',
-        params:{
-          Configuration:{
-            'Name':'',
-            'Rated Frequency':50,
-            'Ramping Time':0.06,
-            'Voltage Angle':0,
-            'Voltage Magnitude (L-L, RMS)':1,
-            'Base Voltage (L-L, RMS)':110,
-          }
-        }
-      },
-      ports:
-      {
-        groups: groups,
-        
-        items: this.equidistributePors({x:0.05, y:0.454}, {x:0.96, y:0.454}, 4/160).map((p, i)=>
-        {
-          return {
-            id: 'in8_'+(i+1),
-            group: 'inline',
-            args:
-            {
-              ...p
-            },
-          }
-        })
-        
-      }
-    })
-    nodes.push({
-      width: 120,
-      height: 120,
-      zIndex:100,
-      shape: 'foreignObject',
-      namec: '三相交流电压源',
-      label: '三相交流电压源',
-      attrs: {
-        body: {
-          fill: '#f5f5f5',
-          stroke: '#d9d9d9',
-        },
-        image: {
-          'xlink:href': '/static/image/nodeSvg/三相交流电压源.svg',
-          width: 120,
-          height: 120,
-        },
-      },
-      
-      data: {
-        entityid: 7,
-        disporder: 7,
-        glid: 3,
-        dimension: 2,
-        src: '/static/image/nodeSvg/三相交流电压源.svg',
-        params:{
-          Configuration:{
-            'Source Name	':'',
-            'Is Star Point Grounded?':2, // NO||YES
-            'Rated Voltage (L-L, RMS)':230,
-            'Function Type':1,
-            'Initial Phase':0,
-            'Frequency':60,
-            'Resistance':0,
-            'Start-up Type':1,
-            'Voltage Ramp Up Time':0.05,
-            'Voltage Input Time Constant':0.05
-          }
-        }
-      },
-      ports:
-      {
-        groups: groups,
-        items:
-        [
-          {
-            id: 'in9_1',
-            group: 'in',
-            args:
-            {
-              x: 0.96,
-              y: 0.5,
-            },
-            attrs: {
-              text: { text: 'in9_1' },
-            },
-          }
-        ]
-      }
-    })
-    nodes.push({
-      width: 120,
-      height: 120,
-      zIndex:100,
-      shape: 'foreignObject',
-      namec: '单相变压器',
-      label: '单相变压器_1',
-      attrs: {
-        body: {
-          fill: '#f5f5f5',
-          stroke: '#d9d9d9',
-        },
-        image: {
-          'xlink:href': '/static/image/nodeSvg/单相变压器.svg',
-          width: 120,
-          height: 120,
-        },
-        
-      },
-      
-      data: {
-        entityid: 7,
-        disporder: 7,
-        glid: 1,
-        dimension: 1,
-        src: '/static/image/nodeSvg/单相变压器.svg',
-        params:{
-          Configuration:{
-            'Source Name	':'',
-            'Is Star Point Grounded?':2, // NO||YES
-            'Rated Voltage (L-L, RMS)':230,
-            'Function Type':1,
-            'Initial Phase':0,
-            'Frequency':60,
-            'Resistance':0,
-            'Start-up Type':1,
-            'Voltage Ramp Up Time':0.05,
-            'Voltage Input Time Constant':0.05
-          }
-        }
-      },
-      ports:
-      {
-        groups: groups,
-        items:
-        [
-          {
-            id: 'in10_1',
-            group: 'in',
-            args:
-            {
-              x: 0.96,
-              y: 0.28,
-            },
-            attrs: {
-              text: { text: 'in10_1' },
-            },
-          },
-          {
-            id: 'in10_2',
-            group: 'in',
-            args:
-            {
-              x: 0.96,
-              y: 0.72,
-            },
-            attrs: {
-              text: { text: 'in10_2' },
-            },
-          },
-          {
-            id: 'in10_3',
-            group: 'in',
-            args:
-            {
-              x: 0.04,
-              y: 0.28,
-            },
-            attrs: {
-              text: { text: 'in10_3' },
-            },
-          },
-          {
-            id: 'in10_4',
-            group: 'in',
-            args:
-            {
-              x: 0.04,
-              y: 0.72,
-            },
-            attrs: {
-              text: { text: 'in10_4'},
-            },
-          }
-        ]
-      }
-    })
-    nodes.forEach(node=>
-    {
-      Object.assign(node.attrs, {label:{
-        refX: 0.5,
-        refY: '100%',
-        refY2: 4,
-        textAnchor: 'middle',
-        textVerticalAnchor: 'top',
-        fontSize: 16,
-        fontWeight: 'bold',
-        display:'none'
-      }})
-      
-    })
-    return nodes
-  }
   
   static commAttrs()
   {
@@ -1073,7 +372,6 @@ export default class common
         textAnchor: 'middle',
         textVerticalAnchor: 'top',
         fontSize: 14,
-        fontWeight: 'bold',
         display: 'none'
       }
     }
@@ -1128,7 +426,7 @@ export default class common
           position:
           {
             name: 'radial', // 标签位置
-            args: { offset: 20 }
+            args: { offset: 10 }
           }
         }
       },
@@ -1195,7 +493,7 @@ export default class common
           position:
           {
             name: 'radial', // 标签位置
-            args: { offset: 20 }
+            args: { offset: 10 }
           }
         }
       },
@@ -1248,7 +546,7 @@ export default class common
           position:
           {
             name: 'radial', // 标签位置
-            args: { offset: 20 }
+            args: { offset: 10 }
           }
         }
       }

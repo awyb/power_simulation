@@ -14,7 +14,7 @@
   }
   .logo { height: 80%; }
   .oper-box { cursor: pointer; }
-  .iconfont { font-size: var(--icon-font-size); margin-left: var(--header-icon-distance); color: var(--color2); }
+  .iconfont { font-size: var(--icon-font-size); margin-left: var(--header-icon-distance); color: var(--color3); }
 }
 </style>
 <template>

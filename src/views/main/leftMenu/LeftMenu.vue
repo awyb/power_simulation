@@ -21,7 +21,7 @@
     <el-main style="padding: 0;">
       <el-collapse v-model="expArr" style="width: 100%;">
         <el-collapse-item v-for="item in nodelist" :name="item.name" :title="item.namec" :key="item.name">
-          <div class="drag-box col-2"
+          <div class="drag-box col-3"
             v-for="node in item.children"
             :key="node.data.entityid"
             draggable="true"
@@ -52,8 +52,8 @@
 // 导入模块
 import { ref, defineProps, defineEmits} from 'vue'
 import { cellsList, cellNode, RightMenu } from '../../../components/interface/interfaceBase'
+import { query } from '@/request'
 import eveBus from '@/components/ts/eveBus'
-
 
 // 接收参数
 const props = defineProps({
@@ -95,6 +95,12 @@ function handleRightClick(e:MouseEvent, node:cellNode)
   eveBus.emit('right-menu', { e, menus: menus.value, data:node })
 }
 // 初始化
-if (props.expandFirst&&nodelist.length)
-  expArr.value.push(nodelist[0].name)
+query({ tabname: 'default_config', exp: `keyname = 'cells_list_expand'` }).then(res =>
+{
+  if (res.status === 200&&res.data.length)
+  {
+    const vals = JSON.parse(res.data[0].config)
+    vals.forEach((item:string) => expArr.value.push(item))
+  }
+})
 </script>

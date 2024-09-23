@@ -1,7 +1,7 @@
 <style scoped lang="less">
   .container { width: 100%;height: 100%;
     .tab-menu{width: 100%; height:var(--tab-menu-height);background: var(--tab-menu-bg-color);display: flex;align-items: center;
-      .collapse-btn { height: var(--collapse-button-height);width: var(--collapse-button-width);background: var(--collapse-btn-color);color: var(--color2); border-radius: 0;
+      .collapse-btn { height: var(--collapse-button-height);width: var(--collapse-button-width);background: var(--collapse-btn-color);color: var(--color3); border-radius: 0;
         .iconfont{font-size:var(--icon-font-size);
           &:hover{color:var(--hover-color);}
         }

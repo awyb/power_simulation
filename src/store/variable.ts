@@ -1,16 +1,6 @@
 import { add, update, del } from '@/request/index'
 import { variable } from '@/components/interface/interfaceBase'
 import { compareArrays } from '@/components/ts/compare'
-// export interface variable {
-//   id: number;
-//   name: string;
-//   disptype: number;
-//   disporder: number;
-//   val: string;
-//   isval: number;
-//   prjid: number;
-//   expression: string;
-// }
 export interface variableState
 {
   global: Array<variable>;

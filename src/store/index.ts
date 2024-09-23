@@ -1,7 +1,6 @@
 import { createStore } from 'vuex'
 import { module as moduleA } from './variable'
-import { module as moduleB } from './graphConfig'
-import { module as moduleC } from './savePage'
+import { module as moduleB } from './savePage'
 const func = (event: BeforeUnloadEvent) =>
 {
   event.preventDefault()
@@ -15,6 +14,7 @@ export default createStore({
     rightMenuW: 350,
     rmenuBoxW: 232,
     rmenuBoxH: 400,
+    runAsideW: 350,
     curComp: null,
     needSave: false,
   },
@@ -39,7 +39,6 @@ export default createStore({
   },
   modules: {
     variable: moduleA,
-    graphConfig: moduleB,
-    savePage: moduleC
+    savePage: moduleB
   }
 })

@@ -1,12 +1,12 @@
 <style scoped lang="less">
-  .form-container {display: flex;align-items: center;margin:5px;
+  .input-container {display: flex;align-items: center;margin:5px;
     .value-input{height: 30px;}
     .end-label {height: 30px;width: 30px;margin-left: 5px;line-height: 30px;font-size: 16px;font-weight: bold;cursor: pointer;}
     .icon-drag{cursor: pointer;}
   }
 </style>
 <template>
-  <div class="form-container">
+  <div class="input-container">
     <el-input v-model="values.name" class="name-input" style="width: 150px;"/>
     <el-input v-model="values.value" class="value-input" style="width: 180px;">
       <template v-if="!!values.isval" #suffix>{{ values.unit }}</template>
@@ -17,10 +17,10 @@
 </template>
 
 <script lang="ts">
-import { reactive, ref, defineComponent, onMounted, watch} from 'vue'
+import { reactive, defineComponent } from 'vue'
 import eveBus from '@/components/ts/eveBus'
 export default defineComponent({
-  name: 'VarForm',
+  name: 'VarInput',
   props:{
     params: {
       type: Object,

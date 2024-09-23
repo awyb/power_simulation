@@ -40,8 +40,13 @@ export interface graphRef {
 }
 
 export interface pageDirectory {
+  id: number,
   name: string,
   namec: string,
+}
+export interface description extends pageDirectory {
+  icon: string,
+  classify:string
 }
 
 export interface RightMenuEvent {
@@ -83,17 +88,17 @@ export interface nodeDbValue extends dbvalueBase {
 export interface fldBase {
   name: string,
   namec: string,
-  describe: string,
+  describe?: string,
   unit: string,
   disptype: number,
   defval: string,
   disporder: number,
-  newedit: number,
-  editable: number,
-  nullable: number,
-  ufunc: string,
-  valid: string,
-  params: string,
+  newedit?: number,
+  editable?: number,
+  nullable?: number,
+  ufunc?: any,
+  valid?: string,
+  params?: string,
 }
 
 export interface nodeAttr extends fldBase {
@@ -108,20 +113,21 @@ export interface nodeParams extends attFld {
   keyname: string,
   fldvalue?: nodeDbValue[]
 }
+
 export interface attFld extends fldBase {
   id?: number,
   value: any,
   disabled: boolean,
   value_: any,
   isval: number,
-  keyname: string,
+  keyname?: string,
   focus?: boolean,
-  fldvalue?: nodeDbValue[]
+  fldvalue?: nodeDbValue[] | dbvalueBase[],
 }
 
 export interface fldsObject {
   flds: nodeAttr[],
-  fldvalues: dbvalueBase[]
+  fldvalue: dbvalueBase[]
 }
 
 export interface collapseItem {
