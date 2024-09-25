@@ -112,7 +112,7 @@
 </template>
 
 <script lang="ts">
-import { reactive, ref, defineComponent, watch} from 'vue'
+import { reactive, ref, defineComponent, watch, nextTick} from 'vue'
 import { useStore } from 'vuex'
 import { type SortableEvent, VueDraggable } from 'vue-draggable-plus'
 
@@ -124,7 +124,6 @@ import common from '@/components/ts/common'
 import { query } from '@/request'
 
 import { variable, attFld, collapseItem, description } from '@/components/interface/interfaceBase'
-
 let isFirst = true
 let tabIndex = 0
 // 接收菜单信息
@@ -190,7 +189,6 @@ export default defineComponent({
       }
       else if (props.params.type==='node') // 节点
       {
-        collapseItem.value = []
         const nodeData = newValue.cell.data
         const func_memory = nodeData.func_memory
         const config = await common.getNodeConfig(nodeData.name)
@@ -224,6 +222,7 @@ export default defineComponent({
             portForm[key] = pin[key]
           })
         }
+        collapseItem.value.length = 0
         config.forEach(c =>
         {
           c.show = true
@@ -251,6 +250,7 @@ export default defineComponent({
             })
           }
         })
+        await nextTick()
         collapseItem.value = config
       }
     })

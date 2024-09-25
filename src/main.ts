@@ -12,7 +12,7 @@ import 'vcolorpicker/lib/style.css'
 import i18n from '../public/static/locales/index'
 import vcolorpicker from 'vcolorpicker'
 
-const app = createApp(App)
+const app = createApp(App, { productionTip: true })
 for (const [key, component] of Object.entries(ElementPlusIconsVue))
 
   app.component(key, component)

@@ -50,7 +50,8 @@ import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import Header from '@/views/header/Header.vue'
 import Footer from '@/views/footer/Footer.vue'
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onUnmounted } from 'vue'
+import { init, closeIndexedDB } from './main/init'
 
 const store = useStore()
 const router:any = useRouter()
@@ -58,6 +59,8 @@ const pageHeaderH = store.state.pageHeaderH + 'px'
 const pageFooterH = store.state.pageFooterH + 'px'
 const leftSideW = store.state.leftSideW + 'px'
 const checkName = ref('design')
+router.push('/design')
+init()
 document.addEventListener('keydown', (event: KeyboardEvent)=>
 {
   if (event.ctrlKey && event.key.toLowerCase() === 's')
@@ -69,17 +72,13 @@ document.addEventListener('keydown', (event: KeyboardEvent)=>
     store.commit('changeNeedSave', false)
   }
 })
-
-router.push('/design')
-const iskeepAlive = computed(() =>
-{
-  if (router.currentRoute&&router.currentRoute.meta&&router.currentRoute.meta.keepAlive)
-    return true
-  return false
-})
 function runPlug(routerName: string)
 {
   checkName.value = routerName
   router.push('/'+routerName)
 }
+onUnmounted(() =>
+{
+  closeIndexedDB()
+})
 </script>

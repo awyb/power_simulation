@@ -33,6 +33,8 @@ import { graphEvents } from './graphEvents'
 import common from '@/components/ts/common'
 import graphcom from './graph'
 import eveBus from '@/components/ts/eveBus'
+import { findStore } from '@/indexedDB'
+import { createIndexedDB } from '@/views/main/init'
 
 import { RightMenu } from '@/components/interface/interfaceBase'
 import { query } from '@/request'
@@ -47,8 +49,6 @@ export default defineComponent({
   setup(props, { expose, emit })
   {
     const container = ref<HTMLElement | null>(null)
-    const rightmenu = ref<HTMLElement | null>(null)
-    const contextMenuVisible = ref(false)
     const menuPosition = reactive({ x: 0, y: 0 })
     const toolsConfig = common.toolsConfig()
     const menus = ref<RightMenu[]>([
@@ -185,13 +185,11 @@ export default defineComponent({
         // 编辑操作逻辑，例如弹出编辑对话框
         console.log('Edit edge', selectedCell)
       }
-      contextMenuVisible.value = false
     }
     const excute = (type: string) =>
     {
       if (excuteGraph)
         (excuteGraph as any)[type]()
-      contextMenuVisible.value = false
     }
     const pasteFun = () =>
     {
@@ -215,8 +213,6 @@ export default defineComponent({
         menuPosition.x = e.clientX
         menuPosition.y = e.clientY
         graph.select(cell)
-        // selectedCell = cell
-        contextMenuVisible.value = true
         eveBus.emit('right-menu', { e, menus: menus.value, data: {} })
       })
       graph.on('blank:contextmenu', ({ e }) =>
@@ -227,7 +223,6 @@ export default defineComponent({
         // 屏幕宽度:window.screen.width
         // 浏览器窗口宽度:window.innerWidth e.clientX
         // container.value.offsetHeight
-        contextMenuVisible.value = true
         eveBus.emit('right-menu', { e, menus: menus.value, data: {} })
       })
       graph.on('edge:connected', async(args) =>
@@ -248,53 +243,41 @@ export default defineComponent({
         
         if (source && target)
         {
-          const sourcePort = (source as any).getPort(sourcePortId)
-          const targetPort = (target as any).getPort(targetPortId)
-          if (getPortDimension(sourcePort) && getPortDimension(targetPort) && getPortDimension(sourcePort) !== getPortDimension(targetPort))
+          if (sourcePortId && targetPortId)
           {
-            ElNotification({
-              title: '连接失败',
-              position: 'bottom-right',
-              message: `引脚 X 维度不相等，首端维度 ${getPortDimension(sourcePort)}，末端维度 ${getPortDimension(targetPort)}`,
-              showClose: true,
-              icon: h('i', { class: 'iconfont icon-jinggao', style: 'color:#faad14;' }, ''),
-              duration: 20000,
-              customClass: 'msg-warning'
-            })
-            args.edge.remove()
-          }
-          else
-          {
-            const edges = graph.getEdges()
-            store.dispatch('savePage/addExcute', {
-              type: 'add', tabname: 'project_edges', index: args.edge.id,
-              args: {
-                id: args.edge.id,
-                name: 'edge#' + edges.length,
-                namec: '连接线#' + edges.length,
-                prjid: props.projectId,
-                source: args.edge.source,
-                target: args.edge.target,
-                cellkey: args.edge.id,
-                vertices: args.edge.vertices,
-                format: {
-                
-                }
-              }
-            })
-            args.edge.data = {
-              name: 'edge#' + edges.length,
-              namec: '连接线#' + edges.length,
-              prjid: props.projectId,
-              source: args.edge.source,
-              target: args.edge.target,
-              cellkey: args.edge.id,
-              vertices: args.edge.vertices,
-              format: {
-                
-              }
+            const sourcePort = (source as any).getPort(sourcePortId)
+            const targetPort = (target as any).getPort(targetPortId)
+            if (getPortDimension(sourcePort) && getPortDimension(targetPort) && getPortDimension(sourcePort) !== getPortDimension(targetPort))
+            {
+              ElNotification({
+                title: '连接失败',
+                position: 'bottom-right',
+                message: `引脚 X 维度不相等，首端维度 ${getPortDimension(sourcePort)}，末端维度 ${getPortDimension(targetPort)}`,
+                showClose: true,
+                icon: h('i', { class: 'iconfont icon-jinggao', style: 'color:#faad14;' }, ''),
+                duration: 20000,
+                customClass: 'msg-warning'
+              })
+              args.edge.remove()
+              return
             }
           }
+          const edges = graph.getEdges()
+          args.edge.data = {
+            name: 'edge#' + edges.length,
+            namec: '连接线#' + edges.length,
+            prjid: props.projectId,
+            source: args.edge.source,
+            target: args.edge.target,
+            cellkey: args.edge.id,
+            vertices: args.edge.vertices,
+            format: {
+            }
+          }
+          store.dispatch('savePage/addExcute', {
+            type: 'add', tabname: 'project_edges', index: args.edge.id,
+            args: args.edge.data
+          })
         }
       })
 
@@ -437,6 +420,14 @@ export default defineComponent({
           }
         }
       })
+      graph.on('edge:change:source', () =>
+      {
+        graphcom.showPorts('visible', graph)
+      })
+      graph.on('edge:change:target', () =>
+      {
+        graphcom.showPorts('visible', graph)
+      })
       graph.on('edge:change:vertices', (args) => // 监听边发生变化发生变化
       {
         const overtices = JSON.parse(JSON.stringify(args.cell.data.format))
@@ -462,13 +453,7 @@ export default defineComponent({
       //   const position = [local.x - nodePosition.x, local.y - nodePosition.y]
       //   console.log('相对于节点的坐标:', position)
       //   node.addPort({group: 'in', args:{x: position[0]/size.width, y: position[1]/size.height, }})
-
       // })
-      // 点击其他地方隐藏菜单
-      document.addEventListener('click', () =>
-      {
-        contextMenuVisible.value = false
-      })
       document.addEventListener('keydown', (event: KeyboardEvent) =>
       {
         if ((event.ctrlKey || event.key === 'Control') && dragPage)
@@ -634,7 +619,6 @@ export default defineComponent({
           // connector: 'smooth',  // 设置连接器的样式
           connectionPoint: 'anchor',  // 设置连接点样式
           anchor: 'center',  // 设置锚点在中心
-
           connector: {
             name: 'jumpover',
             args: {
@@ -658,7 +642,6 @@ export default defineComponent({
                   sourceMarker: { tagName: 'circle', r: 2, cx: -1, },
                   stroke: '#000000',
                   strokeWidth: 2,
-
                   // targetMarker:null
                 },
               },
@@ -670,6 +653,12 @@ export default defineComponent({
           {
             // if (getPortDimension(args.sourceCell) && getPortDimension(args.targetCell))
             //   return getPortDimension(args.sourceCell) === getPortDimension(args.targetCell)
+            // if (args.targetCell?.isNode() && args.sourceCell?.isNode())
+            // {
+
+            // }
+            if (args.targetCell?.isNode() && !args.targetPort || args.sourceCell?.isNode() && !args.sourcePort)
+              return false
             if (args.targetCell?.id === args.sourceCell?.id)
               return Boolean(args.sourcePort !== args.targetPort)
             return Boolean(args.targetView?.isEdgeView() || args.targetMagnet)
@@ -824,17 +813,51 @@ export default defineComponent({
           })
         })
       })
-      eveBus.on('graph-export-toJson', () =>
+      eveBus.on('graph-export-toJson', async() =>
       {
-        const json = JSON.stringify(graph)
-        const data = new Blob([json], { type: 'application/json' })
-        const url = URL.createObjectURL(data)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'graph.json'
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
+        // const json = JSON.stringify(graph)
+        // const data = new Blob([json], { type: 'application/json' })
+        // const url = URL.createObjectURL(data)
+        // const a = document.createElement('a')
+        // a.href = url
+        // a.download = 'graph.json'
+        // document.body.appendChild(a)
+        // a.click()
+        // document.body.removeChild(a)
+        let defParams:any = []
+        const db = await createIndexedDB('power_sys')
+        if (db)
+          defParams = await findStore(db as IDBDatabase, 'node_params')
+        const cells = graph.toJSON().cells
+        const nodes = cells.filter(cell => cell.shape !== 'edge')
+        const edges = cells.filter(cell => cell.shape === 'edge')
+        const cellsJson:any = []
+        nodes.forEach(node =>
+        {
+          const data = node.data
+          const params = data.prjnodeInfo.params
+          const pin = data.prjnodeInfo.pin
+          const nodeParams = defParams.filter((item: any) => item.nodename === data.name)
+          nodeParams.forEach((item: any) =>
+          {
+            if (item.defval)
+            {
+              if ((params[item.classify] && params[item.classify][item.name] === undefined)||!params[item.classify])
+              {
+                if (params[item.classify])
+                  params[item.classify][item.name] = item.defval
+                else
+                  params[item.classify] = { [item.name]: item.defval }
+              }
+            }
+          })
+          cellsJson.push({ id: node.id, type: 'node', keyname: data.keyname, name: data.name, namec: data.namec, params, pin })
+        })
+        edges.forEach(edge =>
+        {
+          cellsJson.push({id:edge.id, type:'edge', source:edge.source, target:edge.target})
+        })
+        console.log(nodes, edges, cellsJson)
       })
       eveBus.on('graph-import-toJson', async() =>
       {
@@ -913,7 +936,6 @@ export default defineComponent({
     onBeforeUnmount(() =>
     {
       eveBus.all.clear()
-      document.removeEventListener('click', () =>contextMenuVisible.value = false)
       if (graph)
         graph.dispose()
     })
@@ -922,8 +944,6 @@ export default defineComponent({
 
     return {
       container,
-      rightmenu,
-      contextMenuVisible,
       menuPosition,
       editEdge,
       dragEnd,

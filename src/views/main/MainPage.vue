@@ -19,7 +19,7 @@
     </el-aside>
     <el-main style="padding: 0;overflow: hidden;">
       <div class="tab-menu">
-        <i class="collapse-btn" :class="`iconfont icon-${collapseL?'left':'right'}-arrow`" @click="collapseL=!collapseL"/>
+        <i class="collapse-btn" :class="`iconfont icon-${collapseL?'left':'right'}-arrow`" @click="collapseL=!collapseL"></i>
         <div class="center">
           <div class="lable"
             v-for="page in pageDirs"
@@ -32,17 +32,13 @@
         <i class="collapse-btn" :class="`iconfont icon-${!collapseR?'left':'right'}-arrow`" @click="collapseR=!collapseR"></i>
       </div>
       <div style="width: 100%;height: calc(100% - var(--tab-menu-height));">
-        <graph-page v-if="ready" ref="childRef" :widthL="parseInt(leftMenuW)" :projectId="projectId" @accept-data="acceptData" />
+        <graph-page v-if="ready" ref="childRef" :projectId="projectId" @accept-data="acceptData" />
       </div>
     </el-main>
     <el-aside :width="rightMenuW" style="padding: 0;">
       <cell-info :params="nodeInfo" :projectId="projectId"/>
     </el-aside>
-    <el-dialog v-model="dialogVisible"
-      width="500"
-      draggable
-      overflow
-      :title="currentTabComponent?.title">
+    <el-dialog v-model="dialogVisible" width="500" draggable overflow :title="currentTabComponent?.title">
       <component v-bind:is="currentTabComponent?.comp"
         @read-success="currentTabComponent?.onOk"
         @close="closeModal"
@@ -57,8 +53,8 @@
 import { onMounted, ref, Ref, computed, watch, defineAsyncComponent, defineComponent, onBeforeUnmount } from 'vue'
 import { cellsList, dlgComponent, graphRef, pageDirectory, RightMenuEvent } from '@/components/interface/interfaceBase'
 import { useStore } from 'vuex'
-import eveBus from '@/components/ts/eveBus'
 import { query } from '@/request'
+import eveBus from '@/components/ts/eveBus'
 // 引入接口
 import common from '@/components/ts/common'
 // 引入组件
@@ -154,8 +150,6 @@ function acceptData(params:any) // 接收子组件传来的数据
       classify: params.type === 'edge' ? '连接线' : params.cell.data.namec
     }
   }
-  
-   
 }
 function closeModal() // 关闭弹窗
 {

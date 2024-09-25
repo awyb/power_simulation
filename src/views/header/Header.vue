@@ -29,7 +29,7 @@
         </span>
       </el-col>
       <el-col :span="7" class="center">
-        <label><span v-show="needSave" class="dot"></span><span>{{ label }}</span></label>
+        
       </el-col>
       <el-col :span="7" class="right">
         <span class="oper-box" @click="fullClick">
@@ -43,7 +43,7 @@
 </template>
 <script lang="ts" setup name="Header">
 import eveBus from '@/components/ts/eveBus'
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive } from 'vue'
 import { FullConfig } from './header'
 import { useI18n } from 'vue-i18n'
 import { useStore } from 'vuex'
@@ -59,7 +59,6 @@ const fullConfig: FullConfig = reactive({
   content: t('header.btn.full-screen'),
   icon:'iconfont icon-fullscreen'
 })
-const label = ref('未命名项目-')
 const needSave = computed(() =>
 {
   return store.state.needSave

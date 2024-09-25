@@ -16,7 +16,7 @@ export default createStore({
     rmenuBoxH: 400,
     runAsideW: 350,
     curComp: null,
-    needSave: false,
+    needSave: false
   },
   getters: {
   },

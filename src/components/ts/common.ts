@@ -2,7 +2,8 @@
 import eveBus from '@/components/ts/eveBus'
 import { query } from '@/request'
 import { fldsObject, collapseItem, nodeParams, dbvalueBase } from '@/components/interface/interfaceBase'
-
+import { findStore } from '@/indexedDB'
+import { createIndexedDB } from '@/views/main/init'
 export default class common
 {
   constructor(private opts={})
@@ -147,32 +148,31 @@ export default class common
       }).catch(reject)
     })
   }
-  static getNodeConfig(nodename: string)
+  static async getNodeConfig(nodename: string)
   {
+    const db = await createIndexedDB('power_sys')
+    if (!db) return []
     return new Promise<collapseItem[]>((resolve, reject) =>
     {
       const res: collapseItem[] = []
       Promise.all(
         [
-          query({ tabname: 'node_params', exp: `nodename = '${nodename}'`, orderby:'cla_disporder,disporder' }),
-          query({ tabname: 'fldvalues', exp: `tabname = '${nodename}'`, orderby: 'disporder' })
+          findStore(db as IDBDatabase, 'node_params', { nodename }),
+          findStore(db as IDBDatabase, 'fldvalues', { tabname: nodename })
         ])
-        .then(ret=>
+        .then(ret =>
         {
-          const fldvalues: dbvalueBase[] = (ret[1].status === 200)?ret[1].data:[]
-          if (ret[0].status === 200)
+          const fldvalues: dbvalueBase[] = ret[1]
+          ret[0].forEach((item: nodeParams) =>
           {
-            ret[0].data.forEach((item: nodeParams) =>
-            {
-              item.ufunc = (item.ufunc?JSON.parse(item.ufunc):null)
-              const f = res.find((i: collapseItem) => i.classify === item.classify)
-              const _filter = fldvalues.filter((i: dbvalueBase) => i.colname === item.name).map(v => ({ ...v, nodename: v.tabname, name: v.colname }))
-              if (f)
-                f.children.push({ ...item, fldvalue: _filter })
-              else
-                res.push({ classify: item.classify, classifydescribe: item.classifydescribe, children: [{ ...item, fldvalue: _filter }] })
-            })
-          }
+            const f = res.find((i: collapseItem) => i.classify === item.classify)
+            const _filter = fldvalues.filter((i: dbvalueBase) => i.colname === item.name).map(v => ({ ...v, nodename: v.tabname, name: v.colname }))
+            item.ufunc = (item.ufunc ? JSON.parse(item.ufunc) : null)
+            if (f)
+              f.children.push({ ...item, fldvalue: _filter })
+            else
+              res.push({ classify: item.classify, classifydescribe: item.classifydescribe, children: [{ ...item, fldvalue: _filter }] })
+          })
           resolve(res)
         }).catch(reject)
     })

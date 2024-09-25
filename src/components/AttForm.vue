@@ -26,7 +26,7 @@
           </span>
         </el-tooltip>
         <span v-else :style="{color:fld.disabled?'var(--el-disabled-text-color)':'var(--el-text-color-regular)'}">
-           {{ language === 'en'?fld.name:fld.namec }}
+          {{ language === 'en'?fld.name:fld.namec }}
         </span>
       </template>
       <el-input v-if="fld.disptype===1||!fld.isval"

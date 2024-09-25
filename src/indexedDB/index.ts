@@ -1,11 +1,11 @@
 interface openStoreType {
   databaseName: string,
-  storeName: string,
+  storeName: string[] | string,
   keyPath: string,
-  indexes?: Array<string>
+  indexes?: { [key: string]: string[] } | string[]
 }
 
-export const openStore = ({ databaseName, storeName, keyPath, indexes = [] }: openStoreType): Promise<IDBDatabase | null> =>
+export const openStore = ({ databaseName, storeName, keyPath, indexes = {}}: openStoreType): Promise<IDBDatabase | null> =>
 {
   return new Promise((resolve, reject) =>
   {
@@ -20,8 +20,7 @@ export const openStore = ({ databaseName, storeName, keyPath, indexes = [] }: op
 
     request.onerror = (evt: Event) =>
     {
-      console.log('indexedDb open fial!', evt)
-      reject(null)
+      reject(new Error(JSON.stringify(evt)))
     }
 
     request.onupgradeneeded = (evt: IDBVersionChangeEvent) =>
@@ -29,24 +28,28 @@ export const openStore = ({ databaseName, storeName, keyPath, indexes = [] }: op
       if ((evt?.target as IDBOpenDBRequest)?.result)
       {
         const { result } = evt.target as IDBOpenDBRequest
-        // 创建数据对象
-        const store = result.createObjectStore(storeName, { autoIncrement: true, keyPath })
-        // 创建索引
-        for (let i in indexes)
-        
-          store.createIndex(indexes[i], indexes[i], { unique: true })
-        
-        // 创建数据对象成功
-        store.transaction.oncomplete = (evt: any) =>
+        const arr = Array.isArray(storeName) ? storeName : [storeName]
+        arr.forEach(name =>
         {
-          console.log('object store create success!', evt)
-        }
-        console.log('indexedDb upgrade success!', evt)
+          const store = result.createObjectStore(name, { keyPath }) // autoIncrement: true
+          const indexObj = Array.isArray(indexes) ? { [name]: indexes } : indexes
+          // 创建索引
+          if (indexObj)
+          {
+            for (let i in indexObj[name])
+              store.createIndex(indexObj[name][i], indexObj[i], { unique: false })
+          }
+          // 创建数据对象成功
+          store.transaction.oncomplete = (evt: any) =>
+          {
+            console.log('object store create success!', evt)
+          }
+          console.log('indexedDb upgrade success!', evt)
+        })
+        
       }
       else
-      
         console.log('indexedDb upgrade fail!', evt)
-      
     }
   })
 }
@@ -63,14 +66,13 @@ export const updateStore = async(db: IDBDatabase, storeName: string, data: any):
 
     request.onsuccess = (evt: Event) =>
     {
-      console.log('update success!', evt)
+      // console.log('update success!', evt)
       resolve(true)
     }
 
     request.onerror = (evt: Event) =>
     {
-      console.log('update fail!', evt)
-      reject(false)
+      reject(new Error(JSON.stringify(evt)))
     }
   })
 }
@@ -93,32 +95,52 @@ export const deleteStore = async(db: IDBDatabase, storeName: string, key: string
 
     request.onerror = (evt: Event) =>
     {
-      console.log('delete fail!', evt)
-      reject(false)
+      reject(new Error(JSON.stringify(evt)))
     }
   })
 }
 
 // 获取所有数据
-export const findStore = (db: IDBDatabase, storeName: string): Promise<any[]> =>
+export const findStore = (db: IDBDatabase, storeName: string, qryExp?: { [key: string]: any }): Promise<any[]> =>
 {
   return new Promise((resolve, reject) =>
   {
     // 获取store对象
     let store = db.transaction([storeName], 'readwrite').objectStore(storeName)
 
-    const request = store.getAll()
-
+    // const request = store.getAll()
+    const request = store.openCursor()
+    const ret: any[] = []
+    const fl = (val: any) =>
+    {
+      let flag = true
+      if (!qryExp)
+        return flag
+      Object.keys(qryExp).forEach(key =>
+      {
+        if (val[key] !== qryExp[key])
+          flag = false
+      })
+      return flag
+    }
     request.onsuccess = (evt: Event) =>
     {
-      console.log('get all data success!', evt)
-      resolve((evt.target as any).result)
+      // console.log('get all data success!', evt)
+      // resolve((evt.target as any).result)
+      let cursor = (evt.target as any).result
+      if (cursor)
+      {// 如果存在
+        if (fl(cursor.value))
+          ret.push(cursor.value)
+        cursor.continue()// 继续下一个
+      }
+      else
+        resolve(ret)
     }
 
     request.onerror = (evt: Event) =>
     {
-      console.log('get all data fail!', evt)
-      reject([])
+      reject(new Error(JSON.stringify(evt)))
     }
   })
 }
@@ -141,8 +163,7 @@ export const findOneStore = (db: IDBDatabase, storeName: string, key: number | s
 
     request.onerror = (evt: Event) =>
     {
-      console.log('get data fail!', evt)
-      reject([])
+      reject(new Error(JSON.stringify(evt)))
     }
   })
 }
@@ -165,8 +186,7 @@ export const clearAll = (db: IDBDatabase, storeName: string): Promise<boolean> =
 
     request.onerror = (evt: Event) =>
     {
-      console.log('clear data fail!', evt)
-      reject(false)
+      reject(new Error(JSON.stringify(evt)))
     }
   })
 }
