@@ -12,6 +12,7 @@ export interface cellNode {
   width: number,
   height: number,
   shape?: string,
+  counter?: number,
   markup?:any,
   namec: string,
   label: string,
@@ -25,6 +26,7 @@ export interface cellsList {
   name: string,
   namec: string,
   disporder: number,
+  counter?: number,
   children: Array<cellNode>
 }
 

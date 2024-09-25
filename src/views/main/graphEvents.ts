@@ -90,7 +90,14 @@ export class graphEvents
     e&&e.preventDefault()
     const cells = this.graph.getSelectedCells()
     if (cells.length)
+    {
+      cells.forEach(cell =>
+      {
+        cell.setProp('copy', true)
+      })
       this.graph.copy(cells)
+    }
+      
     return false
   }
   // 剪切
@@ -99,7 +106,13 @@ export class graphEvents
     e&&e.preventDefault()
     const cells = this.graph.getSelectedCells()
     if (cells.length)
+    {
+      cells.forEach(cell =>
+      {
+        cell.setProp('copy', true)
+      })
       this.graph.cut(cells)
+    }
     return false
   }
   // 粘贴

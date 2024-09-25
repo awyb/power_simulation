@@ -61,6 +61,7 @@ import common from '@/components/ts/common'
 import GraphPage from '@/views/main/GraphPage.vue'
 import CellInfo from '@/views/main/cellInfo/CellInfo.vue'
 import RightClickMenu from '@/components/RightClickMenu.vue'
+import { resolve } from '@antv/x6/lib/registry/node-anchor/util'
 
 // 定义变量
 const store = useStore() // 使用useStore()函数获取store实例
@@ -157,17 +158,25 @@ function closeModal() // 关闭弹窗
 }
 async function initNodes() // 初始化结点
 {
-  const nodes = await common._getNodes()
-  cellsList_.value = await common.getDirectory()
-  cellsList_.value?.forEach((dir) =>
+  return new Promise<cellsList[]>((resolve, reject) =>
   {
-    dir.children = nodes.filter((node) => node.data.glid === dir.id)
+    Promise.all([common._getNodes(), common.getDirectory()]).then(ret =>
+    {
+      const nodes = ret[0]
+      const dirs:cellsList[] = ret[1]
+      dirs.forEach(dir =>
+      {
+        dir.children = nodes.filter((node) => node.data.glid === dir.id)
+      })
+      LeftMenu.value = defineAsyncComponent(() => import('@/views/main/leftMenu/LeftMenu.vue'))
+      resolve(dirs)
+    }).catch(reject)
   })
-  LeftMenu.value = defineAsyncComponent(() =>import('@/views/main/leftMenu/LeftMenu.vue'))
 }
 // 组件挂载
 onMounted(async()=>
 {
+  cellsList_.value = await initNodes()
   let res = await query({ tabname: 'power_project' })
   if (res.status === 200)
   {
@@ -188,5 +197,4 @@ eveBus.on('right-menu', (params:any) =>
 {
   rightClickMenu.value?.open(params.e, params.menus, params.data)
 })
-initNodes()
 </script>

@@ -285,6 +285,7 @@ export default defineComponent({
       {
         if (!changeProject&&cell.data)
         {
+          eveBus.emit('node-delete', { cellid: cell.data.id })
           store.dispatch('savePage/addExcute', {
             type: 'delete', tabname: cell.isNode() ? 'project_nodes' : 'project_edges', index:cell.id,
             args:
@@ -296,8 +297,9 @@ export default defineComponent({
       })
       graph.on('node:added', ({ node, index, options }) =>
       {
-        if (!node.getProp('autoConnection'))
+        if (node.getProp('copy')||!node.getProp('autoConnection'))
         {
+          eveBus.emit('node-add', {cellid:node.getData().id})
           node.data.prjnodeInfo = {
             ...node.data.prjnodeInfo,
             id: node.id,
@@ -484,6 +486,7 @@ export default defineComponent({
           const func_memory = ret[2].status === 200 ? ret[2].data : []
           if (ret[0].data && ret[0].data.length)
           {
+            eveBus.emit('count-node-num', { cellids: ret[0].data.map((n: any) => n.cellid) })
             const nodes = await common._getNodes()
             ret[0].data.forEach((n: any) =>
             {
@@ -898,7 +901,6 @@ export default defineComponent({
         graph.clearCells()
         changeProject = false
       }
-        
       loadDefNode()
     })
     onMounted(async() =>

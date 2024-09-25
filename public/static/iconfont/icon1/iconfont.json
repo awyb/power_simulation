@@ -6,6 +6,27 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "7148751",
+      "name": "切换账号",
+      "font_class": "qiehuanzhanghao",
+      "unicode": "e646",
+      "unicode_decimal": 58950
+    },
+    {
+      "icon_id": "11305018",
+      "name": "调度",
+      "font_class": "tiaodu",
+      "unicode": "e865",
+      "unicode_decimal": 59493
+    },
+    {
+      "icon_id": "19977022",
+      "name": "目录",
+      "font_class": "mulu",
+      "unicode": "e63e",
+      "unicode_decimal": 58942
+    },
+    {
       "icon_id": "1302489",
       "name": "design",
       "font_class": "design",
