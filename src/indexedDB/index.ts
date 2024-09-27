@@ -14,7 +14,6 @@ export const openStore = ({ databaseName, storeName, keyPath, indexes = {}}: ope
 
     request.onsuccess = (evt: Event) =>
     {
-      console.log('indexedDB open success!', evt)
       resolve((evt.target as IDBOpenDBRequest).result)
     }
 
@@ -42,11 +41,9 @@ export const openStore = ({ databaseName, storeName, keyPath, indexes = {}}: ope
           // 创建数据对象成功
           store.transaction.oncomplete = (evt: any) =>
           {
-            console.log('object store create success!', evt)
+            // console.log('object store create success!', evt)
           }
-          console.log('indexedDb upgrade success!', evt)
         })
-        
       }
       else
         console.log('indexedDb upgrade fail!', evt)
@@ -54,7 +51,7 @@ export const openStore = ({ databaseName, storeName, keyPath, indexes = {}}: ope
   })
 }
 
-// 新增（add），修改（put）
+// 修改（put）
 export const updateStore = async(db: IDBDatabase, storeName: string, data: any): Promise<boolean> =>
 {
   return new Promise((resolve, reject) =>
@@ -76,7 +73,44 @@ export const updateStore = async(db: IDBDatabase, storeName: string, data: any):
     }
   })
 }
+// 修改（put）
+export const addStore = async(db: IDBDatabase, storeName: string, data: any): Promise<boolean> =>
+{
+  return new Promise((resolve, reject) =>
+  {
+    // 获取store对象
+    const transaction = db.transaction([storeName], 'readwrite')
+    const objectStore = transaction.objectStore(storeName)
+    // 添加或修改数据
+    const adds = Array.isArray(data) ? data : [data]
+    adds.forEach(item =>
+    {
+      const request = objectStore.get(item.id)
+      request.onsuccess = function()
+      {
+        if (!request.result)
+          objectStore.add(item)
+        // console.log('数据插入成功:', item)
+      }
+      request.onerror = function()
+      {
+        // console.error('数据插入失败:', item)
+      }
+    })
 
+    transaction.oncomplete = function(this: IDBTransaction, evt: Event)
+    {
+      console.log('事务完成:', this, evt)
+      resolve(true)
+    }
+
+    transaction.onerror = function(this: IDBTransaction, evt: Event)
+    {
+      console.log('事务失败:', this, evt)
+      reject(new Error('事务失败'))
+    }
+  })
+}
 // 根据key删除对应数据
 export const deleteStore = async(db: IDBDatabase, storeName: string, key: string | number): Promise<boolean> =>
 {

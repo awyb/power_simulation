@@ -1,5 +1,5 @@
 <style scoped lang="less">
-  .cell-info { height: calc(100% - 40px);width: 100%; padding: 20px 0; display: flex;flex-direction: column;background: var(--color1);
+  .cell-info { height: calc(100% - 40px);width: 100%; padding: 20px 0; display: flex;flex-direction: column;background: var(--color1);user-select: none;
     .top {width: 100%;height: 70px;
       .description {margin: 5px;
         .iconfont {font-size: 20px;vertical-align: middle;}

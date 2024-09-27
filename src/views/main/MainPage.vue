@@ -61,7 +61,6 @@ import common from '@/components/ts/common'
 import GraphPage from '@/views/main/GraphPage.vue'
 import CellInfo from '@/views/main/cellInfo/CellInfo.vue'
 import RightClickMenu from '@/components/RightClickMenu.vue'
-import { resolve } from '@antv/x6/lib/registry/node-anchor/util'
 
 // 定义变量
 const store = useStore() // 使用useStore()函数获取store实例
@@ -76,7 +75,7 @@ const currentTabComponent: Ref<dlgComponent | null> = ref(null) // 当前弹窗�
 const cellsList_ = ref<cellsList[]>([]) // 原件列表
 const nodeInfo = ref<{ [key: string]: any }>({}) // 结点信息
 const LeftMenu = ref<ReturnType<typeof defineComponent> | null>(null) // 左侧菜单栏组件，用于动态加载
-const rightClickMenu: Ref<RightMenuEvent | null> = ref(null)
+const rightClickMenu: Ref<RightMenuEvent | null> = ref(null) // 右键菜单
 const ready = ref<boolean>(false) // 是否加载完成
 // 计算属性
 const leftMenuW = computed(()=> // 获取左侧菜单宽度

@@ -18,14 +18,22 @@
     .col-3{ width: calc(30% - 20px);
       img { height: var(--cells-img-height-col-3); }
     }
-    .el-footer {--el-footer-height: 40px;display: flex;align-items: center;justify-content: flex-start;}
+    .el-header {--el-header-height: 30px;display: flex;align-items: center;justify-content: flex-start;border-bottom: 1px solid var(--collapse-border-color);}
   }
 </style>
 
 <template>
   <el-container class="left-menu">
+    <el-header>
+      <el-tooltip placement="top" effect="light">
+        <template #content>
+          <p>切换</p>
+        </template>
+        <i class="iconfont icon-qiehuanzhanghao" @click="byTree = !byTree"></i>
+      </el-tooltip>
+    </el-header>
     <el-main style="padding: 0;">
-      <el-tree v-show="byTree" class="el-tree" default-expand-all :data="nodelist" :props="defaultProps">
+      <el-tree v-show="byTree" class="el-tree" highlight-current default-expand-all :data="nodelist" :props="defaultProps">
         <template #default="{ node, data }">
           <i :class="'iconfont '+ (node.level===1?'icon-mulu':'icon-tiaodu')"></i>
           <label v-if="node.level === 1">{{ data.namec }}</label>
@@ -62,32 +70,6 @@
         </el-collapse-item>
       </el-collapse>
     </el-main>
-    <el-footer>
-      <el-button>
-        <el-tooltip placement="top" effect="light">
-          <template #content>
-            <p>新增</p>
-          </template>
-          <i class="iconfont icon-xinjian"></i>
-        </el-tooltip>
-      </el-button>
-      <el-button>
-         <el-tooltip placement="top" effect="light">
-          <template #content>
-            <p>编辑</p>
-          </template>
-          <i class="iconfont icon-edit"></i>
-        </el-tooltip>
-      </el-button>
-      <el-button @click="byTree = !byTree">
-        <el-tooltip placement="top" effect="light">
-          <template #content>
-            <p>切换</p>
-          </template>
-          <i class="iconfont icon-qiehuanzhanghao"></i>
-        </el-tooltip>
-      </el-button>
-    </el-footer>
   </el-container>
 </template>
 
@@ -134,15 +116,18 @@ const menus = ref<RightMenu[]>([
     },
   }])
 // 定义方法
+// 拖拽结束
 function handleDragEnd(e:DragEvent, node:cellNode)
 {
   emit('drag-end', {clientX:e.clientX, clientY:e.clientY, node})
 }
+// 右键菜单
 function handleRightClick(e:MouseEvent, node:cellNode)
 {
   e.preventDefault()
   eveBus.emit('right-menu', { e, menus: menus.value, data:node })
 }
+// 统计结点数量
 function countIt()
 {
   nodelist.forEach(node =>

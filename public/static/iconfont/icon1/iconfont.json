@@ -6,6 +6,48 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "37908979",
+      "name": "running",
+      "font_class": "running",
+      "unicode": "e647",
+      "unicode_decimal": 58951
+    },
+    {
+      "icon_id": "29664339",
+      "name": "drawing",
+      "font_class": "drawing",
+      "unicode": "e84e",
+      "unicode_decimal": 59470
+    },
+    {
+      "icon_id": "10021137",
+      "name": "inspection",
+      "font_class": "inspection",
+      "unicode": "e639",
+      "unicode_decimal": 58937
+    },
+    {
+      "icon_id": "36044306",
+      "name": "close",
+      "font_class": "close",
+      "unicode": "e609",
+      "unicode_decimal": 58889
+    },
+    {
+      "icon_id": "1176983",
+      "name": "setting",
+      "font_class": "setting",
+      "unicode": "e736",
+      "unicode_decimal": 59190
+    },
+    {
+      "icon_id": "8327184",
+      "name": "user",
+      "font_class": "user",
+      "unicode": "e60c",
+      "unicode_decimal": 58892
+    },
+    {
       "icon_id": "7148751",
       "name": "切换账号",
       "font_class": "qiehuanzhanghao",
@@ -32,13 +74,6 @@
       "font_class": "design",
       "unicode": "e607",
       "unicode_decimal": 58887
-    },
-    {
-      "icon_id": "5961323",
-      "name": "运行",
-      "font_class": "yunhang",
-      "unicode": "ec61",
-      "unicode_decimal": 60513
     },
     {
       "icon_id": "201638",

@@ -5,3 +5,8 @@
 <template>
   <router-view/>
 </template>
+
+<script setup ts>
+
+
+</script>

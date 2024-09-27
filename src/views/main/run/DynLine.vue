@@ -1,16 +1,16 @@
 <style scoped lang="less">
   .container {  height: 100%;width: 100%;
-    .tool-bar { height: 50px; width: 100%;line-height: 50px;}
-    .chart-container { box-shadow: 0px 0px 5px 0px #adadad;height:calc(100% - 50px);width: 100%;}
+    .tool-bar { height: 40px; width: 100%;line-height: 40px;}
+    .chart-container { box-shadow: 0px 0px 5px 0px #adadad;height:calc(100% - 40px);width: 100%;}
   }
 </style>
 
 <template>
   <div class="container">
     <div class="tool-bar">
-      <el-button @click="onRefresh">重置</el-button>
-      <el-button @click="onPause">暂停</el-button>
-      <el-button @click="onStart">开始</el-button>
+      <el-button @click="onRefresh" size="small">重置</el-button>
+      <el-button @click="onPause" size="small">暂停</el-button>
+      <el-button @click="onStart" size="small">开始</el-button>
     </div>
     <div class="chart-container" ref="chartRef"></div>
   </div>
@@ -52,9 +52,10 @@ const option = {
     top: '4%'
   },
   grid: {
-    top: '10%',
+    top: '16%',
     left: '4%',
     right: '4%',
+    bottom: '4%',
     containLabel: true,
   },
   tooltip: {
@@ -67,9 +68,8 @@ const option = {
     },
   },
   xAxis: {
-
     axisLabel: {
-      interval: Math.ceil(data1.length/6)-1, // 设置x轴标签的间隔
+      interval: Math.ceil(data1.length / 6) - 1, // 设置x轴标签的间隔
     },
     type: 'category', // x轴类型设置为时间轴
     boundaryGap: true, // 时间轴不留白
