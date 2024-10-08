@@ -23,8 +23,10 @@
             .resizer { position: sticky;top: 0;right: 0;width: 100%;height: 3px;cursor: ns-resize;background-color: rgb(232,232,232);
               &:hover { height: 3px;background-color: rgb(0, 132, 255); }
             }
-            .icon-close { position: absolute; right: 20px;top: 10px; font-size:18px; cursor: pointer; z-index:99;
-              &:hover { color: rgb(0, 132, 255); }
+            .oper-tools { position: absolute; right: 20px;top: 8px; font-size:18px; cursor: pointer; z-index:99;
+              .iconfont { margin-left: 10px;
+                &:hover { color: rgb(0, 132, 255); }
+              }
             }
             .console-tab { height: 100%;display: flex;flex-direction: column;
               /deep/.el-tabs__content { flex-grow: 1;}
@@ -68,14 +70,16 @@
                 <router-view v-slot="{Component}">
                   <transition name="router-fade" mode="out-in">
                     <keep-alive>
-                      <component :is="Component"/>
+                      <component :is="Component" :tableData="tableData" @update-project="initTable"/>
                     </keep-alive>
                   </transition>
                 </router-view>
               </el-main>
               <el-footer :height="pageFooterH+'px'" class="console-box">
                 <div class="resizer" @mousedown="startResizing"></div>
-                <i class="iconfont icon-close" @click="closeFooter"></i>
+                <div class="oper-tools">
+                  <i class="iconfont icon-close" @click="closeConSole"></i>
+                </div>
                 <el-tabs type="border-card" class="console-tab" v-model="activeTab">
                   <el-tab-pane label="日志" name="log">
                     <div class="console-content" ref="loginfo">
@@ -91,8 +95,8 @@
                   </el-tab-pane>
                   <el-tab-pane label="输出" lazy name="output">
                     <div class="console-content output" v-if="checkPass">
-                      <dyn-line style="height: 400px;width: 600px;margin:5px;"></dyn-line>
-                      <dyn-line style="height: 400px;width: 600px;margin:5px;"></dyn-line>
+                      <dyn-line style="height: 400px;width: 600px;margin:5px;" :func="['logBase','cosBase','inverseBase']"></dyn-line>
+                      <dyn-line style="height: 400px;width: 600px;margin:5px;" :func="['sinBase','expBase']"></dyn-line>
                     </div>
                   </el-tab-pane>
                   <el-tab-pane label="模型表" name="model">
@@ -131,6 +135,11 @@
         </el-container>
       </el-main>
     </el-container>
+    <dialog-plus v-model="showDialog" :close-on-click-overlay="false" :uicfg="{ modal: false }">
+      <template #content>
+        {{flds}}
+      </template>
+    </dialog-plus>
   </div>
 </template>
 
@@ -141,7 +150,9 @@ import { ref, onMounted, nextTick, computed } from 'vue'
 import { initDB, getCacheData, setDataInDB } from './main/init'
 import Header from '@/views/header/Header.vue'
 import DynLine from '@/views/main/run/DynLine.vue'
+import DialogPlus from '@/components/DialogPlus.vue'
 import { query } from '@/request'
+import eveBus from '@/components/ts/eveBus'
 interface OutInfo{
   time: string,
   type: string,
@@ -152,6 +163,7 @@ let startY = 0
 let startHeight = 0
 let minHeight = 2
 
+const showDialog = ref(false)
 const store = useStore()
 const router = useRouter()
 const pageHeaderH = store.state.pageHeaderH + 'px'
@@ -181,7 +193,7 @@ const btnsAside = [
   },
   {
     layout: 'bottom', list: [
-      { name: 'account', icon: 'iconfont icon-user', namec: '账户', click: () => console.log('account') },
+      { name: 'account', icon: 'iconfont icon-user', namec: '账户', click: () => showDialog.value = true },
       { name: 'setting', icon: 'iconfont icon-setting', namec: '管理', click: () => console.log('setting') },
     ]
   }
@@ -200,10 +212,11 @@ const handleEdit = (index: number, row: any) =>
 }
 const handleLocation = (index: number, row: any) =>
 {
-  console.log(index, row)
+  eveBus.emit('graph-location', row)
 }
 function checkData()
 {
+  checkName.value = 'check'
   if (pageFooterH.value === minHeight)
     pageFooterH.value = 500
   activeTab.value = 'log'
@@ -224,7 +237,6 @@ function checkData()
       loginfo.value.scrollTop = loginfo.value.scrollHeight
     }
   }, 100)
- 
 }
 
 function startResizing(event: MouseEvent)
@@ -258,7 +270,7 @@ function runPlug(routerName: string)
   router.push('/'+routerName)
 }
 
-function closeFooter()
+function closeConSole()
 {
   pageFooterH.value = minHeight
 }
@@ -274,12 +286,11 @@ function saveChange(event: KeyboardEvent)
     store.commit('changeNeedSave', false)
   }
 }
-function initTable()
+function initTable(prjid = 0)
 {
-  // const db = await createIndexedDB('power_sys')
   Promise.all([
     query({tabname:'flds', exp:`tabname = 'project_nodes'`}),
-    query({tabname:'project_nodes', exp:'prjid = 1'})
+    query({tabname:'project_nodes', exp:`prjid = ${prjid}`})
   ]).then(ret =>
   {
     flds.value = ret[0].data
@@ -292,7 +303,6 @@ onMounted(async() =>
   const db = await initDB()
   const data = await getCacheData()
   setDataInDB(db, data)
-  initTable()
   document.addEventListener('mouseup', stopResizing)
   document.addEventListener('keydown', saveChange)
 })

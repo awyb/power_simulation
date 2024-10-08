@@ -6,6 +6,55 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "4333920",
+      "name": "确定",
+      "font_class": "sure",
+      "unicode": "e611",
+      "unicode_decimal": 58897
+    },
+    {
+      "icon_id": "10056245",
+      "name": "取消",
+      "font_class": "cancel",
+      "unicode": "e709",
+      "unicode_decimal": 59145
+    },
+    {
+      "icon_id": "11363478",
+      "name": "对话框折叠",
+      "font_class": "modal-fold",
+      "unicode": "e603",
+      "unicode_decimal": 58883
+    },
+    {
+      "icon_id": "11363479",
+      "name": "对话框展开",
+      "font_class": "modal-expand",
+      "unicode": "e604",
+      "unicode_decimal": 58884
+    },
+    {
+      "icon_id": "34452919",
+      "name": "inspection",
+      "font_class": "inspection",
+      "unicode": "e833",
+      "unicode_decimal": 59443
+    },
+    {
+      "icon_id": "2966912",
+      "name": "折叠",
+      "font_class": "fold",
+      "unicode": "e701",
+      "unicode_decimal": 59137
+    },
+    {
+      "icon_id": "8841041",
+      "name": "扩大",
+      "font_class": "expand",
+      "unicode": "ec49",
+      "unicode_decimal": 60489
+    },
+    {
       "icon_id": "37908979",
       "name": "running",
       "font_class": "running",
@@ -18,13 +67,6 @@
       "font_class": "drawing",
       "unicode": "e84e",
       "unicode_decimal": 59470
-    },
-    {
-      "icon_id": "10021137",
-      "name": "inspection",
-      "font_class": "inspection",
-      "unicode": "e639",
-      "unicode_decimal": 58937
     },
     {
       "icon_id": "36044306",

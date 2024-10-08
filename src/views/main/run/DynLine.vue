@@ -17,20 +17,39 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, onBeforeUnmount } from 'vue'
+import { onMounted, ref, onBeforeUnmount, defineProps } from 'vue'
 import * as echarts from 'echarts'
 const chartRef = ref(null)
+const props = defineProps({
+  func: {
+    type: Array,
+    default:()=>(['sinBase'])
+  }
+})
+const datas:{ [key: string]: any} = {
+
+}
 let chart: echarts.ECharts
 let timer: number | undefined
-let data1: any = []
-let data2: any = []
-let data3: any = []
 let index = 0
+let datalen = 0
+const funcs = {
+  logBase,
+  expBase,
+  cosBase,
+  sinBase,
+  inverseBase
+}
+props.func.forEach((f, index) =>
+{
+  datas['data'+(index+1)] = []
+})
 function onRefresh()
 {
-  data1 = []
-  data2 = []
-  data3 = []
+  Object.keys(datas).forEach(d =>
+  {
+    datas[d] = []
+  })
   index = 0
   initChart()
 }
@@ -41,6 +60,18 @@ function onPause()
 function onStart()
 {
   initChart()
+}
+const seriesInit = (index: number, data: any) =>
+{
+  return {
+    name: '曲线' + index,
+    type: 'line', // 折线图
+    data,
+    animation: false, // 禁用动画
+    smooth: true,
+    yAxisIndex: 0,
+    showSymbol: false,
+  }
 }
 const option = {
   legend: {
@@ -69,7 +100,7 @@ const option = {
   },
   xAxis: {
     axisLabel: {
-      interval: Math.ceil(data1.length / 6) - 1, // 设置x轴标签的间隔
+      interval: Math.ceil(datalen / 6) - 1, // 设置x轴标签的间隔
     },
     type: 'category', // x轴类型设置为时间轴
     boundaryGap: true, // 时间轴不留白
@@ -100,65 +131,29 @@ const option = {
       show: true
     }
   },
-  series: [
-    {
-      name: '曲线1',
-      type: 'line', // 折线图
-      data: data1,
-      animation: false, // 禁用动画
-      smooth: true,
-      yAxisIndex: 0,
-      showSymbol: false,
-    },
-    {
-      name: '曲线2',
-      type: 'line', // 折线图
-      data: data2,
-      animation: false, // 禁用动画
-      smooth: true,
-      yAxisIndex: 0,
-      showSymbol: false,
-    },
-    {
-      name: '曲线3',
-      type: 'line', // 折线图
-      data: data3,
-      animation: false, // 禁用动画
-      smooth: true,
-      yAxisIndex: 0,
-      showSymbol: false,
-    }
-  ]
+  series:Object.keys(datas).map((key, index)=>(seriesInit(index+1, datas[key])))
 }
 function initChart()
 {
   // 更新数据的定时器，每秒增加一个新数据，删除一个最老的数据
   timer = setInterval(function()
   {
-    data1.push([index, Number(sinBase(index, Math.E).toFixed(5))])
-    // data2.push([index, Number(expBase(index, 2).toFixed(5))])
-    data2.push([index, Number(parabolaBase(index, 1, 2, -1).toFixed(5))])
-    data3.push([index, Number(cosBase(index, 2).toFixed(5))])
-    
+    Object.keys(datas).forEach((d, _index) =>
+    {
+      const num = funcs[props.func[_index] as keyof typeof funcs](index)
+      datas[d].push([index, Number(num.toFixed(5))])
+    })
+
     // 更新图表，设置切换动画效果
     chart.setOption({
       xAxis: {
         axisLabel: {
-          interval: Math.ceil(data1.length / 6) - 1, // 设置x轴标签的间隔
+          interval: Math.ceil(datalen / 6) - 1, // 设置x轴标签的间隔
         },
       },
-      series: [
-        {
-          data: data1,
-        },
-        {
-          data: data2,
-        },
-        {
-          data: data3,
-        }
-      ]
+      series: Object.keys(datas).map(d=>({data:datas[d]}))
     })
+    datalen ++
     index = parseFloat(add(0.01, index).toFixed(2))
     if (index > 3)
       clearInterval(timer) // 停止定时器
@@ -166,21 +161,29 @@ function initChart()
   // 使用配置项展示图表
   chart.setOption(option)
 }
-function logBase(x: number, base: number)
+function logBase(x: number, base = Math.E)
 {
   return Math.log(x + 1) / Math.log(base)
 }
-function expBase(x: number, base: number)
+function expBase(x: number, base = 2 )
 {
   return Math.pow(base, x)
 }
-function cosBase(x: number, base: number)
+function cosBase(x: number, base =2 )
 {
   return base*Math.cos(x * base * Math.PI) + 2
 }
-function sinBase(x: number, base: number)
+function sinBase(x: number, base = Math.E)
 {
-  return base*Math.sin(x * base * Math.PI)
+  return base * Math.sin((x + 1) * 50)
+}
+function inverseBase(x: number, base = 2)
+{
+  return base / (x + 0.5)
+}
+function parabolaBase(x: number, a = 0, b = 0, c = 0)
+{
+  return a * (x * x) + b * x + c
 }
 function multiple(num1: number, num2: number)
 {
@@ -188,33 +191,12 @@ function multiple(num1: number, num2: number)
   const result = (num1 * factor) * (num2 * factor) / (factor * factor)
   return result
 }
-function parabolaBase(x: number, a = 0, b = 0, c = 0)
-{
-  return a * (x * x) + b * x + c
-}
 function add(num1:number, num2:number)
 {
   let a = num1.toString().split('.').length===2?num1.toString().split('.')[1].length:1
   let b = num2.toString().split('.').length===2?num2.toString().split('.')[1].length:1
   var baseNum = Math.pow(10, Math.max(a, b))
   return (multiple(num1, baseNum) + multiple(num2, baseNum)) / baseNum
-}
-function multiple1(num1: number, num2: number)
-{
-  let m=0, s1=num1.toString(), s2=num2.toString()
-  try
-  {
-    m+=s1.split('.')[1].length
-  }
-  catch (e)
-  {}
-  try
-  {
-    m+=s2.split('.')[1].length
-  }
-  catch (e)
-  {}
-  return Number(s1.replace('.', ''))*Number(s2.replace('.', ''))/Math.pow(10, m)
 }
 
 onMounted(() =>

@@ -34,6 +34,8 @@ export interface dlgComponent {
   id: number,
   comp: Component,
   title: string,
+  params: object,
+  attr: object,
   onOk: () => void
 }
 

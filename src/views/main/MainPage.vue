@@ -15,7 +15,7 @@
 <template>
   <el-container class="container">
     <el-aside :width="leftMenuW" style="padding: 0;">
-      <left-menu :cellsList="cellsList_" expand-first @drag-end="handleDragEnd" />
+      <left-menu :cellsList="cellsList_" :tableData="tableData" expand-first @drag-end="handleDragEnd" />
     </el-aside>
     <el-main style="padding: 0;overflow: hidden;">
       <div class="tab-menu">
@@ -38,11 +38,15 @@
     <el-aside :width="rightMenuW" style="padding: 0;">
       <cell-info :params="nodeInfo" :projectId="projectId"/>
     </el-aside>
-    <el-dialog v-model="dialogVisible" width="500" draggable overflow :title="currentTabComponent?.title">
+    <el-dialog v-model="dialogVisible"
+      draggable
+      v-bind="currentTabComponent?.attr"
+      :title="currentTabComponent?.title">
       <component v-bind:is="currentTabComponent?.comp"
+        :params="currentTabComponent?.params"
+        :key="currentTabComponent?.id"
         @read-success="currentTabComponent?.onOk"
-        @close="closeModal"
-        :key="currentTabComponent?.id"/>
+        @close="closeModal"/>
     </el-dialog>
     <RightClickMenu ref="rightClickMenu"/>
   </el-container>
@@ -50,7 +54,7 @@
 
 <script lang="ts" setup name="MainPage">
 // 导入模块
-import { onMounted, ref, Ref, computed, watch, defineAsyncComponent, defineComponent, onBeforeUnmount } from 'vue'
+import { onMounted, ref, Ref, computed, watch, defineAsyncComponent, defineComponent, onBeforeUnmount, defineProps, defineEmits } from 'vue'
 import { cellsList, dlgComponent, graphRef, pageDirectory, RightMenuEvent } from '@/components/interface/interfaceBase'
 import { useStore } from 'vuex'
 import { query } from '@/request'
@@ -62,6 +66,13 @@ import GraphPage from '@/views/main/GraphPage.vue'
 import CellInfo from '@/views/main/cellInfo/CellInfo.vue'
 import RightClickMenu from '@/components/RightClickMenu.vue'
 
+const props = defineProps({
+  tableData: {
+    type: Array,
+    default: () => []
+  }
+})
+const emits = defineEmits(['update-project'])
 // 定义变量
 const store = useStore() // 使用useStore()函数获取store实例
 const projectId = ref<number>(0)
@@ -97,6 +108,7 @@ watch(() => selPage.value, (n) =>// 监听当前图纸
   const cur = pageDirs.value.find(page => page.name === n)
   if (cur)
   {
+    emits('update-project', cur.id)
     projectId.value = cur.id
     nodeInfo.value = {
       ...cur, type: 'blank',
@@ -196,4 +208,5 @@ eveBus.on('right-menu', (params:any) =>
 {
   rightClickMenu.value?.open(params.e, params.menus, params.data)
 })
+
 </script>

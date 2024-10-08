@@ -10,8 +10,8 @@
       <run-aside></run-aside>
     </el-aside>
     <el-main>
-      <dyn-line style="height: 600px;width: 1000px;margin: 50px auto;" :func="func1"></dyn-line>
-      <dyn-line style="height: 600px;width: 1000px;margin: 50px auto;" :func="func2"></dyn-line>
+      <dyn-line style="height: 600px;width: 1000px;margin: 50px auto;"></dyn-line>
+      <dyn-line style="height: 600px;width: 1000px;margin: 50px auto;"></dyn-line>
     </el-main>
   </el-container>
     

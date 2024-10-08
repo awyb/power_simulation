@@ -11,7 +11,6 @@
       .drag-label{cursor: pointer;}
       /deep/ .el-tree-node__content { height: 40px; }
     }
-    
     .col-2{ width: calc(50% - 30px);
       img { height: var(--cells-img-height-col-2); }
     }
@@ -35,9 +34,12 @@
     <el-main style="padding: 0;">
       <el-tree v-show="byTree" class="el-tree" highlight-current default-expand-all :data="nodelist" :props="defaultProps">
         <template #default="{ node, data }">
-          <i :class="'iconfont '+ (node.level===1?'icon-mulu':'icon-tiaodu')"></i>
-          <label v-if="node.level === 1">{{ data.namec }}</label>
-          <el-tooltip placement="right" effect="light">
+          <label v-if="node.level === 1">
+            <i class="iconfont icon-mulu"></i>
+            <span>{{ data.namec }}</span>
+            <span v-if="data.counter">({{ data.counter }})</span>
+          </label>
+          <el-tooltip placement="top" effect="light">
             <template #content>
               <img :src="data.data.src" :alt="data.data.name" style="object-fit: contain;height: var(--cells-img-height-col-2);width: 100px;"/>
             </template>
@@ -46,10 +48,11 @@
               draggable="true"
               @dragend.capture="handleDragEnd($event, data)"
               @contextmenu.prevent="handleRightClick($event, data)">
-              {{ data.namec }}
+              <i class="iconfont icon-tiaodu"></i>
+              <span>{{ data.namec }}</span>
+              <span v-if="data.counter">({{ data.counter }})</span>
             </label>
           </el-tooltip>
-          <span v-if="data.counter">({{ data.counter }})</span>
         </template>
       </el-tree>
       <el-collapse v-show="!byTree" v-model="expArr" style="width: 100%;">
@@ -75,11 +78,13 @@
 
 <script lang="ts" setup name="LeftMenu">
 // 导入模块
-import { ref, defineProps, defineEmits } from 'vue'
+import { ref, defineProps, defineEmits, watch } from 'vue'
 import { cellsList, cellNode, RightMenu } from '../../../components/interface/interfaceBase'
 import { query } from '@/request'
 import eveBus from '@/components/ts/eveBus'
+import { useStore } from 'vuex'
 
+const store = useStore()
 const defaultProps = {
   children: 'children',
   label: 'namec',
@@ -88,22 +93,41 @@ const defaultProps = {
 const props = defineProps({
   cellsList: { type: Array, default: () => [] },
   expandFirst: { type: Boolean, default: false },
+  tableData: { type: Array, default: () => [] },
 })
-let cellids:number[] = []
 // 定义事件
 const emit = defineEmits(['drag-end'])
 // 定义变量
 const nodelist = props.cellsList as Array<cellsList>
 const expArr = ref<string[]>([])
 const byTree = ref<boolean>(true)
+const preview = ref<HTMLElement | null>(null)
 const menus = ref<RightMenu[]>([
   {
     name: 'edit',
     namec: '编辑',
     icon: 'iconfont icon-copy',
-    click: (node:cellNode) =>
+    click: async(node:cellNode) =>
     {
-      console.log(node)
+      const comp = await import('./DialogEdit.vue').then(module => module.default)
+      store.dispatch('changeUrl',
+        {
+          comp,
+          id: Math.random(),
+          attr: {
+            draggable: true,
+            'close-on-click-modal': false,
+            'append-to-body': true,
+            'z-index': 1,
+          },
+          modal: false,
+          title: '编辑',
+          params:node,
+          onOk: (att: any) =>
+          {
+            console.log(att)
+          }
+        })
     },
   },
   {
@@ -114,13 +138,27 @@ const menus = ref<RightMenu[]>([
     {
       console.log(node)
     },
-  }])
+  }
+])
+
+let cellids:number[] = []
+
+
+watch(() => props.tableData, () =>
+{
+  cellids.length = 0
+  props.tableData.forEach((item: any) => cellids.push(item.cellid))
+  countIt()
+}, { deep: true, immediate: true })
+
 // 定义方法
+
 // 拖拽结束
 function handleDragEnd(e:DragEvent, node:cellNode)
 {
-  emit('drag-end', {clientX:e.clientX, clientY:e.clientY, node})
+  emit('drag-end', { clientX: e.clientX, clientY: e.clientY, node })
 }
+
 // 右键菜单
 function handleRightClick(e:MouseEvent, node:cellNode)
 {
@@ -161,11 +199,6 @@ eveBus.on('node-add', async(data:any) =>
   cellids.push(data.cellid)
   countIt()
 })
-eveBus.on('count-node-num', async(data:any) =>
-{
-  data.cellids.forEach((id: any) => cellids.push(id))
-  countIt()
-})
 // 初始化
 query({ tabname: 'default_config', exp: `keyname = 'cells_list_expand'` }).then(res =>
 {
@@ -175,4 +208,5 @@ query({ tabname: 'default_config', exp: `keyname = 'cells_list_expand'` }).then(
     vals.forEach((item: string) => expArr.value.push(item))
   }
 })
+
 </script>

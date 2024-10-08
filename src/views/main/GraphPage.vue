@@ -486,7 +486,6 @@ export default defineComponent({
           const func_memory = ret[2].status === 200 ? ret[2].data : []
           if (ret[0].data && ret[0].data.length)
           {
-            eveBus.emit('count-node-num', { cellids: ret[0].data.map((n: any) => n.cellid) })
             const nodes = await common._getNodes()
             ret[0].data.forEach((n: any) =>
             {
@@ -734,6 +733,18 @@ export default defineComponent({
           // graph.drawBackground(data as Graph.BackgroundManager.Options)
           graph.container.style.background = (data as any).color
 
+      })
+      eveBus.on('graph-location', (data) =>
+      {
+        const circle = graph.getCellById((data as any).cellkey)
+        if (circle)
+        {
+          graph.centerCell(circle)
+          graph.cleanSelection()
+          graph.select(circle)
+        }
+          
+        
       })
       eveBus.on('change-graph-grid', (data) =>
       {

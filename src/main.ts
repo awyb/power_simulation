@@ -14,7 +14,6 @@ import vcolorpicker from 'vcolorpicker'
 
 const app = createApp(App, { productionTip: true })
 for (const [key, component] of Object.entries(ElementPlusIconsVue))
-
   app.component(key, component)
 
 const debounce = (fn: any, delay: any) =>
