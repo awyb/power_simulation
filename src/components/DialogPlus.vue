@@ -1,7 +1,7 @@
 <style scoped lang="less">
   .modal-overlay {position: fixed;top: 0;left: 0;right: 0;background: rgba(0, 0, 0, 0.5);display: flex;justify-content: center;align-items: center;z-index: 9;}
-  .modal {background: white;border-radius: 5px;box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);position: absolute;cursor: move;border-radius: 10px;color: white;}
-  .modal-header {display: flex;justify-content: space-between;align-items: center;padding: 0 15px; height: 35px;background: rgb(43, 170, 255);border-top-left-radius: 10px;border-top-right-radius: 10px;
+  .modal {background: white;border-radius: 5px;box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);position: absolute;border-radius: 10px;color: white;}
+  .modal-header {display: flex;justify-content: space-between;align-items: center;padding: 0 15px; height: 32px;background: rgb(43, 170, 255);border-top-left-radius: 10px;border-top-right-radius: 10px;
     .modal-oper {
       .iconfont {cursor: pointer;margin: 0 5px;
         &:hover {color: #0099ff;}
@@ -17,24 +17,25 @@
     :style="{ bottom: defUicfg.modal ? 0 : 'initial'}"
     @click.self="closeOnClickOverlay ? closeModal() : null">
     <div class="modal"
-      :style="{ width: modalWidth + 'px', height: (expand?modalHeight:30) + 'px', left: modalX + 'px', top: modalY + 'px' }"
-      @mousedown="startDrag"
-      @mouseup="stopDrag"
+      :style="{ width: (minimize?30:modalWidth) + 'px', height: ((minimize ||!expand)?30:modalHeight) + 'px', left: modalX + 'px', top: modalY + 'px', cursor: draggable?'move':'default'}"
+      @mousedown="draggable?startDrag($event):null"
+      @mouseup="draggable?stopDrag():null"
       @mousemove="dragging ? drag($event) : null"
     >
-      <div style="width: 1px;height: 100%;position: absolute;top: 0;right: 0;cursor: e-resize;" @mousedown.stop="(e)=>startResize(e,'right')"></div>
-      <div style="height: 1px;width: 100%;position: absolute;bottom: 0;left: 0;cursor: s-resize;" @mousedown.stop="(e)=>startResize(e,'bottom')"></div>
-      <div class="modal-header">
-        <label>{{ title }}</label>
-        <div class="modal-oper">
-          <i :class="'iconfont icon-modal-'+(expand?'expand':'fold')" @click="expand=!expand"></i>
-          <i class="iconfont icon-close" @click="closeModal"></i>
+      <div v-if="resizeable" style="width: 1px;height: 100%;position: absolute;top: 0;right: 0;cursor: e-resize;" @mousedown.stop="(e)=>startResize(e,'right')"></div>
+      <div v-if="resizeable" style="height: 1px;width: 100%;position: absolute;bottom: 0;left: 0;cursor: s-resize;" @mousedown.stop="(e)=>startResize(e,'bottom')"></div>
+      <div class="modal-header" :style="{padding:minimize?'0':' 0 15px'}">
+        <label v-if="!minimize">{{ title }}</label>
+        <div class="modal-oper" :style="{margin:minimize?'auto':'0'}">
+          <i v-if="showMinimize" :class="'iconfont icon-'+(minimize?'expand':'fold')" @click="minimize=!minimize"></i>
+          <i v-if="!minimize&&showFold" :class="'iconfont icon-modal-'+(expand?'expand':'fold')" @click="expand=!expand"></i>
+          <i v-if="!minimize" class="iconfont icon-close" @click="closeModal"></i>
         </div>
       </div>
       <div class="modal-content">
         <slot name="content"></slot>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" v-if="(!minimize&&expand)">
         <el-button type="text" @click="closeModal">
           <i class="iconfont icon-sure"></i>
           确定
@@ -49,7 +50,7 @@
 </template>
 
 <script lang="ts" setup name="DialogPlus">
-import { ref, defineProps, defineEmits, watch } from 'vue'
+import { ref, defineProps, defineEmits, watch, onBeforeUnmount } from 'vue'
 const props = defineProps({
   modelValue: {
     type: Boolean,
@@ -66,6 +67,22 @@ const props = defineProps({
   uicfg: {
     type: Object,
     default: () => ({})
+  },
+  showFold: {
+    type: Boolean,
+    default: true
+  },
+  showMinimize: {
+    type: Boolean,
+    default: true
+  },
+  draggable: {
+    type: Boolean,
+    default: true
+  },
+  resizeable: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -86,6 +103,7 @@ defUicfg.value.top = defUicfg.value.top - defUicfg.value.height / 2
 
 const emits = defineEmits(['update:modelValue'])
 const expand = ref(true)
+const minimize = ref(false)
 const showModal = ref(props.modelValue)
 const modalWidth = ref(defUicfg.value.width)
 const modalHeight = ref(defUicfg.value.height)
@@ -168,5 +186,9 @@ const resize = (event: MouseEvent) =>
 }
 window.addEventListener('mouseup', stopResize)
 window.addEventListener('mousemove', resize)
-
+onBeforeUnmount(() =>
+{
+  window.removeEventListener('mouseup', stopResize)
+  window.removeEventListener('mousemove', resize)
+})
 </script>

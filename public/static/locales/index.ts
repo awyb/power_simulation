@@ -6,7 +6,7 @@ import en from './en'
 const i18n = createI18n({
   legacy: false, // Composition API 模式
   globalInjection: true, // 全局注册 $t方法
-  locale: 'zh',  // 默认显示的语言
+  locale: 'en',  // 默认显示的语言
   messages: {
     zh,
     en

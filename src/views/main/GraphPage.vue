@@ -569,7 +569,7 @@ export default defineComponent({
         // height: 600, // 画布高度
         background:
         {
-          color: '#ffffff',
+          color: 'var(--graph-bg-color)',
         },
         // panning: {
         //   enabled: true,

@@ -20,7 +20,7 @@
               label:nth-of-type(3) { font-size: 10px;display: inline-block;width: 80px; }
               label:nth-of-type(4) { margin-left:20px; }
             }
-            .resizer { position: sticky;top: 0;right: 0;width: 100%;height: 3px;cursor: ns-resize;background-color: rgb(232,232,232);
+            .resizer { position: sticky;top: 0;right: 0;width: 100%;height: 3px;background-color: rgb(232,232,232);cursor: ns-resize;
               &:hover { height: 3px;background-color: rgb(0, 132, 255); }
             }
             .oper-tools { position: absolute; right: 20px;top: 8px; font-size:18px; cursor: pointer; z-index:99;
@@ -54,13 +54,17 @@
         <el-container class="container">
           <el-aside :width="leftSideW" class="main-aside">
             <div v-for="item in btnsAside" :key="item.layout">
-              <div v-for="(btn,index) in item.list"  @click="btn.click" :key="index" :class="'left-aside-btn '+item.layout" >
-                <el-tooltip placement="right" effect="light">
-                  <template #content>
-                    <p>{{ btn.namec }}</p>
-                  </template>
-                  <i :class="btn.icon" :style="{color:checkName===btn.name?'var(--aside-btn-color)':'var(--aside-btn-active-color)'}"></i>
-                </el-tooltip>
+              <div v-for="btn in item.list" :key="btn.name">
+                <el-tooltip :content="btn.namec" placement="right">
+                  <div @click="btn.click(btn)" :class="'left-aside-btn '+item.layout" >
+                    <el-popover :visible="btn.visible" placement="right" :width="200">
+                      <template #reference>
+                        <i :class="btn.icon" :style="{color:checkName===btn.name?'var(--aside-btn-color)':'var(--aside-btn-active-color)'}"></i>
+                      </template>
+                      <component v-if="btn?.component" :is="btn.component"></component>
+                    </el-popover>
+                  </div>
+                 </el-tooltip>
               </div>
             </div>
           </el-aside>
@@ -84,7 +88,7 @@
                   <el-tab-pane label="日志" name="log">
                     <div class="console-content" ref="loginfo">
                       <div v-for="(info,index) in outInfo" :key="index" class="console-line">
-                        <label>>>line {{index+1}}：</label>
+                        <label>>>LINE {{index+1}}：</label>
                         <label>{{ info.time }}</label>
                         <label :style="{'color':color[info.type]}">
                           {{ info.type }}
@@ -93,15 +97,20 @@
                       </div>
                     </div>
                   </el-tab-pane>
-                  <el-tab-pane label="输出" lazy name="output">
-                    <div class="console-content output" v-if="checkPass">
-                      <dyn-line style="height: 400px;width: 600px;margin:5px;" :func="['logBase','cosBase','inverseBase']"></dyn-line>
-                      <dyn-line style="height: 400px;width: 600px;margin:5px;" :func="['sinBase','expBase']"></dyn-line>
+                  <el-tab-pane label="输出" name="output">
+                    <div class="console-content output" >
+                      <p v-if="!checkPass">请先运行模型！</p>
+                      <dyn-line v-if="checkPass" style="margin:5px;" :func="['logBase','cosBase','inverseBase']" :height="360" :width="600"></dyn-line>
+                      <dyn-line v-if="checkPass" style="margin:5px;" :func="['sinBase','expBase']" :height="360" :width="600"></dyn-line>
                     </div>
                   </el-tab-pane>
                   <el-tab-pane label="模型表" name="model">
-                    <el-table
-                      border stripe
+                    <div style="width: 96%;margin: auto;height: 50px;line-height: 50px;">
+                      <el-input size="small" v-model="searchVal" style="width: 160px" placeholder="Please input" @keyup.enter.native="onSearch" />
+                      <el-button size="small" @click="onSearch" type="primary" style="margin-left: 10px;">搜索</el-button>
+                      <el-button size="small" @click="onClear" style="margin-left: 10px;">清空</el-button>
+                    </div>
+                    <el-table border stripe
                       size="small"
                       style="width: 96%;margin: auto;"
                       :data="filterTableData"
@@ -135,9 +144,13 @@
         </el-container>
       </el-main>
     </el-container>
-    <dialog-plus v-model="showDialog" :close-on-click-overlay="false" :uicfg="{ modal: false }">
+    <dialog-plus v-model="showDialog"
+      v-bind="currentTabComponent?.attr"
+      :title="currentTabComponent?.title"
+      :uicfg="currentTabComponent?.uicfg"
+      :key="Math.random()">
       <template #content>
-        {{flds}}
+       <component v-if="currentTabComponent" :is="currentTabComponent.comp" :params="currentTabComponent?.params" v-bind="currentTabComponent?.compAttr" />
       </template>
     </dialog-plus>
   </div>
@@ -146,13 +159,16 @@
 <script lang="ts" setup>
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { ref, onMounted, nextTick, computed } from 'vue'
+import { ref, onMounted, nextTick, watch, reactive } from 'vue'
 import { initDB, getCacheData, setDataInDB } from './main/init'
 import Header from '@/views/header/Header.vue'
 import DynLine from '@/views/main/run/DynLine.vue'
 import DialogPlus from '@/components/DialogPlus.vue'
 import { query } from '@/request'
 import eveBus from '@/components/ts/eveBus'
+import { dlgComponent } from '@/components/interface/interfaceBase'
+
+import CascadeSelect from '@/components/CascadeSelect.vue'
 interface OutInfo{
   time: string,
   type: string,
@@ -173,7 +189,9 @@ const pageFooterH = ref<number>(minHeight) // 初始宽度
 const outInfo = ref<OutInfo[]>([{time: new Date().toLocaleString(), type: 'PRIMARY', describe: '欢迎进入电力仿真平台！'}])
 const loginfo = ref<HTMLElement | null>(null)
 const tableData = ref<any[]>([])
+const filterTableData = ref<any[]>([])
 const flds = ref<any[]>([])
+const searchVal = ref<string>('')
 const color:any = {
   'SUCCESS': '#67C23A',
   'WARNING': '#E6A23C',
@@ -183,36 +201,103 @@ const color:any = {
 }
 const activeTab = ref('model')
 const checkPass = ref<boolean>(false)
-const btnsAside = [
+const currentTabComponent = ref<dlgComponent | null>(null) // 当前弹窗组件
+
+const btnsAside = reactive([
   {
     layout: 'top', list: [
-      { name: 'design', icon: 'iconfont icon-drawing', namec: '设计', class: 'top', click:()=> runPlug('design')},
-      { name: 'run', icon: 'iconfont icon-running', namec: '运行', class: 'top', click: () => runPlug('run') },
-      { name: 'check', icon: 'iconfont icon-inspection', namec: '检查', class: 'top', click:()=> checkData() },
+      { visible: false, name: 'design', icon: 'iconfont icon-drawing', namec: '设计', class: 'top', click:()=> runPlug('design')},
+      { visible: false, name: 'run', icon: 'iconfont icon-running', namec: '运行', class: 'top', click: () => runPlug('run') },
+      { visible: false, name: 'check', icon: 'iconfont icon-inspection', namec: '检查', class: 'top', click:()=> checkData() },
     ],
   },
   {
     layout: 'bottom', list: [
-      { name: 'account', icon: 'iconfont icon-user', namec: '账户', click: () => showDialog.value = true },
-      { name: 'setting', icon: 'iconfont icon-setting', namec: '管理', click: () => console.log('setting') },
+      {
+        visible: false,
+        name: 'account', icon: 'iconfont icon-user', namec: '账户', click: (btn:any) =>
+        {
+          currentTabComponent.value = null
+          showDialog.value = true
+          
+        }
+      },
+      {
+        visible: false,
+        component: CascadeSelect,
+        name: 'setting', icon: 'iconfont icon-setting', namec: '管理', click: (btn:any) =>
+        {
+          btn.visible = !btn.visible
+         
+        } },
     ]
   }
-]
-const search = ref('')
-const filterTableData = computed(() =>
-  tableData.value.filter(
-    (data:any) =>
-      !search.value ||
-      data.namec.toLowerCase().includes(search.value.toLowerCase())
-  )
-)
-const handleEdit = (index: number, row: any) =>
+])
+
+const handleEdit = async(index: number, row: any) =>
 {
-  console.log(index, row)
+  const attFlds:any = []
+  flds.value.forEach(fld =>
+  {
+    if (fld.disporder)
+    {
+      attFlds.push({
+        ...fld,
+        value: row[fld.name],
+        value_: row[fld.name]
+      })
+    }
+  }
+  )
+  const comp = await import('@/components/AttForm.vue').then(module => module.default)
+  store.dispatch('changeUrl',
+    {
+      comp,
+      id: Math.random(),
+      compAttr: {
+        attFlds,
+        language: 'ch',
+        'show-describle': false,
+        'show-transform': false,
+        'label-width': '200px',
+        'item-style': {
+          width: '300px',
+          height: '30px'
+        },
+        'show-suffix': false,
+      },
+      uicfg: {
+        modal: false,
+        width: 500,
+        height: 400
+      },
+      modal: false,
+      title: '编辑',
+      params:row,
+      onOk: (att: any) =>
+      {
+        console.log(att)
+      }
+    })
 }
 const handleLocation = (index: number, row: any) =>
 {
   eveBus.emit('graph-location', row)
+}
+// 监听
+watch(()=>store.state.curComp, (n)=>// 动态组件接收
+{
+  showDialog.value = true
+  currentTabComponent.value = n
+})
+function onSearch()
+{
+  filterTableData.value = tableData.value.filter(data=>data.namec.indexOf(searchVal.value) > -1)
+}
+function onClear()
+{
+  searchVal.value = ''
+  filterTableData.value = tableData.value
 }
 function checkData()
 {
@@ -227,9 +312,11 @@ function checkData()
     outInfo.value.push({ time: new Date().toLocaleString(), describe: '检验测试，定时器执行' + index, type: ['SUCCESS', 'WARNING', 'ERROR'][index % 3] })
     if (index === 20)
     {
-      checkPass.value = true
+      
       activeTab.value = 'output'
       clearInterval(timer)
+      checkPass.value = true
+
     }
     if (loginfo.value)
     {
@@ -238,7 +325,6 @@ function checkData()
     }
   }, 100)
 }
-
 function startResizing(event: MouseEvent)
 {
   isResizing = true
@@ -256,7 +342,9 @@ function resizeAside(event: MouseEvent)
     pageFooterH.value = newHeight > minHeight ? newHeight : minHeight // 设置最小宽度为 50px
   }
 }
-
+/**
+ * 停止拉伸
+ */
 function stopResizing()
 {
   isResizing = false
@@ -264,17 +352,26 @@ function stopResizing()
   document.removeEventListener('mouseup', stopResizing)
 }
 
+/**
+ * 运行插件
+ * @param routerName 路由名称
+ */
 function runPlug(routerName: string)
 {
   checkName.value = routerName
   router.push('/'+routerName)
 }
-
+/**
+ * 点击关闭控制台
+ */
 function closeConSole()
 {
   pageFooterH.value = minHeight
 }
-
+/**
+ * 保存修改
+ * @event 键盘事件
+ */
 function saveChange(event: KeyboardEvent)
 {
   if (event.ctrlKey && event.key.toLowerCase() === 's')
@@ -295,6 +392,7 @@ function initTable(prjid = 0)
   {
     flds.value = ret[0].data
     tableData.value = ret[1].data
+    filterTableData.value = ret[1].data
   }).catch(err=>console.log(err))
 }
 onMounted(async() =>

@@ -5,7 +5,7 @@
         &:hover{color:var(--hover-color);}
       }
       .center{display: flex; flex: 1;}
-      .lable{padding: var(--tab-menu-lable-padding);height: var(--tab-menu-height);line-height: var(--tab-menu-height);cursor: pointer;border-left: var(--tab-menu-left-border);font-size: 14px;
+      .lable{padding: var(--tab-menu-lable-padding);height: var(--tab-menu-height);line-height: var(--tab-menu-height);cursor: pointer;border-left: var(--tab-menu-left-border);font-size: 14px;color:var(--el-text-color-primary);
         &:hover{background:var(--color2);}
       }
     }
@@ -38,16 +38,6 @@
     <el-aside :width="rightMenuW" style="padding: 0;">
       <cell-info :params="nodeInfo" :projectId="projectId"/>
     </el-aside>
-    <el-dialog v-model="dialogVisible"
-      draggable
-      v-bind="currentTabComponent?.attr"
-      :title="currentTabComponent?.title">
-      <component v-bind:is="currentTabComponent?.comp"
-        :params="currentTabComponent?.params"
-        :key="currentTabComponent?.id"
-        @read-success="currentTabComponent?.onOk"
-        @close="closeModal"/>
-    </el-dialog>
     <RightClickMenu ref="rightClickMenu"/>
   </el-container>
 </template>
@@ -55,7 +45,7 @@
 <script lang="ts" setup name="MainPage">
 // 导入模块
 import { onMounted, ref, Ref, computed, watch, defineAsyncComponent, defineComponent, onBeforeUnmount, defineProps, defineEmits } from 'vue'
-import { cellsList, dlgComponent, graphRef, pageDirectory, RightMenuEvent } from '@/components/interface/interfaceBase'
+import { cellsList, graphRef, pageDirectory, RightMenuEvent } from '@/components/interface/interfaceBase'
 import { useStore } from 'vuex'
 import { query } from '@/request'
 import eveBus from '@/components/ts/eveBus'
@@ -80,9 +70,7 @@ const selPage = ref<string>('') // 当前图纸
 const pageDirs = ref<Array<pageDirectory>>([]) // 图纸目录
 const collapseL = ref<boolean>(false) // 左侧菜单栏是否折叠
 const collapseR = ref<boolean>(true) // 右侧菜单栏是否折叠
-const dialogVisible = ref<boolean>(false) // 弹窗是否显示
 const childRef: Ref<graphRef | null> = ref(null) // 子组件的引用
-const currentTabComponent: Ref<dlgComponent | null> = ref(null) // 当前弹窗组件
 const cellsList_ = ref<cellsList[]>([]) // 原件列表
 const nodeInfo = ref<{ [key: string]: any }>({}) // 结点信息
 const LeftMenu = ref<ReturnType<typeof defineComponent> | null>(null) // 左侧菜单栏组件，用于动态加载
@@ -98,11 +86,11 @@ const rightMenuW = computed(()=> // 获取右侧菜单宽度
   return (collapseR.value? store.state.rightMenuW:0)+ 'px'
 })
 // 监听
-watch(()=>store.state.curComp, (n)=>// 动态组件接收
-{
-  dialogVisible.value = true
-  currentTabComponent.value = n
-})
+// watch(()=>store.state.curComp, (n)=>// 动态组件接收
+// {
+//   dialogVisible.value = true
+//   currentTabComponent.value = n
+// })
 watch(() => selPage.value, (n) =>// 监听当前图纸
 {
   const cur = pageDirs.value.find(page => page.name === n)
@@ -162,10 +150,6 @@ function acceptData(params:any) // 接收子组件传来的数据
       classify: params.type === 'edge' ? '连接线' : params.cell.data.namec
     }
   }
-}
-function closeModal() // 关闭弹窗
-{
-  dialogVisible.value = false
 }
 async function initNodes() // 初始化结点
 {

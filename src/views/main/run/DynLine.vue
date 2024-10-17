@@ -1,18 +1,18 @@
 <style scoped lang="less">
-  .container {  height: 100%;width: 100%;
+  .container { position: relative;
     .tool-bar { height: 40px; width: 100%;line-height: 40px;}
-    .chart-container { box-shadow: 0px 0px 5px 0px #adadad;height:calc(100% - 40px);width: 100%;}
+    .chart-container { box-shadow: 0px 0px 5px 0px #adadad;}
   }
 </style>
 
 <template>
-  <div class="container">
+  <div class="container" >
     <div class="tool-bar">
       <el-button @click="onRefresh" size="small">重置</el-button>
       <el-button @click="onPause" size="small">暂停</el-button>
       <el-button @click="onStart" size="small">开始</el-button>
     </div>
-    <div class="chart-container" ref="chartRef"></div>
+    <div class="chart-container" ref="chartRef" :style="{height: height + 'px', width: width + 'px'}"></div>
   </div>
 </template>
 
@@ -24,6 +24,14 @@ const props = defineProps({
   func: {
     type: Array,
     default:()=>(['sinBase'])
+  },
+  height: {
+    type: Number,
+    default: 500
+  },
+  width: {
+    type: Number,
+    default: 800
   }
 })
 const datas:{ [key: string]: any} = {
@@ -79,7 +87,7 @@ const option = {
       fontSize: 12,
       color: '#000'
     },
-    right: '4%',
+    left: '4%',
     top: '4%'
   },
   grid: {
@@ -96,6 +104,15 @@ const option = {
       label: {
         backgroundColor: '#283b56',
       },
+    },
+  },
+  toolbox: {
+    feature: {
+      dataZoom: {
+        yAxisIndex: 'none',
+      },
+      // restore: {},
+      saveAsImage: {},
     },
   },
   xAxis: {
@@ -154,10 +171,10 @@ function initChart()
       series: Object.keys(datas).map(d=>({data:datas[d]}))
     })
     datalen ++
-    index = parseFloat(add(0.01, index).toFixed(2))
+    index = parseFloat(add(0.005, index).toFixed(3))
     if (index > 3)
       clearInterval(timer) // 停止定时器
-  }, 10) // 定时器每秒执行一次
+  }, 5) // 定时器
   // 使用配置项展示图表
   chart.setOption(option)
 }

@@ -4,13 +4,14 @@ import router from './router'
 import store from './store'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
-import '@/style/main.less'
-import '@/style/global.less'
+import '@/style/base.less'
+// import '@/style/light-theme.less'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import '../public/static/iconfont/icon1/iconfont.css'
 import 'vcolorpicker/lib/style.css'
 import i18n from '../public/static/locales/index'
 import vcolorpicker from 'vcolorpicker'
+import { LightTheme } from '../public/static/themes/LightTheme'
 
 const app = createApp(App, { productionTip: true })
 for (const [key, component] of Object.entries(ElementPlusIconsVue))
@@ -38,5 +39,7 @@ window.ResizeObserver = class ResizeObserver extends resizeObserver
     super(callback)
   }
 }
+for (let key in LightTheme)
+  document.documentElement.style.setProperty(`${key}`, LightTheme[key])
 
 app.use(store).use(router).use(ElementPlus).use(vcolorpicker).use(i18n).mount('#app')

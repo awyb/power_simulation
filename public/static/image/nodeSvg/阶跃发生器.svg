@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="单相变压器" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  class="preview-node"
+  style="--width: 114.375; --height: 78.65625; --scale: 1.0042094348601562; --scale-level: 10.006060184750973; --apx: 0.9958082102059294; --rpx: 0.9968545074797387;"
+  width="114.375" height="78.65625" viewBox="-4 -7.415625000000002 114.375 78.65625">
+  <g data-cell-id="b710b003-823d-4acf-84e7-a9a7438f1756" data-shape="diagram-component" class="x6-cell x6-node"
+    data-definition="model/CloudPSS/_newStepGen" data-enabled="true" style=" " transform="translate(0,0)">
+    <path fill="#f5f5f5" fill-opacity="1" stroke="#2c2c2c" stroke-opacity="1" stroke-width="2"
+      d="m0 0h85.10000000000001v63.825h-85.10000000000001z"></path>
+    <path fill="transparent" fill-opacity="1" stroke="#2c2c2c" stroke-opacity="1" stroke-width="2"
+      d="m0 0m10.637500000000001 47.86875h63.825m-3.19125 -3.19125l3.19125 3.19125l-3.19125 3.19125m-55.315000000000005 2.1275v-42.550000000000004m-3.19125 3.19125l3.19125 -3.19125l3.19125 3.19125m-19.1475 -13.828750000000001m31.9125 47.86875v-26.59375h31.9125m21.275000000000002 10.637500000000001h21.275000000000002">
+    </path>
+  </g>
+</svg>

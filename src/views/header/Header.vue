@@ -29,7 +29,7 @@
         </span>
       </el-col>
       <el-col :span="7" class="center">
-        <label><span v-show="needSave" class="dot"></span></label>
+        <label><span v-show="needSave" class="dot"></span>测试项目一</label>
       </el-col>
       <el-col :span="7" class="right">
         <span class="oper-box" @click="fullClick">

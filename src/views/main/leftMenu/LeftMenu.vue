@@ -2,19 +2,19 @@
   .el-container { height: 100%;width: 100%;background: var(--color1);
     /deep/ .el-collapse-item__header { padding-left:var(--collapse-padding-left); }
     /deep/ .el-collapse { --el-collapse-border-color: var(--collapse-border-color); }
-    /deep/ .el-collapse:first-of-type{border: none;}
+    /deep/ .el-collapse:first-of-type { border: none;}
     .drag-box { float: left;margin: 10px;padding: 5px; text-align: center;cursor: pointer;
       &:hover { background: var(--cells-hover-color);}
     }
-    .el-tree{ background: transparent;
+    .el-tree { background: transparent;
       .iconfont { margin-right: 10px; }
-      .drag-label{cursor: pointer;}
+      .drag-label {cursor: pointer;}
       /deep/ .el-tree-node__content { height: 40px; }
     }
-    .col-2{ width: calc(50% - 30px);
+    .col-2 { width: calc(50% - 30px);
       img { height: var(--cells-img-height-col-2); }
     }
-    .col-3{ width: calc(30% - 20px);
+    .col-3 { width: calc(30% - 20px);
       img { height: var(--cells-img-height-col-3); }
     }
     .el-header {--el-header-height: 30px;display: flex;align-items: center;justify-content: flex-start;border-bottom: 1px solid var(--collapse-border-color);}
@@ -83,7 +83,6 @@ import { cellsList, cellNode, RightMenu } from '../../../components/interface/in
 import { query } from '@/request'
 import eveBus from '@/components/ts/eveBus'
 import { useStore } from 'vuex'
-
 const store = useStore()
 const defaultProps = {
   children: 'children',
@@ -115,10 +114,14 @@ const menus = ref<RightMenu[]>([
           comp,
           id: Math.random(),
           attr: {
-            draggable: true,
-            'close-on-click-modal': false,
-            'append-to-body': true,
-            'z-index': 1,
+            'draggable': false,
+            'resizeable': false,
+            'close-on-click-overlay':false,
+            'show-fold':false,
+            'show-minimize':false,
+          },
+          uicfg: {
+            modal: false,
           },
           modal: false,
           title: '编辑',

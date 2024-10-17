@@ -35,7 +35,9 @@ export interface dlgComponent {
   comp: Component,
   title: string,
   params: object,
-  attr: object,
+  attr?: object,
+  uicfg?: object,
+  compAttr?: object,
   onOk: () => void
 }
 
