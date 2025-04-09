@@ -3,8 +3,8 @@
   .modal {background: white;border-radius: 5px;box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);position: absolute;border-radius: 10px;color: white;}
   .modal-header {display: flex;justify-content: space-between;align-items: center;padding: 0 15px; height: 32px;background: rgb(43, 170, 255);border-top-left-radius: 10px;border-top-right-radius: 10px;
     .modal-oper {
-      .iconfont {cursor: pointer;margin: 0 5px;
-        &:hover {color: #0099ff;}
+      .iconfont {cursor: pointer;margin: 0 5px;color: white;
+        &:hover {color: #363a3c;}
       }
     }
   }

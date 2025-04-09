@@ -30,11 +30,6 @@ export default defineComponent({
     const _data = ref(null)
     const rightMenu = ref(null)
     const menus = ref<RightMenu[]>([])
-    // 关闭菜单
-    function close()
-    {
-      showMenu.value = false
-    }
     // 打开菜单和显示位置
     async function open(event: MouseEvent, _menus:RightMenu[], data:any)
     {
@@ -53,7 +48,10 @@ export default defineComponent({
       
       
       // 注册点击侦听事件
-      document.addEventListener('click', close)
+      document.addEventListener('click', () =>
+      {
+        showMenu.value = false
+      })
     }
     // 暴露方法
     expose({ open, close })
